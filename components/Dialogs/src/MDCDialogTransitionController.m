@@ -1,18 +1,16 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import "MDCDialogTransitionController.h"
 
@@ -20,13 +18,30 @@
 
 @implementation MDCDialogTransitionController
 
-static const NSTimeInterval MDCDialogTransitionDuration = 0.27;
+// The default duration of the dialog fade-in or fade-out animation
+static const NSTimeInterval kDefaultOpacityTransitionDuration = 0.2;
+
+// The default duration of the dialog scale-up or scale-down animation
+static const NSTimeInterval kDefaultScaleTransitionDuration = 0;
+
+// The default starting X and Y scale of the presented dialog
+static const CGFloat kDefaultInitialScaleFactor = 1.0;
+
+- (instancetype)init {
+  self = [super init];
+  if (self) {
+    _opacityAnimationDuration = kDefaultOpacityTransitionDuration;
+    _scaleAnimationDuration = kDefaultScaleTransitionDuration;
+    _dialogInitialScaleFactor = kDefaultInitialScaleFactor;
+  }
+  return self;
+}
 
 #pragma mark - UIViewControllerAnimatedTransitioning
 
 - (NSTimeInterval)transitionDuration:
     (__unused id<UIViewControllerContextTransitioning>)transitionContext {
-  return MDCDialogTransitionDuration;
+  return MAX(self.opacityAnimationDuration, self.scaleAnimationDuration);
 }
 
 - (void)animateTransition:(id<UIViewControllerContextTransitioning>)transitionContext {
@@ -50,7 +65,7 @@ static const NSTimeInterval MDCDialogTransitionDuration = 0.27;
   BOOL presenting = (toPresentingViewController == fromViewController) ? YES : NO;
 
   UIViewController *animatingViewController = presenting ? toViewController : fromViewController;
-  UIView *animatingView = presenting ? toView : fromView;
+  UIView *dialogView = presenting ? toView : fromView;
 
   UIView *containerView = transitionContext.containerView;
 
@@ -58,34 +73,64 @@ static const NSTimeInterval MDCDialogTransitionDuration = 0.27;
     [containerView addSubview:toView];
   }
 
-  CGFloat startingAlpha = presenting ? 0.0f : 1.0f;
-  CGFloat endingAlpha = presenting ? 1.0f : 0.0f;
+  dialogView.frame = [transitionContext finalFrameForViewController:animatingViewController];
 
-  animatingView.frame = [transitionContext finalFrameForViewController:animatingViewController];
-  animatingView.alpha = startingAlpha;
+  [CATransaction begin];
+  [CATransaction setCompletionBlock:^{
+    // If we're dismissing, remove the presented view from the hierarchy
+    if (!presenting) {
+      [fromView removeFromSuperview];
+    }
 
-  NSTimeInterval transitionDuration = [self transitionDuration:transitionContext];
+    // From ADC : UIViewControllerContextTransitioning
+    // (https://developer.apple.com/documentation/uikit/uiviewcontrollercontexttransitioning/1622042-completetransition)
+    // When you do create transition animations, always call the
+    // completeTransition: from an appropriate completion block to let UIKit know
+    // when all of your animations have finished.
+    [transitionContext completeTransition:YES];
+  }];
+
   UIViewAnimationOptions options =
       UIViewAnimationOptionAllowUserInteraction | UIViewAnimationOptionBeginFromCurrentState;
 
-  [UIView animateWithDuration:transitionDuration
-      delay:0.0
-      options:options
-      animations:^{
-        animatingView.alpha = endingAlpha;
-      }
-      completion:^(__unused BOOL finished) {
-        // If we're dismissing, remove the presented view from the hierarchy
-        if (!presenting) {
-          [fromView removeFromSuperview];
-        }
+  // Opacity animation
+  CGFloat startingAlpha = presenting ? 0 : 1;
+  CGFloat endingAlpha = presenting ? 1 : 0;
+  dialogView.alpha = startingAlpha;
+  [UIView animateWithDuration:self.opacityAnimationDuration
+                        delay:0
+                      options:options
+                   animations:^{
+                     dialogView.alpha = endingAlpha;
+                   }
+                   completion:nil];
 
-        // From ADC : UIViewControllerContextTransitioning
-        // When you do create transition animations, always call the
-        // completeTransition: from an appropriate completion block to let UIKit know
-        // when all of your animations have finished.
-        [transitionContext completeTransition:YES];
-      }];
+  // Scale animation
+  MDCDialogPresentationController *presentationController = nil;
+  if ([animatingViewController.presentationController
+          isKindOfClass:[MDCDialogPresentationController class]]) {
+    presentationController =
+        (MDCDialogPresentationController *)animatingViewController.presentationController;
+  }
+
+  CGAffineTransform startingTransform =
+      presenting
+          ? CGAffineTransformMakeScale(self.dialogInitialScaleFactor, self.dialogInitialScaleFactor)
+          : CGAffineTransformIdentity;
+  CGAffineTransform endingTransform = CGAffineTransformIdentity;
+  dialogView.transform = startingTransform;
+  presentationController.dialogTransform = startingTransform;
+  UIViewAnimationOptions scaleAnimationOptions = options | UIViewAnimationOptionCurveEaseOut;
+  [UIView animateWithDuration:self.scaleAnimationDuration
+                        delay:0
+                      options:scaleAnimationOptions
+                   animations:^{
+                     dialogView.transform = endingTransform;
+                     presentationController.dialogTransform = endingTransform;
+                   }
+                   completion:nil];
+
+  [CATransaction commit];
 }
 
 #pragma mark - UIViewControllerTransitioningDelegate

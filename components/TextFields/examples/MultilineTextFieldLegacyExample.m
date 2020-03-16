@@ -1,18 +1,16 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import "MaterialTextFields.h"
 
@@ -34,7 +32,7 @@
 
 - (void)viewDidLoad {
   [super viewDidLoad];
-  self.view.backgroundColor = [UIColor colorWithWhite:0.97f alpha:1.0f];
+  self.view.backgroundColor = [UIColor colorWithWhite:(CGFloat)0.97 alpha:1];
 
   self.title = @"Legacy Multi-line Styles";
 
@@ -50,17 +48,13 @@
                               constraintsWithVisualFormat:@"V:|[scrollView]|"
                                                   options:0
                                                   metrics:nil
-                                                    views:@{
-                                                      @"scrollView" : self.scrollView
-                                                    }]];
+                                                    views:@{@"scrollView" : self.scrollView}]];
   [NSLayoutConstraint
       activateConstraints:[NSLayoutConstraint
                               constraintsWithVisualFormat:@"H:|[scrollView]|"
                                                   options:0
                                                   metrics:nil
-                                                    views:@{
-                                                      @"scrollView" : self.scrollView
-                                                    }]];
+                                                    views:@{@"scrollView" : self.scrollView}]];
 
   MDCMultilineTextField *multilineTextFieldUnstyled = [[MDCMultilineTextField alloc] init];
   [self.scrollView addSubview:multilineTextFieldUnstyled];
@@ -115,19 +109,22 @@
   self.textFieldControllerFullWidth.characterCountMax = 140;
   self.textFieldControllerFullWidth.placeholderText = @"Full Width Controller";
 
+  id<UILayoutSupport> topGuide = self.topLayoutGuide;
   [NSLayoutConstraint
-      activateConstraints:
-          [NSLayoutConstraint
-              constraintsWithVisualFormat:@"V:[unstyled]-[area]-[floating]-[charMax]-[fullWidth]"
-                                  options:0
-                                  metrics:nil
-                                    views:@{
-                                      @"unstyled" : multilineTextFieldUnstyled,
-                                      @"area" : multilineTextFieldUnstyledArea,
-                                      @"charMax" : multilineTextFieldCharMaxDefault,
-                                      @"floating" : multilineTextFieldFloating,
-                                      @"fullWidth" : multilineTextFieldCharMaxFullWidth
-                                    }]];
+      activateConstraints:[NSLayoutConstraint
+                              constraintsWithVisualFormat:
+                                  @"V:[topGuide]-[unstyled]-[area]-[floating]-[charMax]-[fullWidth]"
+                                                  options:0
+                                                  metrics:nil
+                                                    views:@{
+                                                      @"topGuide" : topGuide,
+                                                      @"unstyled" : multilineTextFieldUnstyled,
+                                                      @"area" : multilineTextFieldUnstyledArea,
+                                                      @"charMax" : multilineTextFieldCharMaxDefault,
+                                                      @"floating" : multilineTextFieldFloating,
+                                                      @"fullWidth" :
+                                                          multilineTextFieldCharMaxFullWidth
+                                                    }]];
   [NSLayoutConstraint
       activateConstraints:[NSLayoutConstraint
                               constraintsWithVisualFormat:@"H:|-[unstyled]-|"
@@ -161,7 +158,6 @@
                                                       @"charMax" : multilineTextFieldCharMaxDefault
                                                     }]];
 
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
   if (@available(iOS 11.0, *)) {
     [NSLayoutConstraint activateConstraints:@[
       [NSLayoutConstraint constraintWithItem:multilineTextFieldUnstyled
@@ -197,24 +193,6 @@
                                     constant:-20]
     ]];
   }
-#else
-  [NSLayoutConstraint activateConstraints:@[
-    [NSLayoutConstraint constraintWithItem:multilineTextFieldUnstyled
-                                 attribute:NSLayoutAttributeTop
-                                 relatedBy:NSLayoutRelationEqual
-                                    toItem:self.scrollView
-                                 attribute:NSLayoutAttributeTop
-                                multiplier:1
-                                  constant:20],
-    [NSLayoutConstraint constraintWithItem:multilineTextFieldCharMaxFullWidth
-                                 attribute:NSLayoutAttributeBottom
-                                 relatedBy:NSLayoutRelationEqual
-                                    toItem:self.scrollView
-                                 attribute:NSLayoutAttributeBottomMargin
-                                multiplier:1
-                                  constant:-20]
-  ]];
-#endif
 
   [NSLayoutConstraint constraintWithItem:multilineTextFieldCharMaxFullWidth
                                attribute:NSLayoutAttributeLeading
@@ -255,16 +233,12 @@
 
 #pragma mark - CatalogByConvention
 
-+ (NSArray *)catalogBreadcrumbs {
-  return @[ @"Text Field", @"[Legacy] Multi-line" ];
-}
-
-+ (BOOL)catalogIsPrimaryDemo {
-  return NO;
-}
-
-+ (BOOL)catalogIsPresentable {
-  return NO;
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Text Field", @"[Legacy] Multi-line" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+  };
 }
 
 #pragma mark - Keyboard Handling

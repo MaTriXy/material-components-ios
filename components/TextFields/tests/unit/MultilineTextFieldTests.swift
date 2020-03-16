@@ -1,18 +1,16 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 // swiftlint:disable function_body_length
 // swiftlint:disable type_body_length
@@ -100,52 +98,6 @@ class MultilineTextFieldTests: XCTestCase {
     XCTAssertTrue(textField.mdc_adjustsFontForContentSizeCategory)
   }
 
-  func testSerialization() {
-    let textField = MDCMultilineTextField()
-    textField.translatesAutoresizingMaskIntoConstraints = false
-    textField.text = "Lorem ipsum dolor sit amet, consectetuer adipiscing"
-    textField.cursorColor = .red
-
-    let controller = MDCTextInputControllerUnderline(textInput: textField)
-    XCTAssertNotNil(controller.textInput)
-
-    let leadingText = "Serialized Helper Test"
-    controller.helperText = leadingText
-    controller.characterCountMax = 40
-    textField.textInsetsMode = .never
-
-    let trailingView = UIView()
-    trailingView.backgroundColor = .blue
-    textField.trailingView = trailingView
-    textField.trailingViewMode = .never
-
-    let serializedInput = NSKeyedArchiver.archivedData(withRootObject: textField)
-    XCTAssertNotNil(serializedInput)
-
-    let unserializedInput =
-      NSKeyedUnarchiver.unarchiveObject(with: serializedInput) as? MDCMultilineTextField
-    XCTAssertNotNil(unserializedInput)
-
-    XCTAssertEqual(textField.translatesAutoresizingMaskIntoConstraints,
-                   unserializedInput?.translatesAutoresizingMaskIntoConstraints)
-    XCTAssertEqual(textField.text,
-                   unserializedInput?.text)
-
-    XCTAssert(textField.cursorColor?.isEqualAsFloats(unserializedInput?.cursorColor) ?? false)
-
-    XCTAssertEqual(textField.leadingUnderlineLabel.text,
-                   unserializedInput?.leadingUnderlineLabel.text)
-
-    XCTAssertEqual(textField.textInsetsMode, unserializedInput?.textInsetsMode)
-
-    XCTAssertEqual(textField.trailingView?.backgroundColor,
-                   unserializedInput?.trailingView?.backgroundColor)
-    XCTAssertEqual(textField.trailingViewMode, unserializedInput?.trailingViewMode)
-    XCTAssertEqual(textField.trailingUnderlineLabel.text, "51 / 40")
-    XCTAssertEqual(textField.trailingUnderlineLabel.text,
-                   unserializedInput?.trailingUnderlineLabel.text)
-  }
-
   func testSizing() {
     let textField = MDCMultilineTextField(frame: CGRect(x: 0, y: 0, width: 300, height: 0))
     XCTAssertEqual(textField.frame.height, 0)
@@ -188,5 +140,46 @@ class MultilineTextFieldTests: XCTestCase {
     } else {
       XCTFail("No underline or underline is wrong class")
     }
+  }
+
+  func testTraitCollectionDidChangeBlockCalledWithExpectedParameters() {
+    // Given
+    let testTextField = MDCMultilineTextField()
+    let expectation = XCTestExpectation(description: "traitCollection")
+    var passedTraitCollection: UITraitCollection? = nil
+    var passedTextField: MDCMultilineTextField? = nil
+    testTextField.traitCollectionDidChangeBlock = { (textField, traitCollection) in
+      passedTraitCollection = traitCollection
+      passedTextField = textField
+      expectation.fulfill()
+    }
+    let fakeTraitCollection = UITraitCollection(displayScale: 7)
+
+    // When
+    testTextField.traitCollectionDidChange(fakeTraitCollection)
+
+    // Then
+    self.wait(for: [expectation], timeout: 1)
+    XCTAssertEqual(passedTraitCollection, fakeTraitCollection)
+    XCTAssertEqual(passedTextField, testTextField)
+  }
+
+  // MARK - Material Elevation
+
+  func testDefaultBaseElevationOverrideIsNegative() {
+    // Then
+    XCTAssertLessThan(MDCMultilineTextField().mdc_overrideBaseElevation, 0);
+  }
+
+  func testSettingOverrideBaseElevationReturnsSetValue() {
+    // Given
+    let expectedBaseElevation: CGFloat = 99
+    let textField = MDCMultilineTextField()
+
+    // When
+    textField.mdc_overrideBaseElevation = expectedBaseElevation
+
+    // Then
+    XCTAssertEqual(textField.mdc_overrideBaseElevation, expectedBaseElevation, accuracy: 0.001)
   }
 }

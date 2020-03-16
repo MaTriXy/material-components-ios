@@ -1,34 +1,42 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import Foundation
 import MaterialComponents.MaterialAppBar
-import MaterialComponents.MaterialAppBar_ColorThemer
+import MaterialComponents.MaterialAppBar_Theming
+import MaterialComponents.MaterialContainerScheme
 
 class AppBarModalPresentationSwiftExamplePresented: UITableViewController {
 
-  let appBar = MDCAppBar()
-  var colorScheme = MDCSemanticColorScheme()
+  let appBarViewController = MDCAppBarViewController()
+  @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
+
+  deinit {
+    // Required for pre-iOS 11 devices because we've enabled observesTrackingScrollViewScrollEvents.
+    appBarViewController.headerView.trackingScrollView = nil
+  }
 
   init() {
     super.init(nibName: nil, bundle: nil)
 
     self.title = "Modal Presentation (Swift)"
 
-    self.addChildViewController(appBar.headerViewController)
+    // Behavioral flags.
+    appBarViewController.inferTopSafeAreaInsetFromViewController = true
+    appBarViewController.headerView.minMaxHeightIncludesSafeArea = false
+
+    self.addChild(appBarViewController)
     self.modalPresentationStyle = .formSheet
     self.modalTransitionStyle = .coverVertical
   }
@@ -40,15 +48,15 @@ class AppBarModalPresentationSwiftExamplePresented: UITableViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    MDCAppBarColorThemer.applySemanticColorScheme(colorScheme, to: appBar)
+    appBarViewController.applyPrimaryTheme(withScheme: containerScheme)
 
-    appBar.headerViewController.headerView.trackingScrollView = self.tableView
-    self.tableView.delegate = appBar.headerViewController
+    // Allows us to avoid forwarding events, but means we can't enable shift behaviors.
+    appBarViewController.headerView.observesTrackingScrollViewScrollEvents = true
 
-    appBar.addSubviewsToParent()
+    appBarViewController.headerView.trackingScrollView = self.tableView
 
-    self.tableView.layoutMargins = UIEdgeInsets.zero
-    self.tableView.separatorInset = UIEdgeInsets.zero
+    view.addSubview(appBarViewController.view)
+    appBarViewController.didMove(toParent: self)
 
     self.navigationItem.rightBarButtonItem =
       UIBarButtonItem(title: "Touch", style: .done, target: nil, action: nil)
@@ -57,12 +65,12 @@ class AppBarModalPresentationSwiftExamplePresented: UITableViewController {
       UIBarButtonItem(title: "Dismiss", style: .done, target: self, action: #selector(dismissSelf))
   }
 
-  override var childViewControllerForStatusBarHidden: UIViewController? {
-    return appBar.headerViewController
+  override var childForStatusBarHidden: UIViewController? {
+    return appBarViewController
   }
 
-  override var childViewControllerForStatusBarStyle: UIViewController? {
-    return appBar.headerViewController
+  override var childForStatusBarStyle: UIViewController? {
+    return appBarViewController
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -78,12 +86,11 @@ class AppBarModalPresentationSwiftExamplePresented: UITableViewController {
   override func tableView(
     _ tableView: UITableView,
     cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    var cell = self.tableView.dequeueReusableCell(withIdentifier: "cell")
-    if cell == nil {
-      cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
-    }
-    cell!.layoutMargins = UIEdgeInsets.zero
-    return cell!
+    
+    let cell = self.tableView.dequeueReusableCell(withIdentifier: "cell") ??
+          UITableViewCell(style: .default, reuseIdentifier: "cell")
+    cell.layoutMargins = .zero
+    return cell
   }
 
   @objc func dismissSelf() {
@@ -93,15 +100,15 @@ class AppBarModalPresentationSwiftExamplePresented: UITableViewController {
 
 class AppBarModalPresentationSwiftExample: UITableViewController {
 
-  let appBar = MDCAppBar()
-  var colorScheme = MDCSemanticColorScheme()
+  let appBarViewController = MDCAppBarViewController()
+  @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
 
   init() {
     super.init(nibName: nil, bundle: nil)
 
     self.title = "Modal Presentation (Swift)"
 
-    self.addChildViewController(appBar.headerViewController)
+    self.addChild(appBarViewController)
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -111,26 +118,24 @@ class AppBarModalPresentationSwiftExample: UITableViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    MDCAppBarColorThemer.applySemanticColorScheme(colorScheme, to: appBar)
+    appBarViewController.applyPrimaryTheme(withScheme: containerScheme)
+    
+    appBarViewController.headerView.trackingScrollView = self.tableView
+    self.tableView.delegate = appBarViewController
 
-    appBar.headerViewController.headerView.trackingScrollView = self.tableView
-    self.tableView.delegate = appBar.headerViewController
-
-    appBar.addSubviewsToParent()
-
-    self.tableView.layoutMargins = UIEdgeInsets.zero
-    self.tableView.separatorInset = UIEdgeInsets.zero
+    view.addSubview(appBarViewController.view)
+    appBarViewController.didMove(toParent: self)
 
     self.navigationItem.rightBarButtonItem =
       UIBarButtonItem(title: "Detail", style: .done, target: self, action: #selector(presentModal))
   }
 
-  override var childViewControllerForStatusBarHidden: UIViewController? {
-    return appBar.headerViewController
+  override var childForStatusBarHidden: UIViewController? {
+    return appBarViewController
   }
 
-  override var childViewControllerForStatusBarStyle: UIViewController? {
-    return appBar.headerViewController
+  override var childForStatusBarStyle: UIViewController? {
+    return appBarViewController
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -147,15 +152,16 @@ class AppBarModalPresentationSwiftExample: UITableViewController {
 
 // MARK: Catalog by convention
 extension AppBarModalPresentationSwiftExample {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["App Bar", "Modal Presentation (Swift)"]
+
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["App Bar", "Modal Presentation (Swift)"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return false
-  }
-
-  func catalogShouldHideNavigation() -> Bool {
+  @objc func catalogShouldHideNavigation() -> Bool {
     return true
   }
 }
@@ -172,12 +178,11 @@ extension AppBarModalPresentationSwiftExample {
   override func tableView(
     _ tableView: UITableView,
     cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    var cell = self.tableView.dequeueReusableCell(withIdentifier: "cell")
-    if cell == nil {
-      cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
-    }
-    cell!.layoutMargins = UIEdgeInsets.zero
-    return cell!
+    
+    let cell = self.tableView.dequeueReusableCell(withIdentifier: "cell") ??
+        UITableViewCell(style: .default, reuseIdentifier: "cell")
+    cell.layoutMargins = .zero
+    return cell
   }
 
 }

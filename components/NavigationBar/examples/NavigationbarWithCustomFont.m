@@ -1,23 +1,21 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialNavigationBar.h"
 #import "MaterialNavigationBar+ColorThemer.h"
+#import "MaterialNavigationBar.h"
 #import "supplemental/NavigationBarTypicalUseExampleSupplemental.h"
 
 @implementation NavigationBarWithCustomFontExample
@@ -25,7 +23,8 @@
 - (id)init {
   self = [super init];
   if (self) {
-    self.colorScheme = [[MDCSemanticColorScheme alloc] init];
+    self.colorScheme =
+        [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
   }
   return self;
 }
@@ -41,11 +40,7 @@
 
   UIFont *font = [UIFont fontWithName:@"Zapfino" size:18.0];
 
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
-  NSDictionary<NSAttributedStringKey,id> *titleTextAttributes = @{ NSFontAttributeName : font };
-#else
-  NSDictionary<NSString *,id> *titleTextAttributes = @{ NSFontAttributeName : font };
-#endif
+  NSDictionary<NSAttributedStringKey, id> *titleTextAttributes = @{NSFontAttributeName : font};
 
   [self.navBar setTitleTextAttributes:titleTextAttributes];
 
@@ -60,29 +55,27 @@
 
   self.navBar.translatesAutoresizingMaskIntoConstraints = NO;
 
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
   if (@available(iOS 11.0, *)) {
-    [self.view.safeAreaLayoutGuide.topAnchor constraintEqualToAnchor:self.navBar.topAnchor].active = YES;
+    [self.view.safeAreaLayoutGuide.topAnchor constraintEqualToAnchor:self.navBar.topAnchor].active =
+        YES;
   } else {
-#endif
     [NSLayoutConstraint constraintWithItem:self.topLayoutGuide
                                  attribute:NSLayoutAttributeBottom
                                  relatedBy:NSLayoutRelationEqual
                                     toItem:self.navBar
                                  attribute:NSLayoutAttributeTop
                                 multiplier:1.0
-                                  constant:0].active = YES;
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
+                                  constant:0]
+        .active = YES;
   }
-#endif
 
-  NSDictionary *viewsBindings = @{@"navBar": self.navBar};
+  NSDictionary *viewsBindings = @{@"navBar" : self.navBar};
 
   [NSLayoutConstraint
-   activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[navBar]|"
-                                                               options:0
-                                                               metrics:nil
-                                                                 views:viewsBindings]];
+      activateConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|[navBar]|"
+                                                                  options:0
+                                                                  metrics:nil
+                                                                    views:viewsBindings]];
 
   [self setupExampleViews];
 }
@@ -102,20 +95,16 @@
 
 @implementation NavigationBarWithCustomFontExample (CatalogByConvention)
 
-+ (NSArray *)catalogBreadcrumbs {
-  return @[ @"Navigation Bar", @"Navigation Bar with Custom Font" ];
-}
-
-+ (BOOL)catalogIsPrimaryDemo {
-  return NO;
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Navigation Bar", @"Navigation Bar with Custom Font" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+  };
 }
 
 - (BOOL)catalogShouldHideNavigation {
   return YES;
-}
-
-+ (BOOL)catalogIsPresentable {
-  return NO;
 }
 
 @end

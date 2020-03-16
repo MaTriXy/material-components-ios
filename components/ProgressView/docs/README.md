@@ -33,6 +33,6 @@ achieve the desired animation of the control.
 - [Typical use](typical-use.md)
 - [Differences from UIProgressView](differences-from-uiprogressview.md)
 
-## Extensions
+## Accessibility
 
-- [Color Theming](color-theming.md)
+- [Accessibility](accessibility.md)

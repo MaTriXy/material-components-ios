@@ -1,21 +1,19 @@
-/*
- Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
-import MaterialComponents.MDCIcons
+import MaterialComponents.MaterialIcons
 import MaterialComponents.MaterialIcons_ic_settings
 import MaterialComponents.MaterialIcons_ic_color_lens
 import MaterialComponents.MaterialIcons_ic_help_outline
@@ -23,13 +21,29 @@ import MaterialComponents.MaterialLibraryInfo
 
 class MDCMenuViewController: UITableViewController {
 
-  let tableData =
-    [(title: "Settings", icon: MDCIcons.imageFor_ic_settings()?.withRenderingMode(.alwaysTemplate)),
-     (title: "Themes", icon: MDCIcons.imageFor_ic_color_lens()?.withRenderingMode(.alwaysTemplate)),
-     (title:  "v\(MDCLibraryInfo.versionString)",
-      icon: MDCIcons.imageFor_ic_help_outline()?.withRenderingMode(.alwaysTemplate))]
+  private struct MDCMenuItem {
+    let title: String!
+    let icon: UIImage?
+    let accessibilityLabel: String?
+    let accessibilityHint: String?
+    init(_ title: String, _ icon: UIImage?, _ accessibilityLabel: String?,
+         _ accessibilityHint: String?) {
+      self.title = title
+      self.icon = icon
+      self.accessibilityLabel = accessibilityLabel
+      self.accessibilityHint = accessibilityHint
+    }
+  }
+
+  private let tableData =
+    [MDCMenuItem("Settings", MDCIcons.imageFor_ic_settings()?.withRenderingMode(.alwaysTemplate),
+                 nil, "Opens debugging menu."),
+     MDCMenuItem("Themes", MDCIcons.imageFor_ic_color_lens()?.withRenderingMode(.alwaysTemplate),
+                  nil, "Opens color theme chooser."),
+     MDCMenuItem("v\(MDCLibraryInfo.versionString)",
+      MDCIcons.imageFor_ic_help_outline()?.withRenderingMode(.alwaysTemplate),
+      "Version \(MDCLibraryInfo.versionString)", "Closes this menu.")]
   let cellIdentifier = "MenuCell"
-  let iconColor = AppTheme.globalTheme.colorScheme.onSurfaceColor.withAlphaComponent(0.61)
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -39,12 +53,15 @@ class MDCMenuViewController: UITableViewController {
 
   override func tableView(_ tableView: UITableView,
                           cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    let iconColor = AppTheme.containerScheme.colorScheme.onSurfaceColor.withAlphaComponent(0.61)
     let cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath)
     let cellData = tableData[indexPath.item]
     cell.textLabel?.text = cellData.title
     cell.textLabel?.textColor = iconColor
     cell.imageView?.image = cellData.icon
     cell.imageView?.tintColor = iconColor
+    cell.accessibilityLabel = cellData.accessibilityLabel
+    cell.accessibilityHint = cellData.accessibilityHint
     return cell
   }
 
@@ -71,12 +88,7 @@ class MDCMenuViewController: UITableViewController {
       })
     case 1:
       self.dismiss(animated: true, completion: {
-        let themeViewController = MDCThemePickerViewController()
-        let presentingViewController =
-          UINavigationController.embedExampleWithinAppBarContainer(using: themeViewController,
-                                                                   currentBounds: self.view.bounds,
-                                                                   named: "Themes")
-        navController.pushViewController(presentingViewController, animated: true)
+        navController.pushViewController(MDCThemePickerViewController(), animated: true)
       })
     default:
       self.dismiss(animated: true, completion: nil)

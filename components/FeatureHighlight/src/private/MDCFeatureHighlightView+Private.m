@@ -1,25 +1,24 @@
-/*
- Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import "MDCFeatureHighlightView+Private.h"
 
+#import <MDFTextAccessibility/MDFTextAccessibility.h>
 #import "MDCFeatureHighlightDismissGestureRecognizer.h"
 #import "MDCFeatureHighlightLayer.h"
-#import <MDFTextAccessibility/MDFTextAccessibility.h>
 
+#import "MaterialAvailability.h"
 #import "MaterialFeatureHighlightStrings.h"
 #import "MaterialFeatureHighlightStrings_table.h"
 #import "MaterialMath.h"
@@ -29,29 +28,29 @@ static inline CGFloat CGPointDistanceToPoint(CGPoint a, CGPoint b) {
   return MDCHypot(a.x - b.x, a.y - b.y);
 }
 
-const CGFloat kMDCFeatureHighlightMinimumInnerRadius = 44.0f;
-const CGFloat kMDCFeatureHighlightInnerContentPadding = 10.0f;
-const CGFloat kMDCFeatureHighlightInnerPadding = 20.0f;
-const CGFloat kMDCFeatureHighlightTextPadding = 40.0f;
-const CGFloat kMDCFeatureHighlightTextMaxWidth = 300.0f;
-const CGFloat kMDCFeatureHighlightConcentricBound = 88.0f;
-const CGFloat kMDCFeatureHighlightNonconcentricOffset = 20.0f;
-const CGFloat kMDCFeatureHighlightMaxTextHeight = 1000.0f;
-const CGFloat kMDCFeatureHighlightTitleBodyBaselineOffset = 32.0f;
-const CGFloat kMDCFeatureHighlightOuterHighlightAlpha = 0.96f;
+const CGFloat kMDCFeatureHighlightMinimumInnerRadius = 44;
+const CGFloat kMDCFeatureHighlightInnerContentPadding = 10;
+const CGFloat kMDCFeatureHighlightInnerPadding = 20;
+const CGFloat kMDCFeatureHighlightTextPadding = 40;
+const CGFloat kMDCFeatureHighlightTextMaxWidth = 300;
+const CGFloat kMDCFeatureHighlightConcentricBound = 88;
+const CGFloat kMDCFeatureHighlightNonconcentricOffset = 20;
+const CGFloat kMDCFeatureHighlightMaxTextHeight = 1000;
+const CGFloat kMDCFeatureHighlightTitleBodyBaselineOffset = 32;
+const CGFloat kMDCFeatureHighlightOuterHighlightAlpha = (CGFloat)0.96;
 
-const CGFloat kMDCFeatureHighlightGestureDisappearThresh = 0.9f;
-const CGFloat kMDCFeatureHighlightGestureAppearThresh = 0.95f;
-const CGFloat kMDCFeatureHighlightGestureDismissThresh = 0.85f;
-const CGFloat kMDCFeatureHighlightGestureAnimationDuration = 0.2f;
+const CGFloat kMDCFeatureHighlightGestureDisappearThresh = (CGFloat)0.9;
+const CGFloat kMDCFeatureHighlightGestureAppearThresh = (CGFloat)0.95;
+const CGFloat kMDCFeatureHighlightGestureDismissThresh = (CGFloat)0.85;
+const CGFloat kMDCFeatureHighlightGestureAnimationDuration = (CGFloat)0.2;
 
-const CGFloat kMDCFeatureHighlightDismissAnimationDuration = 0.25f;
+const CGFloat kMDCFeatureHighlightDismissAnimationDuration = (CGFloat)0.25;
 
 // Animation consts
-const CGFloat kMDCFeatureHighlightInnerRadiusFactor = 1.1f;
-const CGFloat kMDCFeatureHighlightOuterRadiusFactor = 1.125f;
-const CGFloat kMDCFeatureHighlightPulseRadiusFactor = 2.0f;
-const CGFloat kMDCFeatureHighlightPulseStartAlpha = 0.54f;
+const CGFloat kMDCFeatureHighlightInnerRadiusFactor = (CGFloat)1.1;
+const CGFloat kMDCFeatureHighlightOuterRadiusFactor = (CGFloat)1.125;
+const CGFloat kMDCFeatureHighlightPulseRadiusFactor = 2;
+const CGFloat kMDCFeatureHighlightPulseStartAlpha = (CGFloat)0.54;
 const CGFloat kMDCFeatureHighlightInnerRadiusBloomAmount =
     (kMDCFeatureHighlightInnerRadiusFactor - 1) * kMDCFeatureHighlightMinimumInnerRadius;
 const CGFloat kMDCFeatureHighlightPulseRadiusBloomAmount =
@@ -77,6 +76,7 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
   MDCFeatureHighlightLayer *_pulseLayer;
   MDCFeatureHighlightLayer *_innerLayer;
   MDCFeatureHighlightLayer *_displayMaskLayer;
+  UIButton *_accessibilityView;
 
   BOOL _mdc_adjustsFontForContentSizeCategory;
 
@@ -88,6 +88,7 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
 }
 
 @synthesize highlightRadius = _outerRadius;
+@synthesize adjustsFontForContentSizeCategory = _adjustsFontForContentSizeCategory;
 
 - (instancetype)initWithFrame:(CGRect)frame {
   if (self = [super initWithFrame:frame]) {
@@ -108,6 +109,15 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
 
     _displayMaskLayer = [[MDCFeatureHighlightLayer alloc] init];
     _displayMaskLayer.fillColor = [UIColor whiteColor].CGColor;
+
+    // Tiny frame just inside the bounds so that non-accessibility interactions aren't affected.
+    _accessibilityView = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 1, 1)];
+    _accessibilityView.autoresizingMask = UIViewAutoresizingNone;
+    _accessibilityView.accessibilityLabel = @"Dismiss";
+    // Note: The following is not strictly required, but is expected in unit tests.
+    _accessibilityView.isAccessibilityElement = YES;
+    [self addSubview:_accessibilityView];
+    [self sendSubviewToBack:_accessibilityView];
 
     _titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
     _titleLabel.textAlignment = NSTextAlignmentNatural;
@@ -146,7 +156,7 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
 }
 
 - (void)dealloc {
-  //TODO(#2651): Remove once we move to iOS8
+  // TODO(#2651): Remove once we move to iOS8
   // Remove Dynamic Type contentSizeCategoryDidChangeNotification
   [[NSNotificationCenter defaultCenter] removeObserver:self
                                                   name:UIContentSizeCategoryDidChangeNotification
@@ -185,11 +195,23 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
     _titleFont = [MDCFeatureHighlightView defaultTitleFont];
   }
   if (_mdc_adjustsFontForContentSizeCategory) {
-    _titleLabel.font =
-        [_titleFont mdc_fontSizedForMaterialTextStyle:kTitleTextStyle
-                                scaledForDynamicType:_mdc_adjustsFontForContentSizeCategory];
+    if (_titleFont.mdc_scalingCurve && !_mdc_legacyFontScaling) {
+      // The font has an associated curve (M2+)
+      _titleLabel.font = [_titleFont mdc_scaledFontForCurrentSizeCategory];
+    } else {
+      // The original (M1) custom font + DT implementation
+      _titleLabel.font =
+          [_titleFont mdc_fontSizedForMaterialTextStyle:kTitleTextStyle
+                                   scaledForDynamicType:_mdc_adjustsFontForContentSizeCategory];
+    }
   } else {
     _titleLabel.font = _titleFont;
+  }
+
+  if (_titleLabel.attributedText) {
+    NSMutableAttributedString *attributedString = [_titleLabel.attributedText mutableCopy];
+    [self setFont:_titleFont forAttributedString:attributedString];
+    _titleLabel.attributedText = attributedString;
   }
 
   [self setNeedsLayout];
@@ -212,12 +234,25 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
     _bodyFont = [MDCFeatureHighlightView defaultBodyFont];
   }
   if (_mdc_adjustsFontForContentSizeCategory) {
-    _bodyLabel.font =
-        [_bodyFont mdc_fontSizedForMaterialTextStyle:kBodyTextStyle
-                                scaledForDynamicType:_mdc_adjustsFontForContentSizeCategory];
+    if (_bodyFont.mdc_scalingCurve && !_mdc_legacyFontScaling) {
+      // The font has an associated curve (M2+)
+      _bodyLabel.font = [_bodyFont mdc_scaledFontForCurrentSizeCategory];
+    } else {
+      // The original (M1) custom font + DT implementation
+      _bodyLabel.font =
+          [_bodyFont mdc_fontSizedForMaterialTextStyle:kBodyTextStyle
+                                  scaledForDynamicType:_mdc_adjustsFontForContentSizeCategory];
+    }
   } else {
     _bodyLabel.font = _bodyFont;
   }
+
+  if (_bodyLabel.attributedText) {
+    NSMutableAttributedString *attributedString = [_bodyLabel.attributedText mutableCopy];
+    [self setFont:_bodyFont forAttributedString:attributedString];
+    _bodyLabel.attributedText = attributedString;
+  }
+
   [self setNeedsLayout];
 }
 
@@ -284,6 +319,13 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
   _displayedView = displayedView;
   [self addSubview:_displayedView];
   _displayedView.layer.mask = _displayMaskLayer;
+}
+
+- (NSArray *)accessibilityElements {
+  if (_displayedView) {
+    return @[ _titleLabel, _bodyLabel, _displayedView, _accessibilityView ];
+  }
+  return @[ _titleLabel, _bodyLabel, _accessibilityView ];
 }
 
 - (void)setHighlightPoint:(CGPoint)highlightPoint {
@@ -356,7 +398,7 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
 
   CGFloat leftTextBound = kMDCFeatureHighlightTextPadding;
   CGFloat rightTextBound = self.frame.size.width - MAX(titleSize.width, detailSize.width) -
-      kMDCFeatureHighlightTextPadding;
+                           kMDCFeatureHighlightTextPadding;
   CGPoint titlePos = CGPointMake(0, 0);
   titlePos.x = MIN(MAX(_highlightCenter.x - textWidth / 2, leftTextBound), rightTextBound);
   if (topHalf) {
@@ -390,6 +432,21 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
 
   // Use the larger of the two radii to ensure everything is encircled.
   _outerRadius = MAX(minTextRadius, minInnerHighlightRadius);
+
+  // To support dynamic color
+  _pulseLayer.fillColor = _innerHighlightColor.CGColor;
+  _innerLayer.fillColor = _innerHighlightColor.CGColor;
+  _outerLayer.fillColor = _outerHighlightColor.CGColor;
+
+  _accessibilityView.accessibilityFrame = self.bounds;
+}
+
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+  [super traitCollectionDidChange:previousTraitCollection];
+
+  if (self.traitCollectionDidChangeBlock) {
+    self.traitCollectionDidChangeBlock(self, previousTraitCollection);
+  }
 }
 
 - (void)didTapView:(UITapGestureRecognizer *)tapGestureRecognizer {
@@ -511,15 +568,36 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
 
 - (void)animatePulse {
   NSArray *keyTimes = @[ @0, @0.5, @1 ];
-  id pulseColorStart =
+  __block id pulseColorStart;
+  __block id pulseColorEnd;
+#if MDC_AVAILABLE_SDK_IOS(13_0)
+  if (@available(iOS 13.0, *)) {
+    [self.traitCollection performAsCurrentTraitCollection:^{
+      pulseColorStart =
+          (__bridge id)
+              [self.innerHighlightColor colorWithAlphaComponent:kMDCFeatureHighlightPulseStartAlpha]
+                  .CGColor;
+      pulseColorEnd = (__bridge id)[self.innerHighlightColor colorWithAlphaComponent:0].CGColor;
+    }];
+  } else {
+    pulseColorStart =
+        (__bridge id)
+            [_innerHighlightColor colorWithAlphaComponent:kMDCFeatureHighlightPulseStartAlpha]
+                .CGColor;
+    pulseColorEnd = (__bridge id)[_innerHighlightColor colorWithAlphaComponent:0].CGColor;
+  }
+#else
+  pulseColorStart =
       (__bridge id)
           [_innerHighlightColor colorWithAlphaComponent:kMDCFeatureHighlightPulseStartAlpha]
               .CGColor;
-  id pulseColorEnd = (__bridge id)[_innerHighlightColor colorWithAlphaComponent:0].CGColor;
+  pulseColorEnd = (__bridge id)[_innerHighlightColor colorWithAlphaComponent:0].CGColor;
+#endif  // MDC_AVAILABLE_SDK_IOS(13_0)
+
   CGFloat radius = _innerRadius;
 
   [CATransaction begin];
-  [CATransaction setAnimationDuration:1.0f];
+  [CATransaction setAnimationDuration:1];
   [CATransaction setAnimationTimingFunction:[CAMediaTimingFunction
                                                 functionWithName:kCAMediaTimingFunctionEaseOut]];
   CGFloat innerBloomRadius = radius + kMDCFeatureHighlightInnerRadiusBloomAmount;
@@ -587,6 +665,10 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
   }
 }
 
+- (UIButton *)accessibilityDismissView {
+  return _accessibilityView;
+}
+
 #pragma mark - Dynamic Type Support
 
 - (BOOL)mdc_adjustsFontForContentSizeCategory {
@@ -611,29 +693,42 @@ static inline CGPoint CGPointAddedToPoint(CGPoint a, CGPoint b) {
   [self updateBodyFont];
 }
 
+- (void)setAdjustsFontForContentSizeCategory:(BOOL)adjustsFontForContentSizeCategory {
+  _adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
+  self.titleLabel.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
+  self.bodyLabel.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
+}
+
 // Handles UIContentSizeCategoryDidChangeNotifications
 - (void)contentSizeCategoryDidChange:(__unused NSNotification *)notification {
   [self updateTitleFont];
   [self updateBodyFont];
 }
 
+- (void)setFont:(UIFont *)font forAttributedString:(NSMutableAttributedString *)attributedString {
+  [attributedString beginEditing];
+  NSRange range = NSMakeRange(0, attributedString.length);
+  [attributedString removeAttribute:NSFontAttributeName range:range];
+  [attributedString addAttribute:NSFontAttributeName value:font range:range];
+  [attributedString endEditing];
+}
+
 #pragma mark - UIGestureRecognizerDelegate (Tap)
 
 - (BOOL)gestureRecognizer:(__unused UIGestureRecognizer *)gestureRecognizer
     shouldRecognizeSimultaneouslyWithGestureRecognizer:
-        (__unused UIGestureRecognizer *)otherGestureRecognizer
-{
+        (__unused UIGestureRecognizer *)otherGestureRecognizer {
   return YES;
 }
 
 #pragma mark - UIAccessibility
 
 - (void)setAccessibilityHint:(NSString *)accessibilityHint {
-  _titleLabel.accessibilityHint = accessibilityHint;
+  _accessibilityView.accessibilityHint = accessibilityHint;
 }
 
 - (NSString *)accessibilityHint {
-  return _titleLabel.accessibilityHint;
+  return _accessibilityView.accessibilityHint;
 }
 
 @end

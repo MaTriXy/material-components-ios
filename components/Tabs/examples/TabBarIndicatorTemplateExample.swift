@@ -1,26 +1,26 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
 import CoreGraphics
 
-import MaterialComponents.MaterialAppBar
-import MaterialComponents.MaterialColorScheme
+import MaterialComponents.MaterialAppBar_ColorThemer
+import MaterialComponents.MaterialAppBar_TypographyThemer
+import MaterialComponents.MaterialButtons
+import MaterialComponents.MaterialContainerScheme
 import MaterialComponents.MaterialTabs
-import MaterialComponents.MaterialTabs_ColorThemer
+import MaterialComponents.MaterialTabs_Theming
 
 class TabBarIndicatorTemplateExample: UIViewController {
 
@@ -42,21 +42,20 @@ class TabBarIndicatorTemplateExample: UIViewController {
       tabBar.itemAppearance = newValue
 
       // itemAppearance affects the height of the tab bar.
-      appBar.headerStackView.setNeedsLayout()
+      appBarViewController.headerStackView.setNeedsLayout()
     }
   }
 
   lazy var alignmentButton: MDCButton = self.makeAlignmentButton()
   lazy var appearanceButton: MDCButton = self.makeAppearanceButton()
-  lazy var appBar: MDCAppBar = self.makeAppBar()
-  var colorScheme = MDCSemanticColorScheme()
-  var typographyScheme = MDCTypographyScheme()
+  lazy var appBarViewController: MDCAppBarViewController = self.makeAppBar()
+  @objc var containerScheme = MDCContainerScheme()
 
   lazy var tabBar: MDCTabBar = {
     let tabBar = MDCTabBar()
     tabBar.alignment = .justified
 
-    MDCTabBarColorThemer.applySemanticColorScheme(self.colorScheme, toTabs: tabBar);
+    tabBar.applyPrimaryTheme(withScheme: containerScheme)
 
     let bundle = Bundle(for: TabBarIndicatorTemplateExample.self)
     let info = UIImage.init(named: "TabBarDemo_ic_info", in: bundle, compatibleWith:nil)
@@ -95,10 +94,16 @@ class TabBarIndicatorTemplateExample: UIViewController {
       self,
       action: #selector(changeAppearance),
       for: .touchUpInside)
+
+    MDCAppBarColorThemer.applyColorScheme(containerScheme.colorScheme, to: self.appBarViewController)
+    MDCAppBarTypographyThemer.applyTypographyScheme(containerScheme.typographyScheme,
+                                                    to: self.appBarViewController)
   }
 
   @objc func changeAlignmentDidTouch(sender: UIButton) {
     let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+    sheet.popoverPresentationController?.sourceView = self.alignmentButton
+    sheet.popoverPresentationController?.sourceRect = self.alignmentButton.bounds
     sheet.addAction(UIAlertAction(title: "Leading", style: .default, handler: { _ in
       self.alignment = .leading
     }))
@@ -116,6 +121,8 @@ class TabBarIndicatorTemplateExample: UIViewController {
 
   @objc func changeAppearance(fromSender sender: UIButton) {
     let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+    sheet.popoverPresentationController?.sourceView = self.appearanceButton
+    sheet.popoverPresentationController?.sourceRect = self.appearanceButton.bounds
     sheet.addAction(UIAlertAction(title: "Titles", style: .default, handler: { _ in
       self.itemAppearance = .titles
     }))

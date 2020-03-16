@@ -1,21 +1,22 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
- http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
+#import <MDFInternationalization/MDFInternationalization.h>
 #import "MaterialIcons+ic_arrow_back.h"
+#import "MaterialNavigationBar+ColorThemer.h"
 #import "MaterialNavigationBar.h"
 #import "MaterialTextFields.h"
-#import "MaterialNavigationBar+ColorThemer.h"
-#import <MDFInternationalization/MDFInternationalization.h>
 
 @interface NavigationBarLayoutExample : UIViewController <UITextFieldDelegate>
 
@@ -36,7 +37,8 @@
 - (id)init {
   self = [super init];
   if (self) {
-    self.colorScheme = [[MDCSemanticColorScheme alloc] init];
+    self.colorScheme =
+        [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
   }
   return self;
 }
@@ -98,42 +100,43 @@
   [self.view addSubview:self.trailingItemField];
   [self.view addSubview:self.titleField];
 
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
   if (@available(iOS 11.0, *)) {
-    [self.view.safeAreaLayoutGuide.topAnchor constraintEqualToAnchor:self.navigationBar.topAnchor].active = YES;
+    [self.view.safeAreaLayoutGuide.topAnchor constraintEqualToAnchor:self.navigationBar.topAnchor]
+        .active = YES;
   } else {
-#endif
     [NSLayoutConstraint constraintWithItem:self.topLayoutGuide
                                  attribute:NSLayoutAttributeBottom
                                  relatedBy:NSLayoutRelationEqual
                                     toItem:self.navigationBar
                                  attribute:NSLayoutAttributeTop
                                 multiplier:1.0
-                                  constant:0].active = YES;
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
+                                  constant:0]
+        .active = YES;
   }
-#endif
   [NSLayoutConstraint constraintWithItem:self.navigationBar
                                attribute:NSLayoutAttributeBottom
                                relatedBy:NSLayoutRelationEqual
                                   toItem:self.leadingItemField
                                attribute:NSLayoutAttributeTop
                               multiplier:1.0
-                                constant:0].active = YES;
+                                constant:0]
+      .active = YES;
   [NSLayoutConstraint constraintWithItem:self.leadingItemField
                                attribute:NSLayoutAttributeBottom
                                relatedBy:NSLayoutRelationEqual
                                   toItem:self.titleField
                                attribute:NSLayoutAttributeTop
                               multiplier:1.0
-                                constant:0].active = YES;
+                                constant:0]
+      .active = YES;
   [NSLayoutConstraint constraintWithItem:self.titleField
                                attribute:NSLayoutAttributeBottom
                                relatedBy:NSLayoutRelationEqual
                                   toItem:self.trailingItemField
                                attribute:NSLayoutAttributeTop
                               multiplier:1.0
-                                constant:0].active = YES;
+                                constant:0]
+      .active = YES;
 
   NSDictionary *viewsBindings = NSDictionaryOfVariableBindings(_navigationBar, _leadingItemField,
                                                                _titleField, _trailingItemField);
@@ -181,8 +184,8 @@
 - (BOOL)textField:(UITextField *)textField
     shouldChangeCharactersInRange:(NSRange)range
                 replacementString:(NSString *)string {
-  NSString *finishedString =
-      [textField.text stringByReplacingCharactersInRange:range withString:string];
+  NSString *finishedString = [textField.text stringByReplacingCharactersInRange:range
+                                                                     withString:string];
 
   // MDCNavigationBar doesn't handle BarButtonItems with no image and zero-length strings
   if (finishedString.length == 0) {
@@ -215,20 +218,16 @@
 
 @implementation NavigationBarLayoutExample (CatalogByConvention)
 
-+ (NSArray *)catalogBreadcrumbs {
-  return @[ @"Navigation Bar", @"Navigation Bar Item Layout" ];
-}
-
-+ (BOOL)catalogIsPrimaryDemo {
-  return NO;
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Navigation Bar", @"Navigation Bar Item Layout" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+  };
 }
 
 - (BOOL)catalogShouldHideNavigation {
   return YES;
-}
-
-+ (BOOL)catalogIsPresentable {
-  return NO;
 }
 
 @end

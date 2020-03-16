@@ -1,20 +1,21 @@
-/*
- Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
+
+import MaterialComponents.MaterialCards
+import MaterialComponents.MaterialShapeLibrary
 
 @available(iOS 9.0, *)
 class CardView: MDCCard {
@@ -147,7 +148,7 @@ class ShapedCardViewController: UIViewController {
     secondarySlider.sendActions(for: .valueChanged)
   }
 
-  func didChangeSliderValue(slider: UISlider) {
+  @objc func didChangeSliderValue(slider: UISlider) {
     if let shape = card.shapeGenerator as? MDCRectangleShapeGenerator {
       if slider == primarySlider {
         let cutCornerTreatment = MDCCutCornerTreatment(cut: CGFloat(slider.value))
@@ -161,15 +162,7 @@ class ShapedCardViewController: UIViewController {
     }
   }
 
-  override public var traitCollection: UITraitCollection {
-    if UIDevice.current.userInterfaceIdiom == .pad && UIDevice.current.orientation.isPortrait {
-      return UITraitCollection(traitsFrom:[UITraitCollection(horizontalSizeClass: .compact),
-                                           UITraitCollection(verticalSizeClass: .regular)])
-    }
-    return super.traitCollection
-  }
-
-  func changeShape() {
+  @objc func changeShape() {
     primarySlider.isHidden = true
     secondarySlider.isHidden = true
     switch(card.shapeGenerator) {
@@ -177,16 +170,16 @@ class ShapedCardViewController: UIViewController {
       let shapeGenerator = MDCCurvedRectShapeGenerator(cornerSize: CGSize(width: 50,
                                                                           height: 100))
       card.shapeGenerator = shapeGenerator
-      card.contentView.layoutMargins = UIEdgeInsetsMake(0, 40, 0, 40)
+      card.contentView.layoutMargins = UIEdgeInsets(top: 0, left: 40, bottom: 0, right: 40)
     case is MDCCurvedRectShapeGenerator:
       let shapeGenerator = MDCPillShapeGenerator()
       card.shapeGenerator = shapeGenerator
-      card.contentView.layoutMargins = UIEdgeInsetsMake(0, 80, 0, 80)
+      card.contentView.layoutMargins = UIEdgeInsets(top: 0, left: 80, bottom: 0, right: 80)
     case is MDCPillShapeGenerator:
       let shapeGenerator = MDCSlantedRectShapeGenerator()
       shapeGenerator.slant = 40
       card.shapeGenerator = shapeGenerator
-      card.contentView.layoutMargins = UIEdgeInsetsMake(0, 40, 0, 40)
+      card.contentView.layoutMargins = UIEdgeInsets(top: 0, left: 40, bottom: 0, right: 40)
     case is MDCSlantedRectShapeGenerator:
       fallthrough
     default:
@@ -205,21 +198,18 @@ class ShapedCardViewController: UIViewController {
     let triangleEdgeTreatment = MDCTriangleEdgeTreatment(size: 0, style: MDCTriangleEdgeStyleCut)
     shapeGenerator.setEdges(triangleEdgeTreatment)
     card.shapeGenerator = shapeGenerator
-    card.contentView.layoutMargins = UIEdgeInsetsMake(0, 5, 0, 5)
+    card.contentView.layoutMargins = UIEdgeInsets(top: 0, left: 5, bottom: 0, right: 5)
   }
 }
 
 @available(iOS 9.0, *)
 extension ShapedCardViewController {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["Cards", "Shaped Card"]
-  }
 
-  @objc class func catalogIsPresentable() -> Bool {
-    return false
-  }
-
-  @objc class func catalogIsDebug() -> Bool {
-    return false
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["Cards", "Shaped Card"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 }

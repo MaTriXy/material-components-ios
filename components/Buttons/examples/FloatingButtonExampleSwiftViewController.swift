@@ -1,26 +1,30 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
+
+import MaterialComponents.MaterialButtons
+import MaterialComponents.MaterialContainerScheme
+import MaterialComponents.MaterialButtons_Theming
 
 class FloatingButtonExampleSwiftViewController: UIViewController {
 
   let miniFloatingButton = MDCFloatingButton(frame: .zero, shape: .mini)
   let defaultFloatingButton = MDCFloatingButton()
   let largeIconFloatingButton = MDCFloatingButton()
+
+  var containerScheme = MDCContainerScheme()
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -35,16 +39,22 @@ class FloatingButtonExampleSwiftViewController: UIViewController {
     miniFloatingButton.translatesAutoresizingMaskIntoConstraints = false
     miniFloatingButton.setMinimumSize(CGSize(width: 96, height: 40), for: .mini, in: .expanded)
     miniFloatingButton.setImage(plusImage, for: .normal)
+    miniFloatingButton.accessibilityLabel = "Create"
+    miniFloatingButton.applySecondaryTheme(withScheme: containerScheme)
 
     defaultFloatingButton.sizeToFit()
     defaultFloatingButton.translatesAutoresizingMaskIntoConstraints = false
     defaultFloatingButton.setImage(plusImage, for: .normal)
+    defaultFloatingButton.accessibilityLabel = "Create"
+    defaultFloatingButton.applySecondaryTheme(withScheme: containerScheme)
 
     largeIconFloatingButton.sizeToFit()
     largeIconFloatingButton.translatesAutoresizingMaskIntoConstraints = false
     largeIconFloatingButton.setImage(plusImage36, for: .normal)
-    largeIconFloatingButton.setContentEdgeInsets(UIEdgeInsetsMake(-6, -6, -6, 0), for: .default,
+    largeIconFloatingButton.accessibilityLabel = "Create"
+    largeIconFloatingButton.setContentEdgeInsets(UIEdgeInsets(top: -6, left: -6, bottom: -6, right: 0), for: .default,
                                                  in: .expanded)
+    largeIconFloatingButton.applySecondaryTheme(withScheme: containerScheme)
 
     let label = UILabel()
     label.translatesAutoresizingMaskIntoConstraints = false
@@ -105,12 +115,13 @@ class FloatingButtonExampleSwiftViewController: UIViewController {
 }
 
 extension FloatingButtonExampleSwiftViewController {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["Buttons", "Floating Action Button (Swift)"]
-  }
 
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return false
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["Buttons", "Floating Action Button (Swift)"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 }
 

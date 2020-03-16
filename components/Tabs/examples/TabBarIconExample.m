@@ -1,28 +1,26 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import "supplemental/TabBarIconExampleSupplemental.h"
 
 #import "MaterialAppBar.h"
-#import "MaterialColorScheme.h"
+#import "MaterialContainerScheme.h"
+#import "MaterialTabs+Theming.h"
 #import "MaterialTabs.h"
-#import "MaterialTabs+ColorThemer.h"
 
 @interface TabBarIconExample ()
-@property(nonatomic, strong)UIBarButtonItem *addStarButtonItem;
+@property(nonatomic, strong) UIBarButtonItem *addStarButtonItem;
 @end
 
 @implementation TabBarIconExample
@@ -30,8 +28,7 @@
 - (id)init {
   self = [super init];
   if (self) {
-    self.colorScheme = [[MDCSemanticColorScheme alloc] init];
-    self.typographyScheme = [[MDCTypographyScheme alloc] init];
+    _containerScheme = [[MDCContainerScheme alloc] init];
   }
   return self;
 }
@@ -79,10 +76,12 @@
   tabBar.alignment = MDCTabBarAlignmentCenterSelected;
 
   NSBundle *bundle = [NSBundle bundleForClass:[TabBarIconExample class]];
-  UIImage *infoImage =
-      [UIImage imageNamed:@"TabBarDemo_ic_info" inBundle:bundle compatibleWithTraitCollection:nil];
-  UIImage *starImage =
-      [UIImage imageNamed:@"TabBarDemo_ic_star" inBundle:bundle compatibleWithTraitCollection:nil];
+  UIImage *infoImage = [UIImage imageNamed:@"TabBarDemo_ic_info"
+                                  inBundle:bundle
+             compatibleWithTraitCollection:nil];
+  UIImage *starImage = [UIImage imageNamed:@"TabBarDemo_ic_star"
+                                  inBundle:bundle
+             compatibleWithTraitCollection:nil];
   tabBar.items = @[
     [[UITabBarItem alloc] initWithTitle:@"Info" image:infoImage tag:0],
     [[UITabBarItem alloc] initWithTitle:@"Stars" image:starImage tag:0]
@@ -91,14 +90,14 @@
   // Give the second item a badge
   [tabBar.items[1] setBadgeValue:@"1"];
 
-  [MDCTabBarColorThemer applySemanticColorScheme:self.colorScheme toTabs:tabBar];
+  [tabBar applyPrimaryThemeWithScheme:self.containerScheme];
 
-  tabBar.inkColor = [[UIColor whiteColor] colorWithAlphaComponent:0.1f];
+  tabBar.inkColor = [[UIColor whiteColor] colorWithAlphaComponent:(CGFloat)0.1];
   tabBar.itemAppearance = MDCTabBarItemAppearanceTitledImages;
 
   self.tabBar = tabBar;
-  self.appBar.headerStackView.bottomBar = self.tabBar;
-  [self.appBar.headerStackView setNeedsLayout];
+  self.appBarViewController.headerStackView.bottomBar = self.tabBar;
+  [self.appBarViewController.headerStackView setNeedsLayout];
 }
 
 - (void)changeAlignment:(id)sender {
@@ -106,6 +105,8 @@
       [UIAlertController alertControllerWithTitle:nil
                                           message:nil
                                    preferredStyle:UIAlertControllerStyleActionSheet];
+  sheet.popoverPresentationController.sourceView = self.alignmentButton;
+  sheet.popoverPresentationController.sourceRect = self.alignmentButton.bounds;
   [sheet addAction:[UIAlertAction actionWithTitle:@"Leading"
                                             style:UIAlertActionStyleDefault
                                           handler:^(UIAlertAction *_Nonnull action) {

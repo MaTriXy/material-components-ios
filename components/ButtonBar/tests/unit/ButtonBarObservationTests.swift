@@ -1,18 +1,16 @@
-/*
- Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import XCTest
 import MaterialComponents.MaterialButtonBar
@@ -47,7 +45,7 @@ class ButtonBarObservationTests: XCTestCase {
     buttonBar.layoutSubviews()
 
     // Then
-    let titles = buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.title(for: .normal) }
+    let titles = buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.title(for: .normal) }
     XCTAssertEqual(titles, [item.title!])
   }
 
@@ -62,7 +60,7 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let images =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.image(for: .normal) }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.image(for: .normal) }
     XCTAssertEqual(images, [item.image!])
   }
 
@@ -83,22 +81,22 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let accessibilityHints =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityHint }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityHint }
     XCTAssertEqual(accessibilityHints, [item.accessibilityHint!])
     let accessibilityIdentifiers =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityIdentifier }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityIdentifier }
     XCTAssertEqual(accessibilityIdentifiers, [item.accessibilityIdentifier!])
     let accessibilityLabels =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityLabel }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityLabel }
     XCTAssertEqual(accessibilityLabels, [item.accessibilityLabel!])
     let accessibilityValues =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityValue }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityValue }
     XCTAssertEqual(accessibilityValues, [item.accessibilityValue!])
-    let enabled = buttonBar.subviews.flatMap { $0 as? MDCButton }.map { $0.isEnabled }
+    let enabled = buttonBar.subviews.compactMap { $0 as? MDCButton }.map { $0.isEnabled }
     XCTAssertEqual(enabled, [item.isEnabled])
-    let tags = buttonBar.subviews.flatMap { $0 as? MDCButton }.map { $0.tag }
+    let tags = buttonBar.subviews.compactMap { $0 as? MDCButton }.map { $0.tag }
     XCTAssertEqual(tags, [item.tag])
-    let tintColors = buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.tintColor }
+    let tintColors = buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.tintColor }
     XCTAssertEqual(tintColors, [item.tintColor!])
   }
 
@@ -116,7 +114,7 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let accessibilityLabels =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityHint }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityHint }
     XCTAssertEqual(accessibilityLabels, [item.accessibilityHint!])
   }
 
@@ -132,7 +130,7 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let accessibilityIdentifiers =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityIdentifier }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityIdentifier }
     XCTAssertEqual(accessibilityIdentifiers, [item.accessibilityIdentifier!])
   }
 
@@ -148,7 +146,7 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let accessibilityLabels =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityLabel }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityLabel }
     XCTAssertEqual(accessibilityLabels, [item.accessibilityLabel!])
   }
 
@@ -164,7 +162,7 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let accessibilityValues =
-        buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.accessibilityValue }
+        buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.accessibilityValue }
     XCTAssertEqual(accessibilityValues, [item.accessibilityValue!])
   }
 
@@ -179,7 +177,7 @@ class ButtonBarObservationTests: XCTestCase {
     item.isEnabled = false
 
     // Then
-    let enabled = buttonBar.subviews.flatMap { $0 as? MDCButton }.map { $0.isEnabled }
+    let enabled = buttonBar.subviews.compactMap { $0 as? MDCButton }.map { $0.isEnabled }
     XCTAssertEqual(enabled, [item.isEnabled])
   }
 
@@ -195,7 +193,7 @@ class ButtonBarObservationTests: XCTestCase {
 
     // Then
     let images =
-      buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.image(for: .normal) }
+      buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.image(for: .normal) }
     XCTAssertEqual(images, [item.image!])
   }
 
@@ -210,7 +208,7 @@ class ButtonBarObservationTests: XCTestCase {
     item.tag = 50
 
     // Then
-    let tags = buttonBar.subviews.flatMap { $0 as? MDCButton }.map { $0.tag }
+    let tags = buttonBar.subviews.compactMap { $0 as? MDCButton }.map { $0.tag }
     XCTAssertEqual(tags, [item.tag])
   }
 
@@ -225,14 +223,14 @@ class ButtonBarObservationTests: XCTestCase {
     item.tintColor = .red
 
     // Then
-    let tintColors = buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.tintColor }
+    let tintColors = buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.tintColor }
     XCTAssertEqual(tintColors, [item.tintColor!])
 
     // Verify that the tint color reverts to the default
     item.tintColor = nil
 
     do {
-      let tintColors = buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.tintColor }
+      let tintColors = buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.tintColor }
       XCTAssertEqual(tintColors, [buttonBar.tintColor])
     }
   }
@@ -248,7 +246,7 @@ class ButtonBarObservationTests: XCTestCase {
     item.tintColor = nil
 
     // Then
-    let tintColors = buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.tintColor }
+    let tintColors = buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.tintColor }
     XCTAssertEqual(tintColors, [buttonBar.tintColor])
   }
 
@@ -262,7 +260,7 @@ class ButtonBarObservationTests: XCTestCase {
     item.title = "NEW TITLE"
 
     // Then
-    let titles = buttonBar.subviews.flatMap { $0 as? MDCButton }.flatMap { $0.title(for: .normal) }
+    let titles = buttonBar.subviews.compactMap { $0 as? MDCButton }.compactMap { $0.title(for: .normal) }
     XCTAssertEqual(titles, [item.title!])
   }
 

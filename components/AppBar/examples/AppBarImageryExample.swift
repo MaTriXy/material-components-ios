@@ -1,31 +1,34 @@
-/*
-Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import Foundation
 import MaterialComponents.MaterialAppBar
-import MaterialComponents.MaterialAppBar_ColorThemer
+import MaterialComponents.MaterialAppBar_Theming
 
 class AppBarImagerySwiftExample: UITableViewController {
-  let appBar = MDCAppBar()
-  var colorScheme = MDCSemanticColorScheme()
+  let appBarViewController = MDCAppBarViewController()
+  @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
+
+  deinit {
+    // Required for pre-iOS 11 devices because we've enabled observesTrackingScrollViewScrollEvents.
+    appBarViewController.headerView.trackingScrollView = nil
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
 
-    let headerView = appBar.headerViewController.headerView
+    let headerView = appBarViewController.headerView
 
     // Create our custom image view and add it to the header view.
     let imageView = UIImageView(image: self.headerBackgroundImage())
@@ -43,18 +46,21 @@ class AppBarImagerySwiftExample: UITableViewController {
     // The header view does not clip to bounds by default so we ensure that the image is clipped.
     imageView.clipsToBounds = true
 
-    MDCAppBarColorThemer.applySemanticColorScheme(colorScheme, to: appBar)
+    appBarViewController.applyPrimaryTheme(withScheme: containerScheme)
 
     // Make sure navigation bar background color is clear so the image view is visible.
-    appBar.navigationBar.backgroundColor = UIColor.clear
+    appBarViewController.navigationBar.backgroundColor = UIColor.clear
 
     // Allow the header to show more of the image.
     headerView.maximumHeight = 200
 
-    headerView.trackingScrollView = self.tableView
-    self.tableView.delegate = appBar.headerViewController
+    // Allows us to avoid forwarding events, but means we can't enable shift behaviors.
+    headerView.observesTrackingScrollViewScrollEvents = true
 
-    appBar.addSubviewsToParent()
+    headerView.trackingScrollView = self.tableView
+
+    view.addSubview(appBarViewController.view)
+    appBarViewController.didMove(toParent: self)
   }
 
   override var preferredStatusBarStyle: UIStatusBarStyle {
@@ -69,7 +75,11 @@ class AppBarImagerySwiftExample: UITableViewController {
 
     self.title = "Imagery (Swift)"
 
-    self.addChildViewController(appBar.headerViewController)
+    // Behavioral flags.
+    appBarViewController.inferTopSafeAreaInsetFromViewController = true
+    appBarViewController.headerView.minMaxHeightIncludesSafeArea = false
+
+    self.addChild(appBarViewController)
   }
 
   required init?(coder aDecoder: NSCoder) {
@@ -85,15 +95,16 @@ class AppBarImagerySwiftExample: UITableViewController {
 
 // MARK: Catalog by convention
 extension AppBarImagerySwiftExample {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["App Bar", "Imagery (Swift)"]
+
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["App Bar", "Imagery (Swift)"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return false
-  }
-
-  func catalogShouldHideNavigation() -> Bool {
+  @objc func catalogShouldHideNavigation() -> Bool {
     return true
   }
 }
@@ -110,11 +121,10 @@ extension AppBarImagerySwiftExample {
   override func tableView(
     _ tableView: UITableView,
     cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-      var cell = self.tableView.dequeueReusableCell(withIdentifier: "cell")
-      if cell == nil {
-        cell = UITableViewCell(style: .default, reuseIdentifier: "cell")
-      }
-      cell!.layoutMargins = UIEdgeInsets.zero
-      return cell!
+    
+    let cell = self.tableView.dequeueReusableCell(withIdentifier: "cell") ??
+        UITableViewCell(style: .default, reuseIdentifier: "cell")
+    cell.selectionStyle = .none
+    return cell
   }
 }

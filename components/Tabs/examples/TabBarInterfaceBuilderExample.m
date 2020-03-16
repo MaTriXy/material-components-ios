@@ -1,40 +1,38 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialColorScheme.h"
+#import "MaterialContainerScheme.h"
 #import "MaterialPalettes.h"
+#import "MaterialTabs+Theming.h"
 #import "MaterialTabs.h"
-#import "MaterialTabs+ColorThemer.h"
 
 @interface TabBarInterfaceBuilderExample : UIViewController <MDCTabBarDelegate>
 
 @property(weak, nonatomic) IBOutlet MDCTabBar *tabBar;
 @property(nonatomic) NSArray<UIColor *> *colors;
-@property(nonatomic, strong) MDCSemanticColorScheme *colorScheme;
+@property(nonatomic, strong) MDCContainerScheme *containerScheme;
 
 @end
 
 @implementation TabBarInterfaceBuilderExample
 
-- (id)init {
-  self = [super init];
+- (id)initWithCoder:(NSCoder *)aDecoder {
+  self = [super initWithCoder:aDecoder];
   if (self) {
-    self.colorScheme = [[MDCSemanticColorScheme alloc] init];
+    _containerScheme = [[MDCContainerScheme alloc] init];
   }
   return self;
 }
@@ -50,12 +48,12 @@
   ];
 
   self.colors = @[
-    MDCPalette.bluePalette.tint500, MDCPalette.pinkPalette.tint500,
-    MDCPalette.redPalette.tint500, MDCPalette.greenPalette.tint500
+    MDCPalette.bluePalette.tint500, MDCPalette.pinkPalette.tint500, MDCPalette.redPalette.tint500,
+    MDCPalette.greenPalette.tint500
   ];
 
-  [MDCTabBarColorThemer applySemanticColorScheme:self.colorScheme toTabs:self.tabBar];
-  
+  [self.tabBar applyPrimaryThemeWithScheme:self.containerScheme];
+
   self.view.backgroundColor = self.colors[0];
 }
 
@@ -72,6 +70,8 @@
       [UIAlertController alertControllerWithTitle:nil
                                           message:nil
                                    preferredStyle:UIAlertControllerStyleActionSheet];
+  sheet.popoverPresentationController.sourceView = sender;
+  sheet.popoverPresentationController.sourceRect = sender.bounds;
   [sheet addAction:[UIAlertAction actionWithTitle:@"Leading"
                                             style:UIAlertActionStyleDefault
                                           handler:^(UIAlertAction *_Nonnull action) {
@@ -109,20 +109,13 @@
 
 @implementation TabBarInterfaceBuilderExample (CatalogByConvention)
 
-+ (NSArray *)catalogBreadcrumbs {
-  return @[ @"Tab Bar", @"Interface Builder" ];
-}
-
-+ (NSString *)catalogStoryboardName {
-  return @"TabBarInterfaceBuilderExample";
-}
-
-+ (BOOL)catalogIsPrimaryDemo {
-  return NO;
-}
-
-+ (BOOL)catalogIsPresentable {
-  return NO;
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Tab Bar", @"Interface Builder" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+    @"storyboardName" : @"TabBarInterfaceBuilderExample"
+  };
 }
 
 @end

@@ -1,23 +1,22 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import <UIKit/UIKit.h>
 
+#import "MaterialButtons+Theming.h"
 #import "MaterialButtons.h"
-#import "MaterialButtons+ColorThemer.h"
+#import "MaterialContainerScheme.h"
 
 NSString *kButtonLabel = @"Create";
 NSString *kMiniButtonLabel = @"Add";
@@ -27,7 +26,7 @@ NSString *kMiniButtonLabel = @"Add";
 @property(nonatomic, strong) MDCFloatingButton *miniFloatingButton;
 @property(nonatomic, strong) MDCFloatingButton *defaultFloatingButton;
 @property(nonatomic, strong) MDCFloatingButton *largeIconFloatingButton;
-@property(nonatomic, strong) MDCSemanticColorScheme *colorScheme;
+@property(nonatomic, strong) id<MDCContainerScheming> containerScheme;
 @end
 
 @implementation FloatingButtonExampleViewController
@@ -35,7 +34,9 @@ NSString *kMiniButtonLabel = @"Add";
 - (id)init {
   self = [super init];
   if (self) {
-    self.colorScheme = [[MDCSemanticColorScheme alloc] init];
+    MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+    containerScheme.shapeScheme = [[MDCShapeScheme alloc] init];
+    _containerScheme = containerScheme;
   }
   return self;
 }
@@ -43,7 +44,7 @@ NSString *kMiniButtonLabel = @"Add";
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  self.view.backgroundColor = [UIColor colorWithWhite:0.9f alpha:1];
+  self.view.backgroundColor = [UIColor colorWithWhite:(CGFloat)0.9 alpha:1];
 
   UIImage *plusImage =
       [[UIImage imageNamed:@"Plus"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -57,31 +58,25 @@ NSString *kMiniButtonLabel = @"Add";
 
   self.miniFloatingButton = [[MDCFloatingButton alloc] initWithFrame:CGRectZero
                                                                shape:MDCFloatingButtonShapeMini];
-  self.miniFloatingButton.translatesAutoresizingMaskIntoConstraints = NO;
   [self.miniFloatingButton setImage:plusImage forState:UIControlStateNormal];
   self.miniFloatingButton.accessibilityLabel = kMiniButtonLabel;
   [self.miniFloatingButton setMinimumSize:CGSizeMake(96, 40)
                                  forShape:MDCFloatingButtonShapeMini
                                    inMode:MDCFloatingButtonModeExpanded];
-  [MDCFloatingButtonColorThemer applySemanticColorScheme:self.colorScheme
-                                                toButton:self.miniFloatingButton];
+  [self.miniFloatingButton applySecondaryThemeWithScheme:self.containerScheme];
 
   self.defaultFloatingButton = [[MDCFloatingButton alloc] init];
-  self.defaultFloatingButton.translatesAutoresizingMaskIntoConstraints = NO;
   [self.defaultFloatingButton setImage:plusImage forState:UIControlStateNormal];
   self.defaultFloatingButton.accessibilityLabel = kButtonLabel;
-  [MDCFloatingButtonColorThemer applySemanticColorScheme:self.colorScheme
-                                                toButton:self.defaultFloatingButton];
+  [self.defaultFloatingButton applySecondaryThemeWithScheme:self.containerScheme];
 
   self.largeIconFloatingButton = [[MDCFloatingButton alloc] init];
-  self.largeIconFloatingButton.translatesAutoresizingMaskIntoConstraints = NO;
   [self.largeIconFloatingButton setImage:plusImage36 forState:UIControlStateNormal];
   self.largeIconFloatingButton.accessibilityLabel = kButtonLabel;
   [self.largeIconFloatingButton setContentEdgeInsets:UIEdgeInsetsMake(-6, -6, -6, 0)
                                             forShape:MDCFloatingButtonShapeDefault
                                               inMode:MDCFloatingButtonModeExpanded];
-  [MDCFloatingButtonColorThemer applySemanticColorScheme:self.colorScheme
-                                                toButton:self.largeIconFloatingButton];
+  [self.largeIconFloatingButton applySecondaryThemeWithScheme:self.containerScheme];
 
   [self.view addSubview:self.iPadLabel];
   [self.view addSubview:self.miniFloatingButton];
@@ -98,9 +93,9 @@ NSString *kMiniButtonLabel = @"Add";
   [self.miniFloatingButton sizeToFit];
 
   CGFloat totalUsedHeight = self.iPadLabel.intrinsicContentSize.height +
-      self.miniFloatingButton.intrinsicContentSize.height +
-      self.defaultFloatingButton.intrinsicContentSize.height +
-      self.largeIconFloatingButton.intrinsicContentSize.height;
+                            self.miniFloatingButton.intrinsicContentSize.height +
+                            self.defaultFloatingButton.intrinsicContentSize.height +
+                            self.largeIconFloatingButton.intrinsicContentSize.height;
 
   CGRect bounds = self.view.bounds;
   if (totalUsedHeight > CGRectGetHeight(bounds)) {
@@ -118,10 +113,13 @@ NSString *kMiniButtonLabel = @"Add";
   CGSize largeIconFabSize = self.largeIconFloatingButton.intrinsicContentSize;
 
   CGFloat xOffset = CGRectGetMinX(bounds) + 20;
+  if (@available(iOS 11.0, *)) {
+    xOffset += self.view.safeAreaInsets.left;
+  }
+
   if (!self.iPadLabel.hidden) {
-    self.iPadLabel.center =
-        CGPointMake(CGRectGetMidX(bounds),
-                    viewYOffset + self.iPadLabel.intrinsicContentSize.height / 2);
+    self.iPadLabel.center = CGPointMake(
+        CGRectGetMidX(bounds), viewYOffset + self.iPadLabel.intrinsicContentSize.height / 2);
     viewYOffset += self.iPadLabel.intrinsicContentSize.height + interViewSpacing;
   }
 
@@ -173,28 +171,27 @@ NSString *kMiniButtonLabel = @"Add";
 
   UITraitCollection *currentTraits = self.traitCollection;
   BOOL sizeClassChanged = currentTraits.horizontalSizeClass != newCollection.horizontalSizeClass ||
-      currentTraits.verticalSizeClass != newCollection.verticalSizeClass;
+                          currentTraits.verticalSizeClass != newCollection.verticalSizeClass;
   if (sizeClassChanged) {
     BOOL isRegularRegular = newCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular &&
-        newCollection.verticalSizeClass == UIUserInterfaceSizeClassRegular;
-    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
-      [self updateFloatingButtonsWhenSizeClassIsRegularRegular:isRegularRegular];
-    } completion:nil];
+                            newCollection.verticalSizeClass == UIUserInterfaceSizeClassRegular;
+    [coordinator
+        animateAlongsideTransition:^(
+            id<UIViewControllerTransitionCoordinatorContext> _Nonnull context) {
+          [self updateFloatingButtonsWhenSizeClassIsRegularRegular:isRegularRegular];
+        }
+                        completion:nil];
   }
 }
 
 #pragma mark - Catalog by Convention
 
-+ (NSArray<NSString *> *)catalogBreadcrumbs {
-  return @[ @"Buttons", @"Floating Action Button" ];
-}
-
-+ (BOOL)catalogIsPrimaryDemo {
-  return NO;
-}
-
-+ (BOOL)catalogIsPresentable {
-  return YES;
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Buttons", @"Floating Action Button" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @YES,
+  };
 }
 
 @end

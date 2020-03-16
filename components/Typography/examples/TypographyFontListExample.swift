@@ -1,18 +1,16 @@
-/*
-Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import MaterialComponents.MaterialTypography
 
@@ -26,7 +24,7 @@ class TypographyFontListExampleViewController: UITableViewController {
 
     self.tableView.separatorStyle = .none
 
-    self.tableView.rowHeight = UITableViewAutomaticDimension
+    self.tableView.rowHeight = UITableView.automaticDimension
     self.tableView.estimatedRowHeight = 50
   }
 
@@ -40,33 +38,33 @@ class TypographyFontListExampleViewController: UITableViewController {
 
   override func tableView(_ tableView: UITableView,
                           cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-    var cell = tableView.dequeueReusableCell(withIdentifier: "cell")
-    if cell == nil {
-      cell = UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
+    let cell = tableView.dequeueReusableCell(withIdentifier: "cell") ??
+        UITableViewCell(style: .default, reuseIdentifier: "cell")
+    
+    cell.textLabel?.text = strings[indexPath.section]
+    cell.textLabel?.font = fonts[indexPath.row]
+    cell.textLabel?.alpha = fontOpacities[indexPath.row]
+    cell.textLabel?.numberOfLines = 0
+    cell.textLabel?.lineBreakMode = .byWordWrapping
+    
+    // textLabel must be unwrapped to access 'font'.
+    if cell.textLabel!.font.pointSize > 100 && indexPath.section == 0 {
+      cell.textLabel?.text = "MDC"
     }
-    cell!.textLabel!.text = strings[indexPath.section]
-    cell!.textLabel!.font = fonts[indexPath.row]
-    cell!.textLabel!.alpha = fontOpacities[indexPath.row]
-    cell!.textLabel!.numberOfLines = 0
-    cell!.textLabel!.lineBreakMode = .byWordWrapping
 
-    if cell!.textLabel!.font.pointSize > 100 && indexPath.section == 0 {
-      cell!.textLabel!.text = "MDC"
-    }
+    cell.detailTextLabel?.text = fontStyleNames[indexPath.row]
+    cell.detailTextLabel?.font = MDCTypography.captionFont()
+    cell.detailTextLabel?.alpha = MDCTypography.captionFontOpacity()
+    cell.selectionStyle = .none
 
-    cell!.detailTextLabel!.text = fontStyleNames[indexPath.row]
-    cell!.detailTextLabel!.font = MDCTypography.captionFont()
-    cell!.detailTextLabel!.alpha = MDCTypography.captionFontOpacity()
-    cell!.selectionStyle = .none
-
-    return cell!
+    return cell
   }
 
   convenience init() {
     self.init(style: .plain)
   }
 
-  override init(style: UITableViewStyle) {
+  override init(style: UITableView.Style) {
     super.init(style: style)
 
     self.title = "Font list"
@@ -146,20 +144,14 @@ class TypographyFontListExampleViewController: UITableViewController {
 
 // MARK: - CatalogByConvention
 extension TypographyFontListExampleViewController {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["Typography and Fonts", "Typography"]
-  }
 
-  @objc class func catalogDescription() -> String {
-    return "The Typography component provides methods for displaying text using the type sizes and"
-      + " opacities from the Material Design specifications."
-  }
-
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return false
-  }
-
-  @objc class func catalogIsPresentable() -> Bool {
-    return false
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["Typography and Fonts", "Typography"],
+      "description": "The Typography component provides methods for displaying text using the "
+        + "type sizes and opacities from the Material Design specifications.",
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 }

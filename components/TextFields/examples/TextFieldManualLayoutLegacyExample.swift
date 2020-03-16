@@ -1,18 +1,16 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 // swiftlint:disable function_body_length
 
@@ -258,7 +256,7 @@ extension TextFieldManualLayoutLegacySwiftExample: UITextFieldDelegate {
 
     if textField == zip {
       if let range = fullString.rangeOfCharacter(from: CharacterSet.letters),
-        fullString[range].characterCount > 0 {
+        String(fullString[range]).characterCount > 0 {
         zipController.setErrorText("Error: Zip can only contain numbers",
                                    errorAccessibilityValue: nil)
       } else if fullString.characterCount > 5 {
@@ -269,7 +267,7 @@ extension TextFieldManualLayoutLegacySwiftExample: UITextFieldDelegate {
       }
     } else if textField == city {
       if let range = fullString.rangeOfCharacter(from: CharacterSet.decimalDigits),
-        fullString[range].characterCount > 0 {
+        String(fullString[range]).characterCount > 0 {
         cityController.setErrorText("Error: City can only contain letters",
                                     errorAccessibilityValue: nil)
       } else {
@@ -300,22 +298,22 @@ extension TextFieldManualLayoutLegacySwiftExample {
     notificationCenter.addObserver(
       self,
       selector: #selector(keyboardWillShow(notif:)),
-      name: .UIKeyboardWillShow,
+      name: UIResponder.keyboardWillShowNotification,
       object: nil)
     notificationCenter.addObserver(
       self,
       selector: #selector(keyboardWillShow(notif:)),
-      name: .UIKeyboardWillChangeFrame,
+      name: UIResponder.keyboardWillChangeFrameNotification,
       object: nil)
     notificationCenter.addObserver(
       self,
       selector: #selector(keyboardWillHide(notif:)),
-      name: .UIKeyboardWillHide,
+      name: UIResponder.keyboardWillHideNotification,
       object: nil)
   }
 
   @objc func keyboardWillShow(notif: Notification) {
-    guard let frame = notif.userInfo?[UIKeyboardFrameEndUserInfoKey] as? CGRect else {
+    guard let frame = notif.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
       return
     }
     scrollView.contentInset = UIEdgeInsets(top: 0.0,
@@ -339,11 +337,12 @@ extension TextFieldManualLayoutLegacySwiftExample {
 
 // MARK: - CatalogByConvention
 extension TextFieldManualLayoutLegacySwiftExample {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["Text Field", "[Legacy] Manual Layout (Swift)"]
-  }
 
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return false
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["Text Field", "[Legacy] Manual Layout (Swift)"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 }

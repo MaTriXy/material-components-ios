@@ -1,18 +1,16 @@
-/*
- Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import XCTest
 import MaterialComponents.MaterialAppBar
@@ -26,6 +24,7 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     // Given
     let contentViewController = UIViewController()
     let container = MDCAppBarContainerViewController(contentViewController: contentViewController)
+    container.appBar.inferTopSafeAreaInsetFromViewController = true
     container.isTopLayoutGuideAdjustmentEnabled = true
     container.appBar.headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     container.appBar.headerViewController.headerView.minimumHeight = 50
@@ -37,19 +36,18 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
     XCTAssertEqual(contentViewController.topLayoutGuide.length,
                    container.appBar.headerViewController.headerView.frame.maxY)
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
                      container.appBar.headerViewController.headerView.frame.maxY
                       - MDCDeviceTopSafeAreaInset())
     }
-    #endif
   }
 
   func testEarlyViewLoadStillAffectsTopLayoutGuide() {
     // Given
     let contentViewController = UIViewController()
     let container = MDCAppBarContainerViewController(contentViewController: contentViewController)
+    container.appBar.inferTopSafeAreaInsetFromViewController = true
     container.isTopLayoutGuideAdjustmentEnabled = true
     container.appBar.headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     container.appBar.headerViewController.headerView.minimumHeight = 50
@@ -61,13 +59,11 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
     XCTAssertEqual(contentViewController.topLayoutGuide.length,
                    container.appBar.headerViewController.headerView.frame.maxY)
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
                      container.appBar.headerViewController.headerView.frame.maxY
                       - MDCDeviceTopSafeAreaInset())
     }
-    #endif
   }
 
   // MARK: Untracked table view
@@ -76,6 +72,7 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     // Given
     let contentViewController = UITableViewController()
     let container = MDCAppBarContainerViewController(contentViewController: contentViewController)
+    container.appBar.inferTopSafeAreaInsetFromViewController = true
     container.isTopLayoutGuideAdjustmentEnabled = true
     container.appBar.headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     container.appBar.headerViewController.headerView.minimumHeight = 50
@@ -87,14 +84,12 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
     XCTAssertEqual(contentViewController.topLayoutGuide.length,
                    container.appBar.headerViewController.headerView.frame.maxY)
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
                      container.appBar.headerViewController.headerView.frame.maxY
                       - MDCDeviceTopSafeAreaInset())
       XCTAssertEqual(contentViewController.tableView.adjustedContentInset.top, 0)
     }
-    #endif
   }
 
   // MARK: Tracked table view
@@ -104,6 +99,7 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     let contentViewController = UITableViewController()
 
     let container = MDCAppBarContainerViewController(contentViewController: contentViewController)
+    container.appBar.inferTopSafeAreaInsetFromViewController = true
     container.isTopLayoutGuideAdjustmentEnabled = true
     container.appBar.headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     container.appBar.headerViewController.headerView.minimumHeight = 50
@@ -117,14 +113,11 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     // Then
     XCTAssertEqual(contentViewController.topLayoutGuide.length,
                    container.appBar.headerViewController.headerView.frame.maxY)
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top, 0)
       XCTAssertEqual(contentViewController.tableView.adjustedContentInset.top,
-                     container.appBar.headerViewController.headerView.maximumHeight
-                      + MDCDeviceTopSafeAreaInset())
+                     container.appBar.headerViewController.headerView.maximumHeight)
     }
-    #endif
   }
 
   // MARK: Untracked collection view
@@ -135,6 +128,7 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     let contentViewController = UICollectionViewController(collectionViewLayout: flow)
 
     let container = MDCAppBarContainerViewController(contentViewController: contentViewController)
+    container.appBar.inferTopSafeAreaInsetFromViewController = true
     container.isTopLayoutGuideAdjustmentEnabled = true
     container.appBar.headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     container.appBar.headerViewController.headerView.minimumHeight = 50
@@ -146,14 +140,12 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
     XCTAssertEqual(contentViewController.topLayoutGuide.length,
                    container.appBar.headerViewController.headerView.frame.maxY)
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
                      container.appBar.headerViewController.headerView.frame.maxY
                       - MDCDeviceTopSafeAreaInset())
       XCTAssertEqual(contentViewController.collectionView!.adjustedContentInset.top, 0)
     }
-    #endif
   }
 
   // MARK: Tracked collection view view
@@ -164,6 +156,7 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     let contentViewController = UICollectionViewController(collectionViewLayout: flow)
 
     let container = MDCAppBarContainerViewController(contentViewController: contentViewController)
+    container.appBar.inferTopSafeAreaInsetFromViewController = true
     container.isTopLayoutGuideAdjustmentEnabled = true
     container.appBar.headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     container.appBar.headerViewController.headerView.minimumHeight = 50
@@ -179,14 +172,11 @@ class AppBarWrappingTopLayoutGuideTests: XCTestCase {
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
     XCTAssertEqual(contentViewController.topLayoutGuide.length,
                    container.appBar.headerViewController.headerView.frame.maxY)
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top, 0)
       XCTAssertEqual(contentViewController.collectionView!.adjustedContentInset.top,
-                     container.appBar.headerViewController.headerView.maximumHeight
-                      + MDCDeviceTopSafeAreaInset())
+                     container.appBar.headerViewController.headerView.maximumHeight)
     }
-    #endif
   }
 
 }

@@ -1,21 +1,19 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import <XCTest/XCTest.h>
-#import "MDCAppBarButtonBarBuilder.h"
+#import "../../src/private/MDCAppBarButtonBarBuilder.h"
 #import "MaterialButtonBar.h"
 #import "MaterialButtons.h"
 
@@ -141,19 +139,19 @@
                                             layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
                                         layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
                                      userInterfaceIdiom:UIUserInterfaceIdiomPhone];
-  
+
   UIEdgeInsets insetsLastLeading =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPhone];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPhone];
   UIEdgeInsets insetsLastTrailing =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
-                                     layoutPosition:MDCButtonBarLayoutPositionTrailing
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPhone];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
+                                         layoutPosition:MDCButtonBarLayoutPositionTrailing
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPhone];
 
   // Then
   XCTAssertEqual(insetsFirstLeading.left, insetsFirstTrailing.right);
@@ -169,29 +167,29 @@
 
   // When
   UIEdgeInsets imageInsetsFirst =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPhone];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPhone];
   UIEdgeInsets titleInsetsFirst =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPhone];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPhone];
   UIEdgeInsets imageInsetsLast =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPhone];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPhone];
   UIEdgeInsets titleInsetsLast =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPhone];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPhone];
 
   // Then
   XCTAssertEqual(imageInsetsFirst.left, titleInsetsFirst.left);
@@ -209,29 +207,29 @@
 
   // When
   UIEdgeInsets imageInsetsFirst =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPad];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPad];
   UIEdgeInsets titleInsetsFirst =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPad];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsFirstButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPad];
   UIEdgeInsets imageInsetsLast =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPad];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:imageButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPad];
   UIEdgeInsets titleInsetsLast =
-  [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
-                                     layoutPosition:MDCButtonBarLayoutPositionLeading
-                                        layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
-                                    layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
-                                 userInterfaceIdiom:UIUserInterfaceIdiomPad];
+      [MDCAppBarButtonBarBuilder contentInsetsForButton:titleButton
+                                         layoutPosition:MDCButtonBarLayoutPositionLeading
+                                            layoutHints:MDCBarButtonItemLayoutHintsIsLastButton
+                                        layoutDirection:UIUserInterfaceLayoutDirectionLeftToRight
+                                     userInterfaceIdiom:UIUserInterfaceIdiomPad];
 
   // Then
   XCTAssertEqual(imageInsetsFirst.left, titleInsetsFirst.left);

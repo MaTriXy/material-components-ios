@@ -1,24 +1,21 @@
-/*
-Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import CatalogByConvention
 import MaterialCatalog
 
 import MaterialComponents.MaterialFlexibleHeader
-import MaterialComponents.MaterialFlexibleHeader_ColorThemer
 import MaterialComponents.MaterialIcons_ic_arrow_back
 import MaterialComponents.MaterialInk
 import MaterialComponents.MaterialLibraryInfo
@@ -29,7 +26,7 @@ import MaterialComponents.MaterialTypography
 
 import UIKit
 
-class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchControllerDelegate {
+class MDCCatalogComponentsController: UICollectionViewController, UICollectionViewDelegateFlowLayout, MDCInkTouchControllerDelegate {
 
   fileprivate struct Constants {
     static let headerScrollThreshold: CGFloat = 30
@@ -62,7 +59,8 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     let dotsImage = MDCIcons.imageFor_ic_more_horiz()?.withRenderingMode(.alwaysTemplate)
     button.setImage(dotsImage, for: .normal)
     button.adjustsImageWhenHighlighted = false
-    button.tintColor = .white
+    button.accessibilityLabel = "Menu"
+    button.accessibilityHint = "Opens catalog configuration options."
     return button
   }()
 
@@ -95,15 +93,17 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
 
     title = "Material Components for iOS"
 
-    addChildViewController(headerViewController)
+    addChild(headerViewController)
 
+    headerViewController.isTopLayoutGuideAdjustmentEnabled = true
+    headerViewController.inferTopSafeAreaInsetFromViewController = true
     headerViewController.headerView.minMaxHeightIncludesSafeArea = false
     headerViewController.headerView.maximumHeight = 128
     headerViewController.headerView.minimumHeight = 56
 
     collectionView?.register(MDCCatalogCollectionViewCell.self,
       forCellWithReuseIdentifier: "MDCCatalogCollectionViewCell")
-    collectionView?.backgroundColor = UIColor(white: 0.9, alpha: 1)
+    collectionView?.backgroundColor = AppTheme.containerScheme.colorScheme.backgroundColor
 
     MDCIcons.ic_arrow_backUseNewStyle(true)
 
@@ -114,14 +114,13 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
       object: nil)
   }
 
-  func themeDidChange(notification: NSNotification) {
-    guard let colorScheme = notification.userInfo?[AppTheme.globalThemeNotificationColorSchemeKey]
-          as? MDCColorScheming else {
-      return
-    }
-    MDCFlexibleHeaderColorThemer.applySemanticColorScheme(colorScheme,
-                                                          to: headerViewController.headerView)
+  @objc func themeDidChange(notification: NSNotification) {
+    let colorScheme = AppTheme.containerScheme.colorScheme
+    headerViewController.headerView.backgroundColor = colorScheme.primaryColor
+    setNeedsStatusBarAppearanceUpdate()
 
+    titleLabel.textColor = colorScheme.onPrimaryColor
+    menuButton.tintColor = colorScheme.onPrimaryColor
     collectionView?.collectionViewLayout.invalidateLayout()
     collectionView?.reloadData()
   }
@@ -143,9 +142,9 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     containerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 
     titleLabel.text = title!
-    titleLabel.textColor = AppTheme.globalTheme.colorScheme.onPrimaryColor
+    titleLabel.textColor = AppTheme.containerScheme.colorScheme.onPrimaryColor
     titleLabel.textAlignment = .center
-    titleLabel.font = AppTheme.globalTheme.typographyScheme.headline1
+    titleLabel.font = AppTheme.containerScheme.typographyScheme.headline6
     titleLabel.sizeToFit()
 
     let titleInsets = UIEdgeInsets(top: 0,
@@ -161,7 +160,7 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
 
     containerView.addSubview(logo)
 
-    let colorScheme = AppTheme.globalTheme.colorScheme
+    let colorScheme = AppTheme.containerScheme.colorScheme
 
     let image = MDCDrawImage(CGRect(x:0,
                                     y:0,
@@ -174,7 +173,7 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     menuButton.addTarget(self.navigationController,
                          action: #selector(navigationController?.presentMenu),
                          for: .touchUpInside)
-
+    menuButton.tintColor = colorScheme.onPrimaryColor
     containerView.addSubview(menuButton)
 
     setupFlexibleHeaderContentConstraints()
@@ -183,8 +182,7 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
                    insets: titleInsets,
                    height: titleSize.height)
 
-    MDCFlexibleHeaderColorThemer.applySemanticColorScheme(colorScheme,
-                                                          to: headerViewController.headerView)
+    headerViewController.headerView.backgroundColor = colorScheme.primaryColor
 
     headerViewController.headerView.trackingScrollView = collectionView
 
@@ -197,14 +195,12 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     }
 
     view.addSubview(headerViewController.view)
-    headerViewController.didMove(toParentViewController: self)
+    headerViewController.didMove(toParent: self)
 
     collectionView?.accessibilityIdentifier = "collectionView"
-#if swift(>=3.2)
     if #available(iOS 11.0, *) {
       collectionView?.contentInsetAdjustmentBehavior = .always
     }
-#endif
   }
 
   override func viewWillAppear(_ animated: Bool) {
@@ -218,15 +214,14 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     collectionView?.collectionViewLayout.invalidateLayout()
   }
 
-  override var childViewControllerForStatusBarStyle: UIViewController? {
+  override var childForStatusBarStyle: UIViewController? {
     return headerViewController
   }
 
-  override var childViewControllerForStatusBarHidden: UIViewController? {
+  override var childForStatusBarHidden: UIViewController? {
     return headerViewController
   }
 
-#if swift(>=3.2)
   @available(iOS 11, *)
   override func viewSafeAreaInsetsDidChange() {
     // Re-constraint the title label to account for changes in safeAreaInsets's left and right.
@@ -234,7 +229,6 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     menuButtonRightPaddingConstraint?.constant = -1 * (Constants.inset + view.safeAreaInsets.right)
     menuTopPaddingConstraint?.constant = Constants.inset + view.safeAreaInsets.top
   }
-#endif
 
   func setupFlexibleHeaderContentConstraints() {
 
@@ -344,7 +338,7 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
     let cell =
         collectionView.dequeueReusableCell(withReuseIdentifier: "MDCCatalogCollectionViewCell",
                                            for: indexPath)
-    cell.backgroundColor = UIColor.white
+    cell.backgroundColor = AppTheme.containerScheme.colorScheme.backgroundColor
 
     let componentName = node.children[indexPath.row].title
     if let catalogCell = cell as? MDCCatalogCollectionViewCell {
@@ -359,14 +353,12 @@ class MDCCatalogComponentsController: UICollectionViewController, MDCInkTouchCon
 
   func collectionView(_ collectionView: UICollectionView,
                       layout collectionViewLayout: UICollectionViewLayout,
-                      sizeForItemAtIndexPath indexPath: IndexPath) -> CGSize {
+                      sizeForItemAt indexPath: IndexPath) -> CGSize {
     let dividerWidth: CGFloat = 1
     var safeInsets: CGFloat = 0
-#if swift(>=3.2)
     if #available(iOS 11, *) {
       safeInsets = view.safeAreaInsets.left + view.safeAreaInsets.right
     }
-#endif
     var cellWidthHeight: CGFloat
 
     // iPhones have 2 columns in portrait and 3 in landscape

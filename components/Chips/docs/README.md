@@ -22,12 +22,14 @@ Chips are compact elements that represent an input, attribute, or action.
 
 - [Tips](tips.md)
 
+## Behavioral flags
+
+- [Enable chips that delete](enable-chips-that-delete.md)
+
 ## Examples
 
 - [Examples](Examples.md)
 
 ## Extensions
 
-- [Color Theming](color-theming.md)
-
-- [Typography Theming](typography-theming.md)
+- [Theming](theming.md)

@@ -1,21 +1,18 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import "MaterialFlexibleHeader.h"
-#import "supplemental/FlexibleHeaderHorizontalPagingSupplemental.h"
 
 static UIColor *HexColor(uint32_t hex) {
   return [UIColor colorWithRed:(CGFloat)((uint8_t)(hex >> 16)) / (CGFloat)255
@@ -26,7 +23,8 @@ static UIColor *HexColor(uint32_t hex) {
 
 static const NSUInteger kNumberOfPages = 10;
 
-@interface FlexibleHeaderHorizontalPagingViewController () <UIScrollViewDelegate>
+@interface FlexibleHeaderHorizontalPagingViewController : UIViewController <UIScrollViewDelegate>
+@property(nonatomic, strong) MDCFlexibleHeaderViewController *fhvc;
 @end
 
 @implementation FlexibleHeaderHorizontalPagingViewController {
@@ -40,11 +38,9 @@ static const NSUInteger kNumberOfPages = 10;
   _pagingScrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
   _pagingScrollView.pagingEnabled = YES;
   _pagingScrollView.delegate = self;
-#if defined(__IPHONE_11_0) && (__IPHONE_OS_VERSION_MAX_ALLOWED >= __IPHONE_11_0)
   if (@available(iOS 11.0, *)) {
     _pagingScrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
   }
-#endif
   _pagingScrollView.autoresizingMask =
       (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
   _pagingScrollView.scrollsToTop = NO;
@@ -150,7 +146,14 @@ static const NSUInteger kNumberOfPages = 10;
 
 - (void)commonMDCFlexibleHeaderViewControllerInit {
   self.fhvc = [[MDCFlexibleHeaderViewController alloc] initWithNibName:nil bundle:nil];
+
+  // Behavioral flags.
+  self.fhvc.topLayoutGuideAdjustmentEnabled = YES;
+  self.fhvc.inferTopSafeAreaInsetFromViewController = YES;
+  self.fhvc.headerView.minMaxHeightIncludesSafeArea = NO;
+
   self.fhvc.headerView.sharedWithManyScrollViews = YES;
+  self.fhvc.headerView.maximumHeight = 200;
   [self addChildViewController:_fhvc];
 }
 
@@ -159,7 +162,7 @@ static const NSUInteger kNumberOfPages = 10;
   [self.view addSubview:self.fhvc.view];
   [self.fhvc didMoveToParentViewController:self];
 
-  self.fhvc.headerView.backgroundColor = [UIColor colorWithWhite:0.1f alpha:1.0f];
+  self.fhvc.headerView.backgroundColor = [UIColor colorWithWhite:(CGFloat)0.1 alpha:1];
 }
 
 - (UIStatusBarStyle)preferredStatusBarStyle {
@@ -168,6 +171,22 @@ static const NSUInteger kNumberOfPages = 10;
 
 - (UIViewController *)childViewControllerForStatusBarHidden {
   return self.fhvc;
+}
+
+@end
+
+@implementation FlexibleHeaderHorizontalPagingViewController (CatalogByConvention)
+
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Flexible Header", @"Horizontal Paging" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+  };
+}
+
+- (BOOL)catalogShouldHideNavigation {
+  return YES;
 }
 
 @end

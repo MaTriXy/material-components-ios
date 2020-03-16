@@ -1,18 +1,16 @@
-/*
- Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import <UIKit/UIKit.h>
 
@@ -23,8 +21,10 @@ typedef void (^MDCInkCompletionBlock)(void);
 
 /** Ink styles. */
 typedef NS_ENUM(NSInteger, MDCInkStyle) {
-  MDCInkStyleBounded,  /** Ink is clipped to the view's bounds. */
-  MDCInkStyleUnbounded /** Ink is not clipped to the view's bounds. */
+  /** Ink is clipped to the view's bounds. */
+  MDCInkStyleBounded,
+  /** Ink is not clipped to the view's bounds. */
+  MDCInkStyleUnbounded
 };
 
 /**
@@ -62,16 +62,15 @@ typedef NS_ENUM(NSInteger, MDCInkStyle) {
 @property(nonatomic, assign) MDCInkStyle inkStyle;
 
 /** The foreground color of the ink. The default value is defaultInkColor. */
-@property(nonatomic, strong, nonnull) UIColor *inkColor UI_APPEARANCE_SELECTOR;
+@property(nonatomic, strong, null_resettable) UIColor *inkColor UI_APPEARANCE_SELECTOR;
 
 /** Default color used for ink if no color is specified. */
 @property(nonatomic, strong, readonly, nonnull) UIColor *defaultInkColor;
 
 /**
  Maximum radius of the ink. If the radius <= 0 then half the length of the diagonal of self.bounds
- is used. This value is ignored if @c inkStyle is set to |MDCInkStyleBounded|.
-
- Ignored if updated ink is used.
+ is used. This value is ignored if @c inkStyle is set to MDCInkStyleBounded and @c
+ usesLegacyInkLayer is set to NO.
  */
 @property(nonatomic, assign) CGFloat maxRippleRadius;
 
@@ -94,6 +93,13 @@ typedef NS_ENUM(NSInteger, MDCInkStyle) {
  Affects behavior only if both usesCustomInkCenter and usesLegacyInkRipple are enabled.
  */
 @property(nonatomic, assign) CGPoint customInkCenter;
+
+/**
+ A block that is invoked when the @c MDCInkView receives a call to @c
+ traitCollectionDidChange:. The block is called after the call to the superclass.
+ */
+@property(nonatomic, copy, nullable) void (^traitCollectionDidChangeBlock)
+    (MDCInkView *_Nonnull ink, UITraitCollection *_Nullable previousTraitCollection);
 
 /**
  Start the first part of the "press and release" animation at a particular point.

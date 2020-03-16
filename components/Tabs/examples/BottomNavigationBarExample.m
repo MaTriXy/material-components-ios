@@ -1,25 +1,23 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
-
-#import "MaterialColorScheme.h"
+#import "MaterialContainerScheme.h"
+#import "MaterialTabs+Theming.h"
 #import "MaterialTabs.h"
-#import "MaterialTabs+ColorThemer.h"
 
 @interface BottomNavigationBarExample : UIViewController <MDCTabBarDelegate>
-@property(nonatomic, strong) MDCSemanticColorScheme *colorScheme;
+@property(nonatomic, strong) MDCContainerScheme *containerScheme;
 @end
 
 @implementation BottomNavigationBarExample {
@@ -30,7 +28,7 @@
 - (id)init {
   self = [super init];
   if (self) {
-    self.colorScheme = [[MDCSemanticColorScheme alloc] init];
+    _containerScheme = [[MDCContainerScheme alloc] init];
   }
   return self;
 }
@@ -41,23 +39,30 @@
   _bottomNavigationBar = [[MDCTabBar alloc] initWithFrame:CGRectZero];
   _bottomNavigationBar.translatesAutoresizingMaskIntoConstraints = NO;
   _bottomNavigationBar.delegate = self;
-  [MDCTabBarColorThemer applySemanticColorScheme:self.colorScheme toTabs:_bottomNavigationBar];
-  
-  _bottomNavigationBar.inkColor = [UIColor colorWithRed:0 green:0.5f blue:0 alpha:0.15f];
+  [_bottomNavigationBar applyPrimaryThemeWithScheme:self.containerScheme];
+
+  _bottomNavigationBar.inkColor = [UIColor colorWithRed:0
+                                                  green:(CGFloat)0.5
+                                                   blue:0
+                                                  alpha:(CGFloat)0.15];
 
   NSBundle *bundle = [NSBundle bundleForClass:[BottomNavigationBarExample class]];
-  UIImage *infoImage =
-      [UIImage imageNamed:@"TabBarDemo_ic_info" inBundle:bundle compatibleWithTraitCollection:nil];
-  UIImage *starImage =
-      [UIImage imageNamed:@"TabBarDemo_ic_star" inBundle:bundle compatibleWithTraitCollection:nil];
+  UIImage *infoImage = [UIImage imageNamed:@"TabBarDemo_ic_info"
+                                  inBundle:bundle
+             compatibleWithTraitCollection:nil];
+  UIImage *starImage = [UIImage imageNamed:@"TabBarDemo_ic_star"
+                                  inBundle:bundle
+             compatibleWithTraitCollection:nil];
   _bottomNavigationBar.items = @[
     [[UITabBarItem alloc] initWithTitle:@"Red" image:infoImage tag:0],
     [[UITabBarItem alloc] initWithTitle:@"Blue" image:starImage tag:0]
   ];
 
   _colors = @[
-    [UIColor colorWithRed:0.5 green:0 blue:0 alpha:1],
-    [UIColor colorWithRed:0 green:0 blue:0.5 alpha:1]
+    [UIColor colorWithRed:0.5 green:0 blue:0 alpha:1], [UIColor colorWithRed:0
+                                                                       green:0
+                                                                        blue:0.5
+                                                                       alpha:1]
   ];
 
   [self.view addSubview:_bottomNavigationBar];
@@ -69,21 +74,24 @@
                                   toItem:self.view
                                attribute:NSLayoutAttributeBottom
                               multiplier:1
-                                constant:0].active = YES;
+                                constant:0]
+      .active = YES;
   [NSLayoutConstraint constraintWithItem:_bottomNavigationBar
                                attribute:NSLayoutAttributeLeft
                                relatedBy:NSLayoutRelationEqual
                                   toItem:self.view
                                attribute:NSLayoutAttributeLeft
                               multiplier:1
-                                constant:0].active = YES;
+                                constant:0]
+      .active = YES;
   [NSLayoutConstraint constraintWithItem:_bottomNavigationBar
                                attribute:NSLayoutAttributeRight
                                relatedBy:NSLayoutRelationEqual
                                   toItem:self.view
                                attribute:NSLayoutAttributeRight
                               multiplier:1
-                                constant:0].active = YES;
+                                constant:0]
+      .active = YES;
 }
 
 #pragma mark - MDCTabBarDelegate
@@ -118,16 +126,12 @@
 
 @implementation BottomNavigationBarExample (CatalogByConvention)
 
-+ (NSArray *)catalogBreadcrumbs {
-  return @[ @"Tab Bar", @"Bottom Navigation" ];
-}
-
-+ (BOOL)catalogIsPrimaryDemo {
-  return NO;
-}
-
-+ (BOOL)catalogIsPresentable {
-  return NO;
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Tab Bar", @"Bottom Navigation" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+  };
 }
 
 @end

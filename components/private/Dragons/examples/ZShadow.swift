@@ -1,15 +1,16 @@
-/*
- Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
- http://www.apache.org/licenses/LICENSE-2.0
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2017-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
 
@@ -62,28 +63,25 @@ class ZShadowViewController: UIViewController {
                                                        options: [],
                                                        metrics: nil,
                                                        views: ["view": contentView]));
-    if #available(iOS 9.0, *) {
-      greenBannerLeadingConstraintCollapsed = contentView.greenBanner.trailingAnchor.constraint(equalTo: contentView.greenTappable.trailingAnchor)
-    } else {
-      greenBannerLeadingConstraintCollapsed = NSLayoutConstraint(item: contentView.greenBanner, attribute: .right, relatedBy: .equal, toItem: contentView.greenTappable, attribute: .right, multiplier: 1, constant: 0)
-    }
+    greenBannerLeadingConstraintCollapsed = contentView.greenBanner.trailingAnchor.constraint(equalTo: contentView.greenTappable.trailingAnchor)
     greenBannerLeadingConstraintCollapsed.isActive = false
     
-    if #available(iOS 9.0, *) {
-      blueBannerLeadingConstraintCollapsed = contentView.blueBanner.trailingAnchor.constraint(equalTo: contentView.blueTappable.trailingAnchor)
-    } else {
-      blueBannerLeadingConstraintCollapsed = NSLayoutConstraint(item: contentView.blueBanner, attribute: .right, relatedBy: .equal, toItem: contentView.blueTappable, attribute: .right, multiplier: 1, constant: 0)
-    }
+    blueBannerLeadingConstraintCollapsed = contentView.blueBanner.trailingAnchor.constraint(equalTo: contentView.blueTappable.trailingAnchor)
     blueBannerLeadingConstraintCollapsed.isActive = false
     
     let tap = UITapGestureRecognizer(target: self, action: #selector(squaresTapped))
     contentView.greenTappable.addGestureRecognizer(tap)
+    contentView.greenTappable.isAccessibilityElement = true
+    contentView.greenTappable.accessibilityTraits = .button
+    contentView.greenTappable.accessibilityLabel = "Toggle Material Shadow"
     let tap2 = UITapGestureRecognizer(target: self, action: #selector(squaresTapped))
     contentView.blueTappable.addGestureRecognizer(tap2)
-    
+    contentView.blueTappable.isAccessibilityElement = true
+    contentView.blueTappable.accessibilityTraits = .button
+    contentView.blueTappable.accessibilityLabel = "Toggle UIKit Shadow"
   }
   
-  func squaresTapped() {
+  @objc func squaresTapped() {
     greenBannerLeadingConstraintCollapsed.isActive = !greenBannerLeadingConstraintCollapsed.isActive
     blueBannerLeadingConstraintCollapsed.isActive = !blueBannerLeadingConstraintCollapsed.isActive
     
@@ -96,16 +94,13 @@ class ZShadowViewController: UIViewController {
 extension ZShadowViewController {
   
   // MARK: Catalog by convention
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["ZShadow"]
-  }
-  
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return true
-  }
 
-  @objc class func catalogIsPresentable() -> Bool {
-    return false
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["ZShadow"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 }
 

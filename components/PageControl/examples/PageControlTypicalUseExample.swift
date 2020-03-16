@@ -1,18 +1,16 @@
-/*
-Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import Foundation
 
@@ -21,15 +19,21 @@ import MaterialComponents.MaterialPageControl
 class PageControlSwiftExampleViewController: UIViewController, UIScrollViewDelegate {
 
   static let pageColors = [
-    MDCPalette.cyan.tint300,
-    MDCPalette.cyan.tint500,
-    MDCPalette.cyan.tint700,
-    MDCPalette.cyan.tint300,
-    MDCPalette.cyan.tint500,
-    MDCPalette.cyan.tint700
+    UIColor(white: 0.3, alpha: 1),
+    UIColor(white: 0.2, alpha: 1),
+    UIColor(white: 0.3, alpha: 1),
+    UIColor(white: 0.2, alpha: 1),
+    UIColor(white: 0.3, alpha: 1),
+    UIColor(white: 0.2, alpha: 1),
   ]
 
-  let pageControl = MDCPageControl()
+  let pageControl: MDCPageControl = {
+    let pageControl = MDCPageControl()
+    pageControl.currentPageIndicatorTintColor = .white
+    pageControl.pageIndicatorTintColor = .lightGray
+    return pageControl
+  }()
+
   let scrollView = UIScrollView()
   let pageLabels: [UILabel] = PageControlSwiftExampleViewController.pageColors.enumerated().map {
       enumeration in
@@ -37,7 +41,7 @@ class PageControlSwiftExampleViewController: UIViewController, UIScrollViewDeleg
     let pageLabel = UILabel()
     pageLabel.text = "Page \(i + 1)"
     pageLabel.font = pageLabel.font.withSize(50)
-    pageLabel.textColor = UIColor(white: 0, alpha: 0.8)
+    pageLabel.textColor = UIColor(white: 1, alpha: 0.8)
     pageLabel.backgroundColor = pageColor
     pageLabel.textAlignment = NSTextAlignment.center
     pageLabel.autoresizingMask = [.flexibleTopMargin, .flexibleBottomMargin]
@@ -87,11 +91,9 @@ class PageControlSwiftExampleViewController: UIViewController, UIScrollViewDeleg
     scrollView.contentOffset = offset
 
     var edgeInsets = UIEdgeInsets.zero;
-    #if swift(>=3.2)
-      if #available(iOS 11, *) {
-        edgeInsets = self.view.safeAreaInsets
-      }
-    #endif
+    if #available(iOS 11, *) {
+      edgeInsets = self.view.safeAreaInsets
+    }
     let pageControlSize = pageControl.sizeThatFits(view.bounds.size)
     let yOffset = self.view.bounds.height - pageControlSize.height - 8 - edgeInsets.bottom;
     pageControl.frame =
@@ -122,11 +124,11 @@ class PageControlSwiftExampleViewController: UIViewController, UIScrollViewDeleg
 
   // MARK: - CatalogByConvention
 
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return [ "Page Control", "Swift example"]
-  }
-
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return false
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["Page Control", "Swift example"],
+      "primaryDemo": false,
+      "presentable": false,
+    ]
   }
 }

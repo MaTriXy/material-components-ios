@@ -1,30 +1,38 @@
-/*
- Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2018-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
 import MaterialComponents.MaterialButtons_ButtonThemer
+import MaterialComponents.MaterialContainerScheme
+import MaterialComponents.MaterialCards_Theming
+import MaterialComponents.MaterialButtons_Theming
 
 class CardExampleViewController: UIViewController {
-  @IBOutlet var contentView: UIView!
   @IBOutlet weak var imageView: UIImageView!
   @IBOutlet weak var card: MDCCard!
   @IBOutlet weak var button: MDCButton!
 
-  var colorScheme = MDCSemanticColorScheme()
-  var typographyScheme = MDCTypographyScheme()
+  @objc var containerScheme: MDCContainerScheming
+
+  override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+    containerScheme = MDCContainerScheme()
+    super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+  }
+
+  required init?(coder aDecoder: NSCoder) {
+    fatalError("init(coder:) has not been implemented")
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -33,61 +41,29 @@ class CardExampleViewController: UIViewController {
     // License details: https://unsplash.com/license
     let bundle = Bundle(for: CardExampleViewController.self)
     bundle.loadNibNamed("CardExampleViewController", owner: self, options: nil)
-    contentView.frame = self.view.bounds
-    self.view.addSubview(contentView)
+    view.frame = self.view.bounds
 
-    let bezierPath = UIBezierPath(roundedRect: imageView.bounds,
-                                  byRoundingCorners: [.topLeft, .topRight],
-                                  cornerRadii: CGSize(width: card.cornerRadius,
-                                                      height: card.cornerRadius))
-    let shapeLayer = CAShapeLayer()
-    shapeLayer.frame = imageView.bounds
-    shapeLayer.path = bezierPath.cgPath
-    imageView.layer.mask = shapeLayer
+    button.applyTextTheme(withScheme: containerScheme)
+    card.applyTheme(withScheme: containerScheme)
+    card.isInteractable = false
 
-    let buttonScheme = MDCButtonScheme();
-    buttonScheme.colorScheme = colorScheme
-    buttonScheme.typographyScheme = typographyScheme
-    MDCTextButtonThemer.applyScheme(buttonScheme, to: button)
-
-    let cardScheme = MDCCardScheme();
-    cardScheme.colorScheme = colorScheme
-    MDCCardThemer.applyScheme(cardScheme, to: card)
-  }
-
-  override func didReceiveMemoryWarning() {
-      super.didReceiveMemoryWarning()
-      // Dispose of any resources that can be recreated.
-  }
-
-  override public var traitCollection: UITraitCollection {
-    if UIDevice.current.userInterfaceIdiom == .pad && UIDevice.current.orientation.isPortrait {
-      return UITraitCollection(traitsFrom:[UITraitCollection(horizontalSizeClass: .compact),
-                                           UITraitCollection(verticalSizeClass: .regular)])
+    imageView.isAccessibilityElement = true
+    imageView.accessibilityLabel = "Missing Dish"
+    imageView.layer.cornerRadius = card.layer.cornerRadius
+    if #available(iOS 11.0, *) {
+      imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
     }
-    return super.traitCollection
   }
-
 }
 
 extension CardExampleViewController {
-  @objc class func catalogBreadcrumbs() -> [String] {
-    return ["Cards", "Card (Swift)"]
-  }
 
-  @objc class func catalogIsPresentable() -> Bool {
-    return true
-  }
-
-  @objc class func catalogIsDebug() -> Bool {
-    return false
-  }
-
-  @objc class func catalogIsPrimaryDemo() -> Bool {
-    return true
-  }
-
-  @objc class func catalogDescription() -> String {
-    return "Cards contain content and actions about a single subject."
+  @objc class func catalogMetadata() -> [String: Any] {
+    return [
+      "breadcrumbs": ["Cards", "Card (Swift)"],
+      "description": "Cards contain content and actions about a single subject.",
+      "primaryDemo": true,
+      "presentable": true,
+    ]
   }
 }

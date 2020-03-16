@@ -1,18 +1,16 @@
-/*
- Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import <UIKit/UIKit.h>
 
@@ -43,7 +41,7 @@ typedef void (^MDCFeatureHighlightCompletion)(BOOL accepted);
  @note Due to a bug in the iOS simulator it is possible that the feature highlight will not render
  correctly in the simulator. If you're encountering issues make sure to test on device.
  */
-@interface MDCFeatureHighlightViewController : UIViewController
+@interface MDCFeatureHighlightViewController : UIViewController <UIContentSizeCategoryAdjusting>
 
 /**
  Initializes the controller.
@@ -147,6 +145,20 @@ typedef void (^MDCFeatureHighlightCompletion)(BOOL accepted);
  */
 @property(nonatomic, readwrite, setter=mdc_setAdjustsFontForContentSizeCategory:)
     BOOL mdc_adjustsFontForContentSizeCategory UI_APPEARANCE_SELECTOR;
+
+/**
+ Enable legacy font scaling curves for Dynamic Type.
+ Default value is NO.
+ */
+@property(nonatomic, readwrite, setter=mdc_setLegacyFontScaling:) BOOL mdc_legacyFontScaling;
+
+/**
+ A block that is invoked when the @c MDCFeatureHighlightViewController receives a call to @c
+ traitCollectionDidChange:. The block is called after the call to the superclass.
+ */
+@property(nonatomic, copy, nullable) void (^traitCollectionDidChangeBlock)
+    (MDCFeatureHighlightViewController *_Nonnull featureHighlight,
+     UITraitCollection *_Nullable previousTraitCollection);
 
 /**
  Dismisses the feature highlight using the 'accept' style dismissal animation and triggers the

@@ -34,6 +34,17 @@ Start the title with `[ComponentName]` to identify which component a change affe
 [FooBar] Removes the deprecated fooWithBar:(Bar*)bar method.
 ```
 
+### Pull request continuous integration for new contributors
+
+Continuous integration will only be initiated automatically for the [core team](https://github.com/orgs/material-components/teams/core-ios-team/members)
+and [recognized collaborators](https://github.com/orgs/material-components/teams/recognized-ios-collaborators/members).
+
+All other pull requests must be labeled with `kokoro:force-run` by a member of the repo
+with write access in order for continuous integration to be initiated. This label must
+be added again each time the pull request has new commits pushed to it.
+
+For Googlers: [b/115490922](http://b/115490922) is tracking making the above work more streamlined for new contributors.
+
 #### Using assignee to indicate who should action on a PR
 
 Since PRs on github permanently stay in the `Changes requested` state it is hard to tell when the author has addressed the concerns. By change the assignee to whomever still needs to action (review or modify/justify) we can more easily keep track of what needs attention in our PR queues.
@@ -46,14 +57,27 @@ Since PRs on github permanently stay in the `Changes requested` state it is hard
 
 See [deprecation_policy.md](deprecation_policy.md) for details.
 
-### Hotfixing
-
-Occasionally it is necessary to hotfix the framework. See [hotfixing.md](hotfixing.md) for details.
-
 ## Finding an issue to work on
 
 MDC-iOS uses GitHub to file and track issues.
 To find an issue to work on, filter the issues list by the ["is:fixit" label](https://github.com/material-components/material-components-ios/labels/is%3Afixit).
+
+## Getting started
+
+If you're new to iOS development and have a computer running OS X, these steps should help you get all the prerequisites. More experienced users may just need to see the last steps.
+
+1. We assume you already have installed on you mac
+    1. XCode and the Xcode Command Line Tools which comes with [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+    1. [cocoapods](https://guides.cocoapods.org/using/getting-started.html#installation).
+1. Install
+    1. [git lfs](https://github.com/material-components/material-components-ios/blob/develop/contributing/tools.md#using-git-lfs).
+1. To see your work within the catalog
+    1. `pod install --project-directory=catalog/`
+    1. `open catalog/MDCCatalog.xcworkspace`
+    1. Navigate to the component you want to work on in Pods -> Development Pods -> Material Components -> <#component>.
+    1. Run the `MDCDragons` target to see the full set of examples. 
+    1. Tests can also be run from the Product menu.
+1. To send us a change make a [Pull Requests](https://help.github.com/articles/creating-a-pull-request-from-a-fork/) from [your own fork](https://help.github.com/articles/fork-a-repo/).
 
 ## The small print
 

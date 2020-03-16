@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:material_components_ios.bzl",
-     "mdc_public_objc_library",
-     "mdc_objc_library",
-     "mdc_unit_test_suite")
-load("@build_bazel_rules_apple//apple:swift.bzl", "swift_library")
+load(
+    "//:material_components_ios.bzl",
+    "mdc_examples_objc_library",
+    "mdc_extension_objc_library",
+    "mdc_objc_library",
+    "mdc_public_objc_library",
+    "mdc_snapshot_objc_library",
+    "mdc_snapshot_swift_library",
+    "mdc_snapshot_test",
+    "mdc_unit_test_objc_library",
+    "mdc_unit_test_suite",
+    "mdc_unit_test_swift_library",
+)
 
 licenses(["notice"])  # Apache 2.0
 
@@ -27,56 +35,112 @@ mdc_public_objc_library(
         "UIKit",
     ],
     deps = [
-      "//components/private/Application",
-      "//components/private/UIMetrics",
-      "@material_text_accessibility_ios//:MDFTextAccessibility",
+        "//components/Availability",
+        "//components/Elevation",
+        "//components/ShadowElevations",
+        "//components/private/Application",
+        "//components/private/Math",
+        "//components/private/UIMetrics",
+        "@material_text_accessibility_ios//:MDFTextAccessibility",
     ],
 )
 
-mdc_objc_library(
+mdc_extension_objc_library(
     name = "ColorThemer",
-    srcs = native.glob(["src/ColorThemer/*.m"]),
-    hdrs = native.glob(["src/ColorThemer/*.h"]),
-    includes = ["src/ColorThemer"],
-    sdk_frameworks = [
-        "UIKit",
-    ],
     deps = [
         ":FlexibleHeader",
         "//components/schemes/Color",
     ],
-    visibility = ["//visibility:public"],
-)
-
-swift_library(
-    name = "unit_test_swift_sources",
-    srcs = glob(["tests/unit/*.swift"]),
-    deps = [
-        ":FlexibleHeader",
-        ":ColorThemer",
-    ],
-    visibility = ["//visibility:private"],
 )
 
 mdc_objc_library(
-    name = "unit_test_sources",
+    name = "private",
     testonly = 1,
-    srcs = glob(["tests/unit/*.m"]),
-    hdrs = glob(["tests/unit/*.h"]),
-    sdk_frameworks = [
-        "UIKit",
-        "XCTest",
+    hdrs = native.glob(["src/private/*.h"]),
+    includes = ["src/private"],
+    visibility = [":test_targets"],
+)
+
+package_group(
+    name = "test_targets",
+    packages = [
+        "//components/FlexibleHeader/...",
     ],
+)
+
+mdc_extension_objc_library(
+    name = "CanAlwaysExpandToMaximumHeight",
     deps = [
         ":FlexibleHeader",
-        ":ColorThemer",
     ],
-    visibility = ["//visibility:private"],
+)
+
+mdc_examples_objc_library(
+    name = "ObjcExamples",
+    deps = [
+        ":CanAlwaysExpandToMaximumHeight",
+        ":ColorThemer",
+        ":FlexibleHeader",
+        "//components/Buttons",
+        "//components/PageControl",
+        "//components/Palettes",
+    ],
+)
+
+mdc_unit_test_swift_library(
+    name = "unit_test_swift_sources",
+    deps = [
+        ":CanAlwaysExpandToMaximumHeight",
+        ":ColorThemer",
+        ":FlexibleHeader",
+        "//components/ShadowLayer",
+    ],
+)
+
+mdc_unit_test_objc_library(
+    name = "unit_test_sources",
+    extra_srcs = glob([
+        "tests/unit/supplemental/*.m",
+        "tests/unit/supplemental/*.h",
+    ]),
+    deps = [
+        ":CanAlwaysExpandToMaximumHeight",
+        ":ColorThemer",
+        ":FlexibleHeader",
+        ":private",
+    ],
 )
 
 mdc_unit_test_suite(
+    name = "unit_tests",
+    # TODO (https://github.com/material-components/material-components-ios/issues/8249): Re-enable autobot environment.
+    use_autobot_environment_runner = False,
     deps = [
-      ":unit_test_sources",
-      ":unit_test_swift_sources"
+        ":unit_test_sources",
+        ":unit_test_swift_sources",
+    ],
+)
+
+mdc_snapshot_objc_library(
+    name = "snapshot_test_lib",
+    deps = [
+        ":FlexibleHeader",
+        "//components/ShadowLayer",
+    ],
+)
+
+mdc_snapshot_swift_library(
+    name = "snapshot_test_lib_swift",
+    deps = [
+        ":FlexibleHeader",
+        "//components/ShadowLayer",
+    ],
+)
+
+mdc_snapshot_test(
+    name = "snapshot_tests",
+    deps = [
+        ":snapshot_test_lib",
+        ":snapshot_test_lib_swift",
     ],
 )

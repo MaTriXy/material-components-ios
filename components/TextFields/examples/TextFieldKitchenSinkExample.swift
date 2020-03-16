@@ -1,18 +1,16 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 // swiftlint:disable file_length
 // swiftlint:disable type_body_length
@@ -204,27 +202,10 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
     baselineTestLabel.font = textFieldFloatingCharMax.font
     self.scrollView.addSubview(baselineTestLabel)
 
-    if #available(iOSApplicationExtension 9.0, *) {
-      baselineTestLabel.trailingAnchor.constraint(equalTo: textFieldFloatingCharMax.trailingAnchor,
-                                                 constant: 0).isActive = true
+    baselineTestLabel.trailingAnchor.constraint(equalTo: textFieldFloatingCharMax.trailingAnchor,
+                                               constant: 0).isActive = true
 
-      baselineTestLabel.firstBaselineAnchor.constraint(equalTo: textFieldFloatingCharMax.firstBaselineAnchor).isActive = true
-    } else {
-      NSLayoutConstraint(item: baselineTestLabel,
-                         attribute: .trailing,
-                         relatedBy: .equal,
-                         toItem: textFieldFloatingCharMax,
-                         attribute: .trailing,
-                         multiplier: 1,
-                         constant: 0).isActive = true
-      NSLayoutConstraint(item: baselineTestLabel,
-                         attribute: .lastBaseline,
-                         relatedBy: .equal,
-                         toItem: textFieldFloatingCharMax,
-                         attribute: .lastBaseline,
-                         multiplier: 1,
-                         constant: 0).isActive = true
-    }
+    baselineTestLabel.firstBaselineAnchor.constraint(equalTo: textFieldFloatingCharMax.firstBaselineAnchor).isActive = true
 
     return [textFieldControllerFloating, textFieldControllerFloatingCharMax]
   }
@@ -314,7 +295,8 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
       MDCTextInputControllerUnderline(textInput: textFieldCustomFontFloating)
     textFieldControllerUnderlineCustomFontFloating.characterCountMax = 40
     textFieldControllerUnderlineCustomFontFloating.placeholderText = "This is a custom font with the works"
-    textFieldControllerUnderlineCustomFontFloating.helperText = "Custom Font"
+    textFieldControllerUnderlineCustomFontFloating.setHelperText("Custom Font",
+                                                                 helperAccessibilityLabel: "Cyan custom font in leading underline label")
     textFieldControllerUnderlineCustomFontFloating.activeColor = .green
     textFieldControllerUnderlineCustomFontFloating.normalColor = .purple
     textFieldControllerUnderlineCustomFontFloating.leadingUnderlineLabelTextColor = .cyan
@@ -330,7 +312,8 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
     textFieldControllerUnderlineCustomFontFloating.floatingPlaceholderActiveColor = .orange
 
     let bundle = Bundle(for: TextFieldKitchenSinkSwiftExample.self)
-    let leadingViewImage = UIImage(named: "ic_search", in: bundle, compatibleWith: nil)!
+    let leadingViewImage = UIImage(named: "ic_search", in: bundle, compatibleWith: nil) ??
+        UIImage()
 
     let textFieldLeadingView = MDCTextField()
     textFieldLeadingView.leadingViewMode = .always
@@ -393,7 +376,8 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
         "This has a leading view and floats"
     textFieldLeadingViewFloatingAttributed.attributedText = attributedString
 
-    let trailingViewImage = UIImage(named: "ic_done", in: bundle, compatibleWith: nil)!
+    let trailingViewImage = UIImage(named: "ic_done", in: bundle, compatibleWith: nil) ??
+        UIImage()
 
     let textFieldTrailingView = MDCTextField()
     textFieldTrailingView.trailingViewMode = .always
@@ -466,7 +450,8 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
 
     let textFieldControllerBase = MDCTextInputControllerBase(textInput: textFieldBase)
     textFieldControllerBase.placeholderText = "This is the common base class for controllers"
-    textFieldControllerBase.helperText = "It's expected that you'll subclass this."
+    textFieldControllerBase.setHelperText("It's expected that you'll subclass this.",
+                                          helperAccessibilityLabel: "You should subclass this.")
 
     unstyledTextField.translatesAutoresizingMaskIntoConstraints = false
     scrollView.addSubview(unstyledTextField)
@@ -621,7 +606,8 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
 
   func setupSpecialMultilineTextFields() -> [MDCTextInputController] {
     let bundle = Bundle(for: TextFieldKitchenSinkSwiftExample.self)
-    let trailingViewImage = UIImage(named: "ic_done", in: bundle, compatibleWith: nil)!
+    let trailingViewImage = UIImage(named: "ic_done", in: bundle, compatibleWith: nil) ??
+        UIImage()
 
     let multilineTextFieldTrailingView = MDCMultilineTextField()
     multilineTextFieldTrailingView.trailingViewMode = .always
@@ -678,7 +664,8 @@ final class TextFieldKitchenSinkSwiftExample: UIViewController {
 
   @objc func helperSwitchDidChange(helperSwitch: UISwitch) {
     allInputControllers.forEach { controller in
-      controller.helperText = helperSwitch.isOn ? "This is helper text." : nil
+      controller.setHelperText(helperSwitch.isOn ? "This is helper text." : nil,
+                               helperAccessibilityLabel: helperSwitch.isOn ? "This is accessible helper text." : nil) 
     }
   }
 
@@ -688,6 +675,35 @@ extension TextFieldKitchenSinkSwiftExample: UITextFieldDelegate {
   func textFieldShouldReturn(_ textField: UITextField) -> Bool {
     textField.resignFirstResponder()
     return false
+  }
+
+  func textFieldShouldClear(_ textField: UITextField) -> Bool {
+    for controller in allTextFieldControllers {
+      if textField == controller.textInput {
+        controller.setErrorText(nil, errorAccessibilityValue: nil)
+        return true
+      }
+    }
+    return true
+  }
+
+  func textField(_ textField: UITextField,
+                 shouldChangeCharactersIn range: NSRange,
+                 replacementString string: String) -> Bool {
+    for controller in allTextFieldControllers {
+      if textField == controller.textInput {
+        let finishedString = (textField.text as NSString?)?.replacingCharacters(in: range, with: string)
+
+        if finishedString?.rangeOfCharacter(from: CharacterSet.letters.inverted) != nil {
+          controller.setErrorText("Only letters allowed.",
+                                  errorAccessibilityValue: "Error: Only letters allowed.")
+        } else {
+          controller.setErrorText(nil, errorAccessibilityValue: nil)
+        }
+        return true
+      }
+    }
+    return true
   }
 }
 

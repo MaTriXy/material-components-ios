@@ -49,7 +49,7 @@ which is larger than headline3 and so on.
 Add the following to your `Podfile`:
 
 ```bash
-pod 'MaterialComponents/schemes/TypographyScheme'
+pod 'MaterialComponents/schemes/Typography'
 ```
 <!--{: .code-renderer.code-renderer--install }-->
 
@@ -76,10 +76,6 @@ import MaterialComponents.MaterialTypographyScheme
 ```
 <!--</div>-->
 
-## Extensions
+## Usage
 
-<!-- Template: Extensions should be called out separately from Usage docs.
-
-- [Typography Theming](typography-theming.md)
--->
-
+- [Dynamic Type](dynamic-type.md)

@@ -25,6 +25,7 @@ Chips are compact elements that represent an input, attribute, or action.
   <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/chips/api-docs/Classes/MDCChipField.html">MDCChipField</a></li>
   <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/chips/api-docs/Classes/MDCChipView.html">MDCChipView</a></li>
   <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/chips/api-docs/Protocols/MDCChipFieldDelegate.html">MDCChipFieldDelegate</a></li>
+  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/chips/api-docs/Enums.html">Enumerations</a></li>
   <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/chips/api-docs/Enums/MDCChipFieldDelimiter.html">MDCChipFieldDelimiter</a></li>
 </ul>
 
@@ -43,11 +44,13 @@ Chips are compact elements that represent an input, attribute, or action.
   - [Stateful properties](#stateful-properties)
   - [Selected Image View](#selected-image-view)
   - [Padding](#padding)
+  - [Adjusting chip sizes after changing the label](#adjusting-chip-sizes-after-changing-the-label)
+- [Behavioral flags](#behavioral-flags)
+  - [Accessibility](#accessibility)
 - [Examples](#examples)
   - [Create a single Chip](#create-a-single-chip)
 - [Extensions](#extensions)
-  - [Chip Color Theming](#chip-color-theming)
-  - [Typography Theming](#typography-theming)
+  - [Theming](#theming)
 
 - - -
 
@@ -285,7 +288,52 @@ the others (`contentPadding`). This is useful so that you can set each of the pa
 ensure your chips look correct whether or not they have an image and/or accessory view. The chip
 uses these property to determine `intrinsicContentSize` and `sizeThatFits`.
 
+### Adjusting chip sizes after changing the label
+If the label of a chip in a collection view can be changed dynamically (e.g. in reaction to a user's
+tap), then you may notice that the chip's frame does not automatically update to accomodate the new
+size of the chip's label. To force your chip to update its layout when this happens you can invoke
+`invalidateIntrinsicContentSize` on the chip view. For example:
+
+<!--<div class="material-code-render" markdown="1">-->
+#### Swift
+```swift
+chipView.invalidateIntrinsicContentSize()
+```
+
+#### Objective-C
+```objc
+[chipView invalidateIntrinsicContentSize];
+```
+<!--</div>-->
+
 - - -
+
+
+## Behavioral flags
+
+<!-- Extracted from docs/enable-chips-that-delete.md -->
+
+If within your `MDCChipField` you want chips that can be deleted follow these steps.
+
+### Accessibility
+
+Enabling this flag will add 24x24 touch targets within the chip view. This goes against Google's recommended 
+48x48 touch targets. We recommend if you enable this behavior your associate it with a `MDCSnackbar` or 
+`MDCDialog` to confirm allow the user to confirm their behavior.
+
+<!--<div class="material-code-render" markdown="1">-->
+#### Swift
+```swift
+let chipField = MDCChipField()
+chipField.showChipsDeleteButton = true
+```
+
+#### Objective-C
+```objc
+MDCChipField *chipField = [[MDCChipField alloc] init];
+chipField.showChipsDeleteButton = YES;
+```
+<!--</div>-->
 
 
 ## Examples
@@ -322,84 +370,43 @@ chipView.titleLabel.text = @"Tap me";
 
 ## Extensions
 
-<!-- Extracted from docs/color-theming.md -->
+<!-- Extracted from docs/theming.md -->
 
-### Chip Color Theming
+### Theming
 
-You can theme a chip with your app's color scheme using the ColorThemer extension.
+ `MDCChipView` supports Material Theming using a Container Scheme.
+There are two variants for Material Theming of an MDCChipVIew, which are the default theme
+and the outlined theme.
 
-You must first add the Color Themer extension to your project:
+ <!--<div class="material-code-render" markdown="1">-->
 
-```bash
-pod 'MaterialComponents/Chips+ColorThemer'
-```
+ #### Swift
 
-<!--<div class="material-code-render" markdown="1">-->
-#### Swift
 ```swift
-// Step 1: Import the ColorThemer extension
-import MaterialComponents.MaterialChips_ColorThemer
-
-// Step 2: Create or get a color scheme
-let colorScheme = MDCSemanticColorScheme()
-
-// Step 3: Apply the color scheme to your component
-MDCChipViewColorThemer.applySemanticColorScheme(colorScheme, to: component)
+// Import the Chips Theming Extensions module
+import MaterialComponents.MaterialChips_MaterialTheming
+ ...
+ // Create or use your app's Container Scheme
+let containerScheme = MDCContainerScheme()
+ // Theme the chip with either default theme
+chip.applyTheme(withScheme: containerScheme)
+ // Or outlined theme
+chip.applyOutlinedTheme(withScheme: containerScheme)
 ```
 
-#### Objective-C
+ #### Objective-C
 
 ```objc
-// Step 1: Import the ColorThemer extension
-#import "MaterialChips+ColorThemer.h"
-
-// Step 2: Create or get a color scheme
-id<MDCColorScheming> colorScheme = [[MDCSemanticColorScheme alloc] init];
-
-// Step 3: Apply the color scheme to your component
-[MDCChipViewColorThemer applySemanticColorScheme:colorScheme
-     toChipView:component];
-```
-<!--</div>-->
-
-
-<!-- Extracted from docs/typography-theming.md -->
-
-### Typography Theming
-
-You can theme a chip with your app's typography scheme using the TypographyThemer extension.
-
-You must first add the Typography Themer extension to your project:
-
-```bash
-pod 'MaterialComponents/Chips+TypographyThemer'
+// Import the Tabs Theming Extensions header
+#import <MaterialComponents/MaterialChips+MaterialTheming.h>
+ ...
+ // Create or use your app's Container Scheme
+MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+ // Theme the chip with either default theme
+[self.chip applyThemeWithScheme:containerScheme];
+ // Or outlined theme
+[self.chip applyOutlinedThemeWithScheme:containerScheme];
 ```
 
-<!--<div class="material-code-render" markdown="1">-->
-#### Swift
-```swift
-// Step 1: Import the TypographyThemer extension
-import MaterialComponents.MaterialChips_TypographyThemer
-
-// Step 2: Create or get a typography scheme
-let typographyScheme = MDCTypographyScheme()
-
-// Step 3: Apply the typography scheme to your component
-MDCChipViewTypographyThemer.applyTypographyScheme(typographyScheme, to: component)
-```
-
-#### Objective-C
-
-```objc
-// Step 1: Import the TypographyThemer extension
-#import "MaterialChips+TypographyThemer.h"
-
-// Step 2: Create or get a typography scheme
-id<MDCTypographyScheming> typographyScheme = [[MDCTypographyScheme alloc] init];
-
-// Step 3: Apply the typography scheme to your component
-[MDCChipViewTypographyThemer applyTypographyScheme:colorScheme
-     toChipView:component];
-```
 <!--</div>-->
 

@@ -47,5 +47,8 @@ according to the Material spec.
 
 ## Extensions
 
-- [Color Theming](color-theming.md)
-- [Typography Theming](typography-theming.md)
+- [Theming](theming.md)
+
+## Accessibility
+
+- [Accessibility](accessibility.md)

@@ -1,18 +1,16 @@
-/*
-Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-*/
+// Copyright 2015-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 import UIKit
 
@@ -25,13 +23,13 @@ import MaterialComponents.MaterialButtons
 import MaterialComponents.MaterialButtons_ButtonThemer
 import MaterialComponents.MaterialCollections
 import MaterialComponents.MaterialTypography
-import MaterialComponents.MaterialFlexibleHeader_ColorThemer
+import MaterialComponents.MaterialButtons_Theming
 
 class NodeViewTableViewDemoCell: UITableViewCell {
 
   let label = UILabel()
 
-  override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+  override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: .subtitle, reuseIdentifier: reuseIdentifier)
     textLabel!.font = MDCTypography.subheadFont()
     imageView!.image = UIImage(named: "Demo")
@@ -96,7 +94,7 @@ class NodeViewTableViewPrimaryDemoCell: UITableViewCell {
 
   let containedButton = MDCButton()
 
-  override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+  override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
     super.init(style: style, reuseIdentifier: reuseIdentifier)
     setupContainedButton()
   }
@@ -148,8 +146,9 @@ class NodeViewTableViewPrimaryDemoCell: UITableViewCell {
 
 
 class MDCNodeListViewController: CBCNodeListViewController {
-  let appBar = MDCAppBar()
   var mainSectionHeader : UIView?
+  var mainSectionHeaderTitleLabel : UILabel?
+  var mainSectionHeaderDescriptionLabel : UILabel?
   var additionalExamplesSectionHeader : UIView?
   let sectionNames = ["Description", "Additional Examples"]
   let estimadedDescriptionSectionHeight = CGFloat(100)
@@ -191,14 +190,6 @@ class MDCNodeListViewController: CBCNodeListViewController {
 
     componentDescription = childrenNodes.first?.exampleDescription() ?? ""
 
-    self.addChildViewController(appBar.headerViewController)
-
-    appBar.navigationBar.titleAlignment = .center
-    applyColorScheme(AppTheme.globalTheme.colorScheme)
-    MDCAppBarTypographyThemer.applyTypographyScheme(
-        AppTheme.globalTheme.typographyScheme,
-        to:appBar)
-
     NotificationCenter.default.addObserver(
       self,
       selector: #selector(self.themeDidChange),
@@ -219,16 +210,12 @@ class MDCNodeListViewController: CBCNodeListViewController {
 
     mainSectionHeader = MainSectionHeader()
     additionalExamplesSectionHeader = createAdditionalExamplesSectionHeader()
-    self.tableView.backgroundColor = UIColor.white
+    self.tableView.backgroundColor = AppTheme.containerScheme.colorScheme.backgroundColor
     self.tableView.separatorStyle = .none
-    self.tableView.sectionHeaderHeight = UITableViewAutomaticDimension
+    self.tableView.sectionHeaderHeight = UITableView.automaticDimension
 
     var charactersCount = 0
-    #if swift(>=3.2)
-      charactersCount = node.title.count
-    #else
-      charactersCount = node.title.characters.count
-    #endif
+    charactersCount = node.title.count
     if charactersCount > 0 {
       self.tableView.accessibilityIdentifier = "Table" + node.title
     } else {
@@ -239,97 +226,17 @@ class MDCNodeListViewController: CBCNodeListViewController {
                             forCellReuseIdentifier: "NodeViewTableViewPrimaryDemoCell")
     self.tableView.register(NodeViewTableViewDemoCell.self,
                             forCellReuseIdentifier: "NodeViewTableViewDemoCell")
-    appBar.headerViewController.headerView.trackingScrollView = self.tableView
-
-    appBar.addSubviewsToParent()
   }
 
   override func viewWillAppear(_ animated: Bool) {
     super.viewWillAppear(animated)
 
     self.navigationController?.setNavigationBarHidden(true, animated: animated)
-
-    applyColorScheme(AppTheme.globalTheme.colorScheme)
   }
 
-  override var childViewControllerForStatusBarStyle: UIViewController? {
-    return appBar.headerViewController
-  }
-
-  override var childViewControllerForStatusBarHidden: UIViewController? {
-    return appBar.headerViewController
-  }
-
-  func themeDidChange(notification: NSNotification) {
-    guard let colorScheme = notification.userInfo?[AppTheme.globalThemeNotificationColorSchemeKey]
-          as? MDCColorScheming else {
-      return
-    }
-    applyColorScheme(colorScheme)
-    applyThemeToCurrentExample()
+  @objc func themeDidChange(notification: NSNotification) {
+    setNeedsStatusBarAppearanceUpdate()
     self.tableView.reloadData()
-  }
-
-  private func applyColorScheme(_ colorScheme: MDCColorScheming) {
-    MDCAppBarColorThemer.applySemanticColorScheme(colorScheme, to: appBar)
-
-    appBar.navigationBar.tintColor = UIColor.white
-  }
-
-  func applyThemeToCurrentExample() {
-    // This is a short term solution of applying the theme instantly on the
-    // currently presented example. A better solution would be to re-theme the example's components
-    // and not reload the example entirely with a pop-push.
-    guard let navigationController = self.navigationController else {
-      return
-    }
-    guard let topVC = navigationController.topViewController,
-      topVC is MDCAppBarContainerViewController ||
-        topVC.self.responds(to: NSSelectorFromString("catalogBreadcrumbs")) else {
-          return
-    }
-    navigationController.popViewController(animated: false)
-    guard let selectedNode = selectedNode else {
-      return
-    }
-    let vc = createViewController(from: selectedNode)
-    self.navigationController?.pushViewController(vc, animated: false)
-  }
-}
-
-// MARK: UIScrollViewDelegate
-extension MDCNodeListViewController {
-
-  override func scrollViewDidScroll(_ scrollView: UIScrollView) {
-    if scrollView == appBar.headerViewController.headerView.trackingScrollView {
-      appBar.headerViewController.headerView.trackingScrollDidScroll()
-    }
-  }
-
-  override func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-    if scrollView == appBar.headerViewController.headerView.trackingScrollView {
-      appBar.headerViewController.headerView.trackingScrollDidEndDecelerating()
-    }
-  }
-
-  override func scrollViewDidEndDragging(_ scrollView: UIScrollView,
-                                         willDecelerate decelerate: Bool) {
-    if scrollView == appBar.headerViewController.headerView.trackingScrollView {
-      let headerView = appBar.headerViewController.headerView
-      headerView.trackingScrollDidEndDraggingWillDecelerate(decelerate)
-    }
-  }
-
-  override func scrollViewWillEndDragging(_ scrollView: UIScrollView,
-                                          withVelocity velocity: CGPoint,
-                                          targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-    if scrollView == appBar.headerViewController.headerView.trackingScrollView {
-      let headerView = appBar.headerViewController.headerView
-      headerView.trackingScrollWillEndDragging(
-        withVelocity: velocity,
-        targetContentOffset: targetContentOffset
-      )
-    }
   }
 }
 
@@ -355,8 +262,13 @@ extension MDCNodeListViewController {
   }
 
   override func tableView(_ tableView: UITableView, estimatedHeightForHeaderInSection section: Int) -> CGFloat {
-    if section == Section.description.rawValue {
-      return estimadedDescriptionSectionHeight
+    if let mainSectionHeader = mainSectionHeader, section == Section.description.rawValue {
+      let labelPreferredMaxLayoutWidth = tableView.frame.size.width - (2 * padding)
+      mainSectionHeaderDescriptionLabel?.preferredMaxLayoutWidth = labelPreferredMaxLayoutWidth
+      mainSectionHeaderTitleLabel?.preferredMaxLayoutWidth = labelPreferredMaxLayoutWidth
+      let targetSize = CGSize(width: tableView.frame.size.width,
+                              height: estimadedDescriptionSectionHeight)
+      return mainSectionHeader.systemLayoutSizeFitting(targetSize).height
     }
     return estimadedAdditionalExamplesSectionHeight
   }
@@ -371,7 +283,7 @@ extension MDCNodeListViewController {
 
   func createAdditionalExamplesSectionHeader() -> UIView {
     let sectionView = UIView()
-    sectionView.backgroundColor = UIColor.white
+    sectionView.backgroundColor = AppTheme.containerScheme.colorScheme.backgroundColor
     let lineDivider = UIView()
     lineDivider.backgroundColor = UIColor(white: 0.85, alpha: 1)
     lineDivider.translatesAutoresizingMaskIntoConstraints = false
@@ -381,7 +293,7 @@ extension MDCNodeListViewController {
     sectionTitleLabel.translatesAutoresizingMaskIntoConstraints = false
     sectionTitleLabel.text = sectionNames[1]
     sectionTitleLabel.numberOfLines = 0
-    sectionTitleLabel.setContentCompressionResistancePriority(1000, for: .vertical)
+    sectionTitleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
 
     sectionView.addSubview(lineDivider)
     sectionView.addSubview(sectionTitleLabel)
@@ -451,7 +363,6 @@ extension MDCNodeListViewController {
         constant: self.padding).isActive = true
     }
     // Title Label to Section View
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       // Align to the safe area insets.
       sectionTitleLabel.leadingAnchor
@@ -463,9 +374,6 @@ extension MDCNodeListViewController {
     } else {
       preiOS11Behavior()
     }
-    #else
-    preiOS11Behavior()
-    #endif
 
      NSLayoutConstraint(
       item: sectionView,
@@ -481,28 +389,31 @@ extension MDCNodeListViewController {
 
   func MainSectionHeader() -> UIView {
     let sectionView = UIView()
-    sectionView.backgroundColor = UIColor.white
+    sectionView.backgroundColor = AppTheme.containerScheme.colorScheme.backgroundColor
 
     let sectionTitleLabel = UILabel()
     sectionTitleLabel.font = MDCTypography.body2Font()
     sectionTitleLabel.translatesAutoresizingMaskIntoConstraints = false
     sectionTitleLabel.text = sectionNames[0]
     sectionTitleLabel.numberOfLines = 0
-    sectionTitleLabel.setContentCompressionResistancePriority(1000, for: .vertical)
+    sectionTitleLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+    mainSectionHeaderTitleLabel = sectionTitleLabel
 
     let descriptionLabel = UILabel()
     descriptionLabel.font = MDCTypography.body1Font()
 
     let paragraphStyle = NSMutableParagraphStyle()
     paragraphStyle.lineSpacing = descriptionLineHeight - descriptionLabel.font.lineHeight
-    let attrs = [NSParagraphStyleAttributeName: paragraphStyle]
+    let attrs = [NSAttributedString.Key.paragraphStyle: paragraphStyle]
 
     descriptionLabel.attributedText =
         NSAttributedString(string:componentDescription, attributes:attrs)
     descriptionLabel.alpha = MDCTypography.body1FontOpacity()
     descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
     descriptionLabel.numberOfLines = 0
-    descriptionLabel.setContentCompressionResistancePriority(1000, for: .vertical)
+    descriptionLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+    mainSectionHeaderDescriptionLabel = descriptionLabel
+
     sectionView.addSubview(sectionTitleLabel)
     sectionView.addSubview(descriptionLabel)
 
@@ -525,7 +436,6 @@ extension MDCNodeListViewController {
         multiplier: 1.0,
         constant: self.padding).isActive = true
     }
-    #if swift(>=3.2)
     if #available(iOS 11.0, *) {
       // Align to the safe area insets.
       sectionTitleLabel.leadingAnchor
@@ -537,9 +447,6 @@ extension MDCNodeListViewController {
     } else {
       preiOS11Behavior()
     }
-    #else
-    preiOS11Behavior()
-    #endif
 
     NSLayoutConstraint(
       item: sectionTitleLabel,
@@ -605,8 +512,7 @@ extension MDCNodeListViewController {
       cell?.selectionStyle = .none
       let primaryDemoCell = cell as! NodeViewTableViewPrimaryDemoCell
       let button = primaryDemoCell.containedButton
-      let buttonScheme = AppTheme.globalTheme.buttonScheme
-      MDCContainedButtonThemer.applyScheme(buttonScheme, to:button)
+      button.applyContainedTheme(withScheme: AppTheme.containerScheme)
       button.addTarget(self, action: #selector(primaryDemoButtonClicked), for: .touchUpInside)
     } else {
       cell = tableView.dequeueReusableCell(withIdentifier: "NodeViewTableViewDemoCell")
@@ -627,11 +533,16 @@ extension MDCNodeListViewController {
       cell!.accessibilityIdentifier = "Cell" + cell!.textLabel!.text!
       cell!.accessoryType = .disclosureIndicator
     }
-
+    cell?.backgroundColor = AppTheme.containerScheme.colorScheme.backgroundColor
     return cell!
   }
 
-  func primaryDemoButtonClicked () {
+  override func accessibilityPerformMagicTap() -> Bool {
+    primaryDemoButtonClicked()
+    return true
+  }
+
+  @objc func primaryDemoButtonClicked () {
     let indexPath = IndexPath(row: 0, section: Section.description.rawValue)
     self.tableView(self.tableView, didSelectRowAt: indexPath)
   }
@@ -656,28 +567,24 @@ extension MDCNodeListViewController {
   }
 
   func createViewController(from node: CBCNode) -> UIViewController {
-    var vc: UIViewController
     let contentVC = node.createExampleViewController()
     themeExample(vc: contentVC)
-    if contentVC.responds(to: NSSelectorFromString("catalogShouldHideNavigation")) {
-      vc = contentVC
-    } else {
-      self.navigationController?.setMenuBarButton(for: contentVC)
-      vc = UINavigationController.embedExampleWithinAppBarContainer(using: contentVC,
-                                                                    currentBounds: view.bounds,
-                                                                    named: node.title)
-    }
-    return vc
+    self.navigationController?.setMenuBarButton(for: contentVC)
+    return contentVC
   }
 
   func themeExample(vc: UIViewController) {
     let colorSel = NSSelectorFromString("setColorScheme:");
     if vc.responds(to: colorSel) {
-      vc.perform(colorSel, with: AppTheme.globalTheme.colorScheme)
+      vc.perform(colorSel, with: AppTheme.containerScheme.colorScheme)
     }
     let typoSel = NSSelectorFromString("setTypographyScheme:");
     if vc.responds(to: typoSel) {
-      vc.perform(typoSel, with: AppTheme.globalTheme.typographyScheme)
+      vc.perform(typoSel, with: AppTheme.containerScheme.typographyScheme)
+    }
+    let containerSel = NSSelectorFromString("setContainerScheme:")
+    if vc.responds(to: containerSel) {
+      vc.perform(containerSel, with: AppTheme.containerScheme)
     }
   }
 }

@@ -32,6 +32,7 @@ contain a text action, but no icons.
   <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/snackbars/api-docs/Classes/MDCSnackbarMessageView.html">MDCSnackbarMessageView</a></li>
   <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/snackbars/api-docs/Protocols.html#/c:objc(pl)MDCSnackbarSuspensionToken">MDCSnackbarSuspensionToken</a></li>
   <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/snackbars/api-docs/Protocols/MDCSnackbarManagerDelegate.html">MDCSnackbarManagerDelegate</a></li>
+  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/snackbars/api-docs/Enums.html">Enumerations</a></li>
   <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/snackbars/api-docs/Enums/MDCSnackbarAlignment.html">MDCSnackbarAlignment</a></li>
 </ul>
 
@@ -181,40 +182,7 @@ message.action = action;
 
 ### Color Theming
 
-You can theme an snackbar with your app's color scheme using the ColorThemer extension.
-
-You must first add the Color Themer extension to your project:
-
-```bash
-pod 'MaterialComponents/Snackbar+ColorThemer'
-```
-
-<!--<div class="material-code-render" markdown="1">-->
-#### Swift
-```swift
-// Step 1: Import the ColorThemer extension
-import MaterialComponents.MaterialSnackbar_ColorThemer
-
-// Step 2: Create or get a color scheme
-let colorScheme = MDCSemanticColorScheme()
-
-// Step 3: Apply the color scheme to your component
-MDCSnackbarColorThemer.applySemanticColorScheme(colorScheme)
-```
-
-#### Objective-C
-
-```objc
-// Step 1: Import the ColorThemer extension
-#import "MaterialSnackbar+ColorThemer.h"
-
-// Step 2: Create or get a color scheme
-id<MDCColorScheming> colorScheme = [[MDCSemanticColorScheme alloc] init];
-
-// Step 3: Apply the color scheme to your component
-[MDCSnackbarColorThemer applySemanticColorScheme:colorScheme];
-```
-<!--</div>-->
+There is currently no theing extension for MDCSnackbar.
 
 <!-- Extracted from docs/typography-theming.md -->
 

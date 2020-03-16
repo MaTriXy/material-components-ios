@@ -1,18 +1,16 @@
-/*
- Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
-
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- */
+// Copyright 2016-present the Material Components for iOS authors. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #import "MDCProgressView.h"
 
@@ -27,7 +25,7 @@ static inline UIColor *MDCProgressViewDefaultTintColor(void) {
 }
 
 // The ratio by which to desaturate the progress tint color to obtain the default track tint color.
-static const CGFloat MDCProgressViewTrackColorDesaturation = 0.3f;
+static const CGFloat MDCProgressViewTrackColorDesaturation = (CGFloat)0.3;
 
 static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
 
@@ -94,6 +92,14 @@ static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
   }
 }
 
+- (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
+  [super traitCollectionDidChange:previousTraitCollection];
+
+  if (self.traitCollectionDidChangeBlock) {
+    self.traitCollectionDidChangeBlock(self, previousTraitCollection);
+  }
+}
+
 - (UIColor *)progressTintColor {
   return self.progressView.backgroundColor;
 }
@@ -115,6 +121,17 @@ static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
         [[self class] defaultTrackTintColorForProgressTintColor:self.progressTintColor];
   }
   self.trackView.backgroundColor = trackTintColor;
+}
+
+- (void)setCornerRadius:(CGFloat)cornerRadius {
+  _cornerRadius = cornerRadius;
+
+  _progressView.layer.cornerRadius = cornerRadius;
+  _trackView.layer.cornerRadius = cornerRadius;
+
+  BOOL hasNonZeroCornerRadius = !MDCCGFloatIsExactlyZero(cornerRadius);
+  _progressView.clipsToBounds = hasNonZeroCornerRadius;
+  _trackView.clipsToBounds = hasNonZeroCornerRadius;
 }
 
 - (void)setProgress:(float)progress {
@@ -191,18 +208,18 @@ static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
   }
 
   [UIView animateWithDuration:animated ? [[self class] animationDuration] : 0
-                         delay:0
-                       options:[[self class] animationOptions]
-                    animations:animations
-                    completion:^(BOOL finished) {
-                      if (hidden) {
-                        self.animatingHide = NO;
-                        self.hidden = YES;
-                      }
-                      if (userCompletion) {
-                        userCompletion(finished);
-                      }
-                    }];
+                        delay:0
+                      options:[[self class] animationOptions]
+                   animations:animations
+                   completion:^(BOOL finished) {
+                     if (hidden) {
+                       self.animatingHide = NO;
+                       self.hidden = YES;
+                     }
+                     if (userCompletion) {
+                       userCompletion(finished);
+                     }
+                   }];
 }
 
 #pragma mark Accessibility
@@ -248,6 +265,10 @@ static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
   }
 }
 
+- (NSString *)accessibilityLabel {
+  return self.accessibilityProgressView.accessibilityLabel;
+}
+
 #pragma mark Private
 
 + (NSTimeInterval)animationDuration {
@@ -263,7 +284,7 @@ static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
 + (UIColor *)defaultTrackTintColorForProgressTintColor:(UIColor *)progressTintColor {
   CGFloat hue, saturation, brightness, alpha;
   if ([progressTintColor getHue:&hue saturation:&saturation brightness:&brightness alpha:&alpha]) {
-    CGFloat newSaturation = MIN(saturation * MDCProgressViewTrackColorDesaturation, 1.0f);
+    CGFloat newSaturation = MIN(saturation * MDCProgressViewTrackColorDesaturation, 1);
     return [UIColor colorWithHue:hue saturation:newSaturation brightness:brightness alpha:alpha];
   }
   return [UIColor clearColor];
@@ -271,8 +292,10 @@ static const NSTimeInterval MDCProgressViewAnimationDuration = 0.25;
 
 - (void)updateProgressView {
   // Update progressView with the current progress value.
-  CGFloat progressWidth = MDCCeil(self.progress * CGRectGetWidth(self.bounds));
-  CGRect progressFrame = CGRectMake(0, 0, progressWidth, CGRectGetHeight(self.bounds));
+  CGFloat scale = self.window.screen.scale > 0 ? self.window.screen.scale : 1;
+  CGFloat pointWidth = self.progress * CGRectGetWidth(self.bounds);
+  CGFloat pixelAlignedWidth = MDCRound(pointWidth * scale) / scale;
+  CGRect progressFrame = CGRectMake(0, 0, pixelAlignedWidth, CGRectGetHeight(self.bounds));
   if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     progressFrame = MDFRectFlippedHorizontally(progressFrame, CGRectGetWidth(self.bounds));
   }

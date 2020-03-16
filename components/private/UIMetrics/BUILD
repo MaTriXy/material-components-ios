@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:material_components_ios.bzl", "mdc_public_objc_library")
-load("@build_bazel_rules_apple//apple:swift.bzl", "swift_library")
+load(
+    "//:material_components_ios.bzl",
+    "mdc_public_objc_library",
+    "mdc_unit_test_objc_library",
+    "mdc_unit_test_suite",
+)
 
 licenses(["notice"])  # Apache 2.0
 
@@ -22,4 +26,14 @@ mdc_public_objc_library(
     deps = [
         "//components/private/Application",
     ],
+)
+
+mdc_unit_test_objc_library(
+    name = "unit_test_sources",
+    deps = [":UIMetrics"],
+)
+
+mdc_unit_test_suite(
+    name = "unit_tests",
+    deps = [":unit_test_sources"],
 )
