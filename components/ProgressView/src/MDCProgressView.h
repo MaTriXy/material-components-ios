@@ -14,6 +14,8 @@
 
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 /** The animation mode when animating backward progress. */
 typedef NS_ENUM(NSInteger, MDCProgressViewBackwardAnimationMode) {
 
@@ -22,6 +24,15 @@ typedef NS_ENUM(NSInteger, MDCProgressViewBackwardAnimationMode) {
 
   /** Animate negative progress by animating from the current value. */
   MDCProgressViewBackwardAnimationModeAnimate
+};
+
+/** The mode the progress bar is in. */
+typedef NS_ENUM(NSInteger, MDCProgressViewMode) {
+  /** Display the progress in a determinate way. */
+  MDCProgressViewModeDeterminate,
+
+  /** Display the progress in an indeterminate way. */
+  MDCProgressViewModeIndeterminate
 };
 
 /**
@@ -35,22 +46,35 @@ IB_DESIGNABLE
 /**
  The color shown for the portion of the progress view that is filled.
 
- The default is a blue color. When changed, the trackTintColor is reset.
+ The default is a blue color.
  */
-@property(nonatomic, strong, null_resettable) UIColor *progressTintColor UI_APPEARANCE_SELECTOR;
+@property(nonatomic, strong, nullable) UIColor *progressTintColor UI_APPEARANCE_SELECTOR;
+
+/**
+ An array of CGColorRef objects used to defining the color of each gradient stop.
+ All colors are spread uniformly across the range.
+
+ Setting @c progressTintColor resets this property to @c nil.
+
+ The default is nil.
+*/
+@property(nonatomic, copy, nullable) NSArray<UIColor *> *progressTintColors;
 
 /**
  The color shown for the portion of the progress view that is not filled.
 
- The default is a light version of the current progressTintColor.
+ The default is a light blue color.
  */
-@property(nonatomic, strong, null_resettable) UIColor *trackTintColor UI_APPEARANCE_SELECTOR;
+@property(nonatomic, strong, nullable) UIColor *trackTintColor UI_APPEARANCE_SELECTOR;
 
 /**
  The corner radius for both the portion of the progress view that is filled and the track.
 
  This is not equivalent to configuring self.layer.cornerRadius; it instead configures the progress
  and track views directly.
+
+ Under @c MDCProgressViewModeIndeterminate mode, the progress view is fully rounded if this value
+ is larger than 0.
 
  The default is 0.
  */
@@ -65,6 +89,20 @@ IB_DESIGNABLE
  To animate progress changes, use -setProgress:animated:completion:.
  */
 @property(nonatomic, assign) float progress;
+
+/**
+ If the progress view shows a constant loading animation (MDCProgressViewModeIndeterminate) or is
+ based on the progress property (MDCProgressViewModeDeterminate).
+ The default value is MDCProgressViewModeDeterminate.
+ */
+@property(nonatomic, assign) MDCProgressViewMode mode;
+
+/**
+ Indicates if the progress view is animating when @c mode is @MDCProgressViewModeIndeterminate.
+
+ The default value is NO.
+ */
+@property(nonatomic, assign, getter=isAnimating) BOOL animating;
 
 /**
  The backward progress animation mode.
@@ -97,10 +135,40 @@ IB_DESIGNABLE
        completion:(void (^__nullable)(BOOL finished))completion;
 
 /**
+ Start the progress bar's indeterminate animation.
+ */
+- (void)startAnimating;
+
+/**
+ Stop the progress bar's indeterminate animation.
+ */
+- (void)stopAnimating;
+
+/**
  A block that is invoked when the @c MDCProgressView receives a call to @c
  traitCollectionDidChange:. The block is called after the call to the superclass.
  */
 @property(nonatomic, copy, nullable) void (^traitCollectionDidChangeBlock)
     (MDCProgressView *_Nonnull progressView, UITraitCollection *_Nullable previousTraitCollection);
 
+/**
+ The property that gates the NTC Determinate progress view changes. This enables the stop mark,
+ rounded corners, and gap.
+
+ For accessibility, this should be enabled for most determinate progress indicators. However, it may
+ be disabled when the determinate track extends the full width of the screen.
+
+ The default value is NO.
+ */
+@property(nonatomic, assign) BOOL enableDeterminateStopMark;
+
+/**
+ The color shown for the gap(s) between the progress bar(s) and the track.
+
+ The default is clearColor, which results in an appearance with no visible gaps.
+ */
+@property(nonatomic, strong, nullable) UIColor *gapColor UI_APPEARANCE_SELECTOR;
+
 @end
+
+NS_ASSUME_NONNULL_END

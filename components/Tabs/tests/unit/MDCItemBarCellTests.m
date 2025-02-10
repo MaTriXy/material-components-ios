@@ -14,9 +14,13 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCItemBarCell+Private.h"
-#import "../../src/private/MDCItemBarCell.h"
-#import "../../src/private/MDCItemBarStyle.h"
+#import "MDCRippleTouchController.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCItemBarCell+Private.h"
+#import "MDCItemBarCell.h"
+#import "MDCItemBarStyle.h"
+#pragma clang diagnostic pop
 
 @interface MDCItemBarCellTests : XCTestCase
 
@@ -101,4 +105,13 @@
   XCTAssertEqualWithAccuracy(CGRectGetWidth(frameWithFiveDigitBadgeValue),
                              CGRectGetWidth(frameWithFourDigitBadgeValue), 0.001);
 }
+
+- (void)testRippleTouchControllerShouldProcessRippleWithScrollViewDefaultsToNo {
+  // Given
+  MDCItemBarCell *cell = [[MDCItemBarCell alloc] initWithFrame:CGRectZero];
+
+  // Then
+  XCTAssertFalse(cell.rippleTouchController.shouldProcessRippleWithScrollViewGestures);
+}
+
 @end

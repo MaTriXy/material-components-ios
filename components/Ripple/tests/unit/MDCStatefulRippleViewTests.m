@@ -14,8 +14,14 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCRippleLayer.h"
-#import "MaterialRipple.h"
+#import "MDCRippleView.h"
+#import "MDCStatefulRippleView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCRippleLayer.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCStatefulRippleView (UnitTests)
 @property(nonatomic, strong) MDCRippleLayer *activeRippleLayer;
@@ -36,7 +42,7 @@
   // Then
   XCTAssertNil(rippleView.rippleViewDelegate);
   XCTAssertEqualObjects(rippleView.rippleColor, [[UIColor alloc] initWithWhite:0
-                                                                         alpha:(CGFloat)0.16]);
+                                                                         alpha:(CGFloat)0.12]);
   XCTAssertEqual(rippleView.rippleStyle, MDCRippleStyleBounded);
 }
 
@@ -174,3 +180,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

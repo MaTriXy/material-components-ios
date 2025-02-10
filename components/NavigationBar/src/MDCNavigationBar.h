@@ -16,6 +16,12 @@
 
 #import "MaterialElevation.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UINavigationController instead: go/material-ios-top-app-bars/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(11, 12))
+
 @protocol MDCButtonBarDelegate;
 
 /** Specifies the title alignment of the |MDCNavigationBar|. */
@@ -29,6 +35,7 @@ typedef NS_ENUM(NSInteger, MDCNavigationBarTitleAlignment) {
 /**
  Behaviors that affect the layout of an |MDCNavigationBar|'s titleView.
  */
+
 typedef NS_ENUM(NSInteger, MDCNavigationBarTitleViewLayoutBehavior) {
   /**
    The title view's width will equal the navigation bar's width minus any space consumed by the
@@ -41,13 +48,20 @@ typedef NS_ENUM(NSInteger, MDCNavigationBarTitleViewLayoutBehavior) {
   /**
    Align the title view's center with the navigation bar's center, if possible.
    */
-  MDCNavigationBarTitleViewLayoutBehaviorCenter
+  MDCNavigationBarTitleViewLayoutBehaviorCenter,
+
+  /**
+   Align the title view's center with the navigation bar's center, if possible. Relies on the title
+   view's intrinsicContentSize to determine its width.
+   */
+  MDCNavigationBarTitleViewLayoutBehaviorCenterFit
 };
 
 /**
  This protocol defines all of the properties on UINavigationItem that can be listened to by
  MDCNavigationBar.
  */
+
 @protocol MDCUINavigationItemObservables <NSObject>
 @required
 
@@ -128,7 +142,13 @@ IB_DESIGNABLE
  right-to-left the titleInset.left will be used for the right side and the titleInset.right will be
  used for the left side.
 
- Defaults to UIEdgeInsets(0, 16, 0, 16).
+ If titleAlignment is center, defaults to UIEdgeInsets(0, 16, 0, 16).
+ If titleAlignment is leading and there are no items, defaults to UIEdgeInsets(0, 16, 0, 16).
+ If titleAlignment is leading and there are leading & trailing items, defaults to UIEdgeInsetsZero.
+ If titleAlignment is leading and there are only trailing items, defaults to
+ UIEdgeInsets(0, 16, 0, 0).
+ If titleAlignment is leading and there are only leading items, defaults to
+ UIEdgeInsets(0, 0, 0, 16).
  */
 @property(nonatomic, assign) UIEdgeInsets titleInsets;
 
@@ -351,7 +371,19 @@ IB_DESIGNABLE
 /* Equivalent to leadingItemsSupplementBackButton. */
 @property(nonatomic) BOOL leftItemsSupplementBackButton;
 
-#pragma mark - To be deprecated
+@end
+
+@interface MDCNavigationBar (ToBeDeprecated)
+
+/**
+ The inkColor that is used for all buttons in trailing and leading button bars.
+
+ If set to nil, button bar buttons use default ink color.
+ @warning This method will eventually be deprecated. Opt-in to Ripple by setting
+ enableRippleBehavior to YES, and then use rippleColor instead. Learn more at
+ https://github.com/material-components/material-components-ios/tree/develop/components/Ink#migration-guide-ink-to-ripple
+ */
+@property(nonatomic, strong, nullable) UIColor *inkColor;
 
 /**
  Display attributes for the titleView's title text.
@@ -367,16 +399,4 @@ IB_DESIGNABLE
 
 @end
 
-@interface MDCNavigationBar (ToBeDeprecated)
-
-/**
- The inkColor that is used for all buttons in trailing and leading button bars.
-
- If set to nil, button bar buttons use default ink color.
- @warning This method will eventually be deprecated. Opt-in to Ripple by setting
- enableRippleBehavior to YES, and then use rippleColor instead. Learn more at
- https://github.com/material-components/material-components-ios/tree/develop/components/Ink#migration-guide-ink-to-ripple
- */
-@property(nonatomic, strong, nullable) UIColor *inkColor;
-
-@end
+API_DEPRECATED_END

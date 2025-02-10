@@ -12,21 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <QuartzCore/QuartzCore.h>
+
 #import "MDCTextControlLabelAnimation.h"
 
-#import "MDCTextControl.h"
-#import "MaterialAnimationTiming.h"
+#import "MDCTextControlLabelSupport.h"
 
 @implementation MDCTextControlLabelAnimation
 
 + (void)animateLabel:(nonnull UILabel *)label
-                 state:(MDCTextControlLabelPosition)labelPosition
-      normalLabelFrame:(CGRect)normalLabelFrame
-    floatingLabelFrame:(CGRect)floatingLabelFrame
-            normalFont:(nonnull UIFont *)normalFont
-          floatingFont:(nonnull UIFont *)floatingFont
-     animationDuration:(NSTimeInterval)animationDuration
-            completion:(void (^__nullable)(BOOL))completion {
+                       state:(MDCTextControlLabelPosition)labelPosition
+            normalLabelFrame:(CGRect)normalLabelFrame
+          floatingLabelFrame:(CGRect)floatingLabelFrame
+                  normalFont:(nonnull UIFont *)normalFont
+                floatingFont:(nonnull UIFont *)floatingFont
+    labelTruncationIsPresent:(BOOL)labelTruncationIsPresent
+           animationDuration:(NSTimeInterval)animationDuration
+                  completion:(void (^__nullable)(BOOL))completion {
   BOOL isAnimationInProgress = label.layer.animationKeys.count > 0;
   if (isAnimationInProgress) {
     if (completion) {
@@ -53,7 +55,7 @@
   BOOL currentFrameIsCGRectZero = CGRectEqualToRect(currentFrame, CGRectZero);
   BOOL isNormalTransition = willChangeFrame && !currentFrameIsCGRectZero;
   BOOL nonZeroDuration = animationDuration > 0;
-  BOOL shouldPerformAnimation = nonZeroDuration && isNormalTransition;
+  BOOL shouldPerformAnimation = nonZeroDuration && isNormalTransition && !labelTruncationIsPresent;
 
   void (^completionBlock)(BOOL finished) = ^void(BOOL finished) {
     label.transform = CGAffineTransformIdentity;
@@ -67,17 +69,18 @@
   if (shouldPerformAnimation) {
     dispatch_async(dispatch_get_main_queue(), ^{
       CAMediaTimingFunction *timingFunction =
-          [CAMediaTimingFunction mdc_functionWithType:MDCAnimationTimingFunctionStandard];
-      [UIView
-          mdc_animateWithTimingFunction:timingFunction
-                               duration:animationDuration
-                                  delay:0
-                                options:0
-                             animations:^{
-                               label.transform =
-                                   transformNeededToMakeViewWithCurrentFrameLookLikeItHasTargetFrame;
-                             }
-                             completion:completionBlock];
+          [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+      [CATransaction begin];
+      [CATransaction setAnimationTimingFunction:timingFunction];
+      [UIView animateWithDuration:animationDuration
+                            delay:0
+                          options:0
+                       animations:^{
+                         label.transform =
+                             transformNeededToMakeViewWithCurrentFrameLookLikeItHasTargetFrame;
+                       }
+                       completion:completionBlock];
+      [CATransaction commit];
     });
   } else {
     completionBlock(YES);

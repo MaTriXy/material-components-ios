@@ -12,10 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialDialogs+ColorThemer.h"
-#import "MaterialDialogs.h"
+#import "MDCButton.h"
+#import "MDCAlertColorThemer.h"
+#import "MDCAlertController.h"
+#import "MDCAlertControllerView.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCAlertActionManager.h"
 #import "MDCAlertControllerView+Private.h"
+#pragma clang diagnostic pop
+#import "MDCSemanticColorScheme.h"
 
 #import <XCTest/XCTest.h>
 
@@ -26,6 +33,8 @@
 #define CGFLOAT_EPSILON FLT_EPSILON
 #endif
 #endif
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCAlertControllerColorThemerTests : XCTestCase
 
@@ -61,7 +70,7 @@
   MDCAlertControllerView *view = (MDCAlertControllerView *)alert.view;
   XCTAssertTrue([self color1:view.titleLabel.textColor
                 equalsColor2:[colorScheme.onSurfaceColor colorWithAlphaComponent:(CGFloat)0.87]]);
-  XCTAssertTrue([self color1:view.messageLabel.textColor
+  XCTAssertTrue([self color1:view.messageTextView.textColor
                 equalsColor2:[colorScheme.onSurfaceColor colorWithAlphaComponent:(CGFloat)0.60]]);
   XCTAssertEqualObjects(view.backgroundColor, colorScheme.surfaceColor);
   for (UIButton *button in view.actionManager.buttonsInActionOrder) {
@@ -70,3 +79,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -13,9 +13,23 @@
 // limitations under the License.
 
 #import <XCTest/XCTest.h>
-#import "MDCAlertActionManager.h"
 #import "MDCAlertController+ButtonForAction.h"
+#import "MDCAlertController.h"
+#import "MDCAlertControllerView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCAlertActionManager.h"
 #import "MDCAlertControllerView+Private.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
+
+/** Category for @c MDCAlertController to expose the @c actionManager property. */
+@interface MDCAlertController (Testing)
+/** Manages the actions and the creation of buttons based off a given action. */
+@property(nonatomic, nonnull, strong) MDCAlertActionManager *actionManager;
+
+@end
 
 @interface MDCAlertActionManagerTests : XCTestCase
 
@@ -51,7 +65,7 @@
   [self.actionManager addAction:self.action];
 
   // When
-  MDCButton *button = [self.actionManager buttonForAction:self.action];
+  UIButton *button = [self.actionManager buttonForAction:self.action];
 
   // Then
   XCTAssertNil(button);
@@ -59,15 +73,15 @@
   XCTAssertEqual([[self.actionManager buttonsInActionOrder] count], 0ul);
 }
 
-- (void)testActionManager_AddingButtonToActionBeforeAlertIsPResentedReturnsDetachedButtons {
+- (void)testActionManager_AddingButtonToActionBeforeAlertIsPresentedReturnsDetachedButtons {
   // Given
   [self.actionManager addAction:self.action];
 
   // When
-  MDCButton *button = [self.actionManager createButtonForAction:self.action
-                                                         target:self
-                                                       selector:@selector(actionButtonPressed:)];
-  MDCButton *button2 = [self.actionManager buttonForAction:self.action];
+  UIButton *button = [self.actionManager createButtonForAction:self.action
+                                                        target:self
+                                                      selector:@selector(actionButtonPressed:)];
+  UIButton *button2 = [self.actionManager buttonForAction:self.action];
 
   // Then
   XCTAssertNotNil(button);
@@ -87,8 +101,8 @@
 
   // When
   [alert addAction:self.action];
-  MDCButton *button = [alert buttonForAction:self.action];
-  MDCButton *button2 = [alert buttonForAction:action2];
+  UIButton *button = [alert buttonForAction:self.action];
+  UIButton *button2 = [alert buttonForAction:action2];
 
   // Then
   XCTAssertEqual([alert.actions count], 1ul);
@@ -101,7 +115,7 @@
   // Given
   MDCAlertController *alert = [MDCAlertController alertControllerWithTitle:@"title" message:@"msg"];
   [alert addAction:self.action];
-  MDCButton *button = [alert buttonForAction:self.action];
+  UIButton *button = [alert buttonForAction:self.action];
 
   // When (simulating alert presentation)
   MDCAlertControllerView *alertView = (MDCAlertControllerView *)alert.view;
@@ -122,7 +136,7 @@
                                                     handler:^(MDCAlertAction *_Nonnull act){
                                                     }];
   [alert addAction:self.action];
-  MDCButton *button = [alert buttonForAction:self.action];
+  UIButton *button = [alert buttonForAction:self.action];
 
   // When
   MDCAlertControllerView *alertView = (MDCAlertControllerView *)alert.view;
@@ -133,9 +147,91 @@
   XCTAssertNotNil(button);
   XCTAssertNotNil(button.superview);
   XCTAssertEqual([[alertView.actionManager buttonsInActionOrder] count], 2ul);
-  MDCButton *button2 = [alert buttonForAction:action2];
+  UIButton *button2 = [alert buttonForAction:action2];
   XCTAssertNotNil(button2);
   XCTAssertNotNil(button2.superview);
 }
 
+/**
+ * Verifies that a new action of the same setup of an added action is not considered as included.
+ */
+- (void)testSecondActionWithSameValuesShouldNotBeIncluded {
+  [self.actionManager addAction:self.action];
+  MDCAlertAction *clonedAction = [self.action copy];
+  XCTAssertFalse([self.actionManager hasAction:clonedAction]);
+
+  // Ensures that the cloned action can be added.
+  [self.actionManager addAction:clonedAction];
+  XCTAssertTrue([self.actionManager hasAction:clonedAction]);
+}
+
+/** Verifes that a button is not created for an action with the same setup that's not yet added. */
+- (void)testButtonForActionShouldReturnNilForSameValueButDifferentActionObject {
+  [self.actionManager addAction:self.action];
+  MDCAlertAction *clonedAction = [self.action copy];
+  UIButton *button = [self.actionManager createButtonForAction:self.action
+                                                        target:self
+                                                      selector:@selector(actionButtonPressed:)];
+
+  XCTAssertNotNil(button);
+  XCTAssertNil([self.actionManager buttonForAction:clonedAction]);
+}
+
+/** Verifies that the buttons for two equal actions have different identities. */
+- (void)testButtonsShouldBeUniqueWithActionsThatAreEqual {
+  MDCAlertAction *clonedAction = [self.action copy];
+  [self.actionManager addAction:self.action];
+  [self.actionManager addAction:clonedAction];
+
+  UIButton *button1 = [self.actionManager createButtonForAction:self.action
+                                                         target:self
+                                                       selector:@selector(actionButtonPressed:)];
+  UIButton *button2 = [self.actionManager createButtonForAction:clonedAction
+                                                         target:self
+                                                       selector:@selector(actionButtonPressed:)];
+  XCTAssertNotEqual(button1, button2);
+}
+
+- (void)testAddActionsResultsInSameButtonsOrderAsAddAction {
+  // Given
+  MDCAlertAction *actionOne = [MDCAlertAction actionWithTitle:@"Foo" handler:nil];
+  MDCAlertAction *actionTwo = [MDCAlertAction actionWithTitle:@"Bar" handler:nil];
+  MDCAlertController *alertOne = [[MDCAlertController alloc] init];
+  MDCAlertController *alertTwo = [[MDCAlertController alloc] init];
+
+  // When
+  [alertOne addActions:@[ actionOne, actionTwo ]];
+  [alertTwo addAction:actionOne];
+  [alertTwo addAction:actionTwo];
+
+  // Then
+  XCTAssertEqualObjects(alertOne.actionManager.actions, alertTwo.actionManager.actions);
+}
+
+- (void)testAddActionsWithButtonsInActionOrder {
+  // Given
+  MDCAlertAction *actionOne = [MDCAlertAction actionWithTitle:@"Foo" handler:nil];
+  MDCAlertAction *actionTwo = [MDCAlertAction actionWithTitle:@"Bar" handler:nil];
+  MDCAlertController *alertOne = [[MDCAlertController alloc] init];
+
+  // When
+  [alertOne addActions:@[ actionOne, actionTwo ]];
+  UIButton *buttonOne =
+      [alertOne.actionManager createButtonForAction:actionOne
+                                             target:self
+                                           selector:@selector(actionButtonPressed:)];
+  UIButton *buttonTwo =
+      [alertOne.actionManager createButtonForAction:actionTwo
+                                             target:self
+                                           selector:@selector(actionButtonPressed:)];
+
+  // Then
+  XCTAssertEqualObjects([buttonOne titleForState:UIControlStateNormal],
+                        [actionOne.title uppercaseString]);
+  XCTAssertEqualObjects([buttonTwo titleForState:UIControlStateNormal],
+                        [actionTwo.title uppercaseString]);
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

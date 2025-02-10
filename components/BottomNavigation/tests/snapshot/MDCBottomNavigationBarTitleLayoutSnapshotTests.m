@@ -15,14 +15,25 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCBottomNavigationItemView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomNavigationItemView.h"
+#pragma clang diagnostic pop
 
-#import "MaterialBottomNavigation.h"
-#import "MaterialInk.h"
-#import "MaterialSnapshot.h"
 #import "supplemental/MDCBottomNavigationSnapshotTestMutableTraitCollection.h"
 #import "supplemental/MDCBottomNavigationSnapshotTestUtilities.h"
 #import "supplemental/MDCFakeBottomNavigationBar.h"
+#import "MDCBottomNavigationBar.h"
+#import "MDCRippleTouchController.h"
+#import "MDCRippleView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSnapshotTestCase.h"
+#import "UIImage+MDCSnapshot.h"
+#import "UIView+MDCSnapshot.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCBottomNavigationBarTitleLayoutSnapshotTests : MDCSnapshotTestCase
 @property(nonatomic, strong) MDCFakeBottomNavigationBar *navigationBar;
@@ -82,20 +93,20 @@
   [self snapshotVerifyView:backgroundView];
 }
 
-- (void)performInkTouchOnBar:(MDCBottomNavigationBar *)navigationBar item:(UITabBarItem *)item {
+- (void)performRippleTouchOnBar:(MDCBottomNavigationBar *)navigationBar item:(UITabBarItem *)item {
   [navigationBar layoutIfNeeded];
   MDCBottomNavigationItemView *itemView =
       (MDCBottomNavigationItemView *)[navigationBar viewForItem:item];
-  [itemView.inkView startTouchBeganAtPoint:CGPointMake(CGRectGetMidX(itemView.bounds),
-                                                       CGRectGetMidY(itemView.bounds))
-                                  animated:NO
-                            withCompletion:nil];
+  CGPoint point = CGPointMake(CGRectGetMidX(itemView.bounds), CGRectGetMidY(itemView.bounds));
+  [itemView.rippleTouchController.rippleView beginRippleTouchDownAtPoint:point
+                                                                animated:NO
+                                                              completion:nil];
 }
 
 - (void)configureBottomNavigation:(MDCFakeBottomNavigationBar *)bottomNavigation
                     withAlignment:(MDCBottomNavigationBarAlignment)alignment
                   titleVisibility:(MDCBottomNavigationBarTitleVisibility)titleVisibility
-                  traitCollection:(UITraitCollection *)traitCollection
+                  traitCollection:(nullable UITraitCollection *)traitCollection
                         allTitles:(NSString *)title {
   bottomNavigation.alignment = alignment;
   bottomNavigation.titleVisibility = titleVisibility;
@@ -136,7 +147,7 @@
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -152,7 +163,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   self.navigationBar.truncatesLongTitles = NO;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -168,7 +179,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -185,7 +196,7 @@
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
   self.navigationBar.truncatesLongTitles = NO;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -205,7 +216,7 @@
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -226,7 +237,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   self.navigationBar.truncatesLongTitles = NO;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -247,7 +258,7 @@
   self.navigationBar.titlesNumberOfLines = 0;
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -268,7 +279,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -290,7 +301,7 @@
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
   self.navigationBar.truncatesLongTitles = NO;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -312,7 +323,7 @@
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
   self.navigationBar.titlesNumberOfLines = 0;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -327,7 +338,7 @@
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -343,7 +354,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   self.navigationBar.truncatesLongTitles = NO;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -359,7 +370,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   self.navigationBar.titlesNumberOfLines = 0;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -375,7 +386,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -392,7 +403,7 @@
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
   self.navigationBar.truncatesLongTitles = NO;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -409,7 +420,7 @@
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestLongTitleArabic];
   self.navigationBar.titlesNumberOfLines = 0;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -424,7 +435,7 @@
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -438,7 +449,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -451,7 +462,7 @@
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -465,7 +476,7 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -478,7 +489,6 @@
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -492,10 +502,11 @@
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

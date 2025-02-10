@@ -15,11 +15,14 @@
 #import "FeatureHighlightExampleSupplemental.h"
 
 #import "MaterialButtons+ButtonThemer.h"
-#import "MaterialButtons+Theming.h"
 #import "MaterialButtons.h"
-#import "MaterialMath.h"
+#import "MaterialButtons+Theming.h"
+#import "MaterialCollections.h"
 #import "MaterialPalettes.h"
 #import "MaterialTypography.h"
+#import "MaterialMath.h"
+#import "MaterialColorScheme.h"
+#import "MaterialTypographyScheme.h"
 
 static NSString *const reuseIdentifier = @"Cell";
 
@@ -36,8 +39,6 @@ static NSString *const reuseIdentifier = @"Cell";
   self.infoLabel = [[UILabel alloc] initWithFrame:CGRectZero];
   self.infoLabel.text = @"Tap anywhere to move the button.";
   self.infoLabel.font = [MDCTypography subheadFont];
-  self.infoLabel.textColor =
-      [self.infoLabel.textColor colorWithAlphaComponent:[MDCTypography captionFontOpacity]];
   [self.view addSubview:self.infoLabel];
 
   MDCButton *button = [[MDCButton alloc] init];
@@ -217,7 +218,7 @@ static NSString *const reuseIdentifier = @"Cell";
   buttonScheme.typographyScheme = self.typographyScheme;
 
   MDCFloatingButton *fab = [[MDCFloatingButton alloc] init];
-  [fab setImage:[UIImage imageNamed:@"Plus"] forState:UIControlStateNormal];
+  [fab setImage:[UIImage imageNamed:@"system_icons/add"] forState:UIControlStateNormal];
   [fab sizeToFit];
   self.button = fab;
   [self.view addSubview:self.button];

@@ -18,7 +18,6 @@
 
 #import "MaterialMath.h"
 #import "MaterialShadowElevations.h"
-#import "MaterialShadowLayer.h"
 #import "MaterialSlider.h"
 
 static NSString *const kDefaultShadowElevationLabelString = @"";
@@ -157,7 +156,7 @@ static const CGFloat kShadowElevationsPaperBottomMargin = 20;
 #pragma mark - MDCSliderDelegate methods
 
 - (NSString *)slider:(MDCSlider *)slider displayedStringForValue:(CGFloat)value {
-  NSInteger points = (NSInteger)MDCRound(value);
+  NSInteger points = (NSInteger)round(value);
   return [NSString stringWithFormat:@"%ld pt", (long)points];
 }
 
@@ -181,7 +180,7 @@ static const CGFloat kShadowElevationsPaperBottomMargin = 20;
 #pragma mark - Internal methods
 
 - (MDCShadowElevation)shadowElevationFromSliderValue:(CGFloat)sliderValue {
-  return MDCRound(sliderValue);
+  return round(sliderValue);
 }
 
 + (NSString *)elevationStringForShadowElevationValue:(MDCShadowElevation)shadowElevationValue {
@@ -229,13 +228,8 @@ static const CGFloat kShadowElevationsPaperBottomMargin = 20;
   _shadowsView = [[ShadowElevationsPointsView alloc] initWithFrame:self.view.bounds];
   [self.view addSubview:_shadowsView];
 
-  if (@available(iOS 11.0, *)) {
-    self.shadowsView.autoresizingMask =
-        UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
-  } else {
-    _shadowsView.translatesAutoresizingMaskIntoConstraints = NO;
-    [self setupShadowsViewConstraints];
-  }
+  self.shadowsView.autoresizingMask =
+      UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 }
 
 - (void)setupShadowsViewConstraints {

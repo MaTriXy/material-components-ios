@@ -14,21 +14,61 @@
 
 #import "MDCActionSheetController.h"
 
-#import "MaterialAvailability.h"
-#import "MaterialMath.h"
-#import "MaterialShadowElevations.h"
-#import "MaterialTypography.h"
 #import "private/MDCActionSheetHeaderView.h"
 #import "private/MDCActionSheetItemTableViewCell.h"
+#import "private/MaterialActionSheetStrings.h"
+#import "private/MaterialActionSheetStrings_table.h"
+#import "MDCActionSheetAction.h"
+#import "MDCActionSheetControllerDelegate.h"
+#import "MaterialAvailability.h"
+#import "MaterialBottomSheet.h"
+#import "MaterialElevation.h"
+#import "MaterialShadowElevations.h"
+#import "MaterialTypography.h"
+#import "MaterialMath.h"
 
 static NSString *const kReuseIdentifier = @"BaseCell";
 static const CGFloat kActionImageAlpha = (CGFloat)0.6;
 static const CGFloat kActionTextAlpha = (CGFloat)0.87;
 static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
 
+// The Bundle for string resources.
+static NSString *const kMaterialActionSheetBundle = @"MaterialActionSheet.bundle";
+
+@interface MDCActionSheetController () <MDCBottomSheetPresentationControllerDelegate,
+                                        UITableViewDelegate,
+                                        UITableViewDataSource>
+@property(nonatomic, strong) UITableView *tableView;
+@property(nonatomic, strong) MDCActionSheetHeaderView *header;
+
+/** The view that divides the header from the table. */
+@property(nonatomic, strong, nonnull) UIView *headerDividerView;
+
+/**
+ Determines if a @c MDCActionSheetItemTableViewCell should add leading padding or not.
+
+ @note Defaults to @c NO.
+ */
+@property(nonatomic, assign) BOOL addLeadingPaddingToCell;
+
+/**
+ Reloads the tables data and does a layout pass.
+ */
+- (void)updateTable;
+
+@end
+
 @interface MDCActionSheetAction ()
 
 @property(nonatomic, nullable, copy) MDCActionSheetHandler completionHandler;
+
+/**
+ The @c MDCActionSheetController responsible for presenting the action.
+
+ @note This is only set when the @c MDCActionSheetController's view is in the heirarchy else it is
+ @c nil.
+ */
+@property(nonatomic, weak, nullable) MDCActionSheetController *actionSheet;
 
 @end
 
@@ -66,23 +106,13 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   return action;
 }
 
-@end
+- (void)setImage:(UIImage *)image {
+  _image = image;
+  if (self.actionSheet) {
+    [self.actionSheet updateTable];
+  }
+}
 
-@interface MDCActionSheetController () <MDCBottomSheetPresentationControllerDelegate,
-                                        UITableViewDelegate,
-                                        UITableViewDataSource>
-@property(nonatomic, strong) UITableView *tableView;
-@property(nonatomic, strong) MDCActionSheetHeaderView *header;
-
-/** The view that divides the header from the table. */
-@property(nonatomic, strong, nonnull) UIView *headerDividerView;
-
-/**
- Determines if a @c MDCActionSheetItemTableViewCell should add leading padding or not.
-
- @note Defaults to @c NO.
- */
-@property(nonatomic, assign) BOOL addLeadingPaddingToCell;
 @end
 
 @implementation MDCActionSheetController {
@@ -92,7 +122,7 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
 
 @synthesize mdc_overrideBaseElevation = _mdc_overrideBaseElevation;
 @synthesize mdc_elevationDidChangeBlock = _mdc_elevationDidChangeBlock;
-@synthesize mdc_adjustsFontForContentSizeCategory = _mdc_adjustsFontForContentSizeCategory;
+@synthesize adjustsFontForContentSizeCategory = _adjustsFontForContentSizeCategory;
 
 + (instancetype)actionSheetControllerWithTitle:(NSString *)title message:(NSString *)message {
   return [[MDCActionSheetController alloc] initWithTitle:title message:message];
@@ -112,6 +142,7 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
     _actions = [[NSMutableArray alloc] init];
     _transitionController = [[MDCBottomSheetTransitionController alloc] init];
     _transitionController.dismissOnBackgroundTap = YES;
+    _transitionController.delegate = self;
     /**
      "We must call super because we've made the setters on this class unavailable and overridden
      their implementations to throw assertions."
@@ -149,8 +180,10 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   return self;
 }
 
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
+- (void)didDismissBottomSheetTransitionController:(MDCBottomSheetTransitionController *)controller {
+  if ([self.delegate respondsToSelector:@selector(actionSheetControllerDidDismiss:)]) {
+    [self.delegate actionSheetControllerDidDismiss:self];
+  }
 }
 
 - (void)addAction:(MDCActionSheetAction *)action {
@@ -159,6 +192,16 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
     self.addLeadingPaddingToCell = YES;
   }
   [self updateTable];
+}
+
+- (UIView *)viewForAction:(MDCActionSheetAction *)action {
+  if (![self.actions containsObject:action]) {
+    return nil;
+  }
+  [self.view layoutIfNeeded];
+  NSUInteger rowIndex = [self.actions indexOfObject:action];
+  NSIndexPath *indexPath = [NSIndexPath indexPathForRow:rowIndex inSection:0];
+  return [self.tableView cellForRowAtIndexPath:indexPath];
 }
 
 - (NSArray<MDCActionSheetAction *> *)actions {
@@ -178,10 +221,8 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   self.tableView.frame = self.view.bounds;
   self.tableView.cellLayoutMarginsFollowReadableWidth = NO;
   self.view.preservesSuperviewLayoutMargins = YES;
-  if (@available(iOS 11.0, *)) {
-    self.view.insetsLayoutMarginsFromSafeArea = NO;
-    self.tableView.insetsLayoutMarginsFromSafeArea = NO;
-  }
+  self.view.insetsLayoutMarginsFromSafeArea = NO;
+  self.tableView.insetsLayoutMarginsFromSafeArea = NO;
   [self.view addSubview:self.tableView];
   [self.view addSubview:self.header];
   [self.view addSubview:self.headerDividerView];
@@ -201,9 +242,7 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   self.headerDividerView.frame =
       CGRectMake(0, size.height, CGRectGetWidth(self.view.bounds), dividerHeight);
   UIEdgeInsets insets = UIEdgeInsetsMake(size.height + dividerHeight, 0, 0, 0);
-  if (@available(iOS 11.0, *)) {
-    insets.bottom = self.tableView.adjustedContentInset.bottom;
-  }
+  insets.bottom = self.tableView.adjustedContentInset.bottom;
   self.tableView.contentInset = insets;
   self.tableView.contentOffset = CGPointMake(0, -size.height);
 }
@@ -225,10 +264,8 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
       (((CGFloat)amountOfCellsToShow - (CGFloat)0.5) * cellHeight) + headerHeight;
   // When updating the preferredSheetHeight the presentation controller takes into account the
   // safe area so we have to remove that.
-  if (@available(iOS 11.0, *)) {
-    preferredHeight = preferredHeight - self.tableView.adjustedContentInset.bottom;
-  }
-  return MDCCeil(preferredHeight);
+  preferredHeight = preferredHeight - self.tableView.adjustedContentInset.bottom;
+  return ceil(preferredHeight);
 }
 
 - (void)viewDidAppear:(BOOL)animated {
@@ -240,6 +277,10 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
 - (void)viewWillAppear:(BOOL)animated {
   [super viewWillAppear:animated];
 
+  for (MDCActionSheetAction *action in self.actions) {
+    action.actionSheet = self;
+  }
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
   self.mdc_bottomSheetPresentationController.delegate = self;
@@ -248,13 +289,33 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   self.mdc_bottomSheetPresentationController.dismissOnBackgroundTap =
       self.transitionController.dismissOnBackgroundTap;
   [self.view layoutIfNeeded];
+
+  NSString *key =
+      kMaterialActionSheetStringTable[kStr_MaterialActionSheetPresentedAccessibilityAnnouncement];
+  NSString *announcement = NSLocalizedStringFromTableInBundle(
+      key, kMaterialActionSheetStringsTableName, [[self class] bundle], @"Alert");
+  UIAccessibilityPostNotification(UIAccessibilityScreenChangedNotification, announcement);
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+  for (MDCActionSheetAction *action in self.actions) {
+    action.actionSheet = nil;
+  }
 }
 
 - (BOOL)accessibilityPerformEscape {
   if (!self.dismissOnBackgroundTap) {
     return NO;
   }
-  [self dismissViewControllerAnimated:YES completion:nil];
+  [self
+      dismissViewControllerAnimated:YES
+                         completion:^{
+                           if ([self.delegate
+                                   respondsToSelector:@selector
+                                   (actionSheetControllerDismissalAnimationCompleted:)]) {
+                             [self.delegate actionSheetControllerDismissalAnimationCompleted:self];
+                           }
+                         }];
   return YES;
 }
 
@@ -330,9 +391,9 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
       [tableView dequeueReusableCellWithIdentifier:kReuseIdentifier forIndexPath:indexPath];
   MDCActionSheetAction *action = _actions[indexPath.row];
   cell.action = action;
-  cell.mdc_adjustsFontForContentSizeCategory = self.mdc_adjustsFontForContentSizeCategory;
   cell.backgroundColor = self.backgroundColor;
   cell.actionFont = self.actionFont;
+  cell.actionLabel.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory;
   cell.accessibilityIdentifier = action.accessibilityIdentifier;
   cell.rippleColor = self.rippleColor;
   cell.tintColor = action.tintColor ?: self.actionTintColor;
@@ -343,6 +404,15 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   cell.dividerColor = action.dividerColor;
   cell.showsDivider = action.showsDivider;
   return cell;
+}
+
+- (void)tableView:(UITableView *)tableView
+      willDisplayCell:(nonnull UITableViewCell *)cell
+    forRowAtIndexPath:(nonnull NSIndexPath *)indexPath {
+  if ([self.delegate respondsToSelector:@selector(actionSheetController:
+                                                        willDisplayView:forRowAtIndexPath:)]) {
+    [self.delegate actionSheetController:self willDisplayView:cell forRowAtIndexPath:indexPath];
+  }
 }
 
 - (void)setContentEdgeInsets:(UIEdgeInsets)contentEdgeInsets {
@@ -442,31 +512,14 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
 
 #pragma mark - Dynamic Type
 
-- (void)mdc_setAdjustsFontForContentSizeCategory:(BOOL)adjusts {
-  _mdc_adjustsFontForContentSizeCategory = adjusts;
-  self.header.mdc_adjustsFontForContentSizeCategory = adjusts;
-  [self updateFontsForDynamicType];
-  if (_mdc_adjustsFontForContentSizeCategory) {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(updateFontsForDynamicType)
-                                                 name:UIContentSizeCategoryDidChangeNotification
-                                               object:nil];
-  } else {
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIContentSizeCategoryDidChangeNotification
-                                                  object:nil];
-  }
-  [self.view setNeedsLayout];
+- (void)setAdjustsFontForContentSizeCategory:(BOOL)adjustsFontForContentSizeCategory {
+  _adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
+  self.header.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
 }
 
 - (void)updateTableFonts {
   UIFont *finalActionsFont =
       _actionFont ?: [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleSubheadline];
-  if (self.mdc_adjustsFontForContentSizeCategory) {
-    finalActionsFont = [finalActionsFont
-        mdc_fontSizedForMaterialTextStyle:MDCFontTextStyleSubheadline
-                     scaledForDynamicType:self.mdc_adjustsFontForContentSizeCategory];
-  }
   _actionFont = finalActionsFont;
   [self updateTable];
 }
@@ -543,6 +596,32 @@ static const CGFloat kDividerDefaultAlpha = (CGFloat)0.12;
   if ([self.delegate respondsToSelector:@selector(actionSheetControllerDidDismiss:)]) {
     [self.delegate actionSheetControllerDidDismiss:self];
   }
+}
+
+- (void)bottomSheetPresentationControllerDismissalAnimationCompleted:
+    (MDCBottomSheetPresentationController *)bottomSheet {
+  if ([self.delegate
+          respondsToSelector:@selector(actionSheetControllerDismissalAnimationCompleted:)]) {
+    [self.delegate actionSheetControllerDismissalAnimationCompleted:self];
+  }
+}
+
+#pragma mark - Resource bundle
+
++ (NSBundle *)bundle {
+  static NSBundle *bundle = nil;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    bundle = [NSBundle bundleWithPath:[self bundlePathWithName:kMaterialActionSheetBundle]];
+  });
+
+  return bundle;
+}
+
++ (NSString *)bundlePathWithName:(NSString *)bundleName {
+  NSBundle *bundle = [NSBundle bundleForClass:[MDCActionSheetController class]];
+  NSString *resourcePath = [(nil == bundle ? [NSBundle mainBundle] : bundle) resourcePath];
+  return [resourcePath stringByAppendingPathComponent:bundleName];
 }
 
 @end

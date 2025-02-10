@@ -14,10 +14,13 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialAppBar+Theming.h"
 #import "MaterialAppBar.h"
-#import "MaterialBanner+Theming.h"
+#import "MaterialAppBar+Theming.h"
 #import "MaterialBanner.h"
+#import "MaterialBanner+Theming.h"
+#import "MaterialButtons.h"
+#import "MaterialFlexibleHeader.h"
+#import "MaterialHeaderStackView.h"
 #import "MaterialContainerScheme.h"
 
 @interface AppBarBannerExample : UITableViewController
@@ -86,6 +89,7 @@
 - (void)showBanner {
   self.banner = [[MDCBannerView alloc] init];
   [self.banner applyThemeWithScheme:_containerScheme];
+  self.banner.contentEdgeInsets = UIEdgeInsetsMake(0, 8, 0, 8);
   self.banner.textView.text = @"This banner has been set as bottomBar of this AppBar.";
   [self.banner.leadingButton setTitle:@"Dismiss" forState:UIControlStateNormal];
   [self.banner.leadingButton addTarget:self

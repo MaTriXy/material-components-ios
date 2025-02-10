@@ -19,8 +19,8 @@ from the Material Design specifications.
 
 <ul class="icon-list">
   <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/go/design-typography">Material Design guidelines: Typography</a></li>
-  <li class="icon-list-item icon-list-item--link"><a href="https://material.io/components/ios/catalog/typography/api-docs/Classes/MDCTypography.html">API: MDCTypography</a></li>
-  <li class="icon-list-item icon-list-item--link"><a href="https://material.io/components/ios/catalog/typography/api-docs/Protocols/MDCTypographyFontLoading.html">API: MDCTypographyFontLoading</a></li>
+  <li class="icon-list-item icon-list-item--link"><a href="https://github.com/material-components/material-components-ios/blob/develop/components/Typography/src/MDCTypography.h">API: MDCTypography</a></li>
+  <li class="icon-list-item icon-list-item--link"><a href="https://github.com/material-components/material-components-ios/blob/develop/components/Typography/src/MDCTypography.h">API: MDCTypographyFontLoading</a></li>
 </ul>
 
 ## Installation
@@ -290,7 +290,7 @@ To support Dynamic Type in your component, you need to set up text styles repres
 
 Users configure text styles in source code. First, you call the `scalerForMaterialTextStyle:` method. This method returns an `MDCFontScalar` object for a given `MDCFontTextStyle`. Next, use the `MDCFontScalar` object to scale a `UIFont` by calling `scaledFontWithFont:` method. This method scales the font based on Dynamic Type setting provided by the user. This method also supports both system fonts and custom fonts.
 
-##### Objective-C
+#### Objective-C
 
 ```objc
 UIFont *customFont = [UIFont fontWithName:@"CustomFontName" size:18.0];
@@ -299,7 +299,7 @@ UIFont *customScalableFont = [fontScaler scaledFontWithFont:customFont];
 label.font = customScalingFont;
 ```
 
-##### Swift
+#### Swift
 
 ```swift
 let customFont = UIFont(name: "CustomFontName", size: 18.0)!

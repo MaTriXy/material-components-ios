@@ -13,20 +13,18 @@
 // limitations under the License.
 
 #import "MDCLegacyInkLayer.h"
+// TODO(b/151929968): Delete import of delegate headers when client code has been migrated to no
+// longer import delegates as transitive dependencies.
+#import "MDCLegacyInkLayerRippleDelegate.h"
+
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use default system highlight behavior instead: go/material-ios-touch-response. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
 
 @class MDCLegacyInkLayerRipple;
-
-@protocol MDCLegacyInkLayerRippleDelegate <MDCLegacyInkLayerDelegate>
-
-/// Called if MDCLegacyInkLayerRipple did start animating.
-- (void)animationDidStart:(nonnull MDCLegacyInkLayerRipple *)layerRipple;
-
-/// Called for every MDCLegacyInkLayerRipple if an animation did end.
-- (void)animationDidStop:(nullable CAAnimation *)anim
-              shapeLayer:(nullable CAShapeLayer *)layerRipple
-                finished:(BOOL)finished;
-
-@end
+@protocol MDCLegacyInkLayerRippleDelegate;
 
 @interface MDCLegacyInkLayer () <MDCLegacyInkLayerRippleDelegate>
 
@@ -52,3 +50,5 @@
 - (void)exit:(BOOL)animated;
 
 @end
+
+API_DEPRECATED_END

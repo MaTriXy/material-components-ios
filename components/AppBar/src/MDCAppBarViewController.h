@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "MDCMinimumOS.h"  // IWYU pragma: keep
+
 #import "MaterialFlexibleHeader.h"
 #import "MaterialHeaderStackView.h"
 #import "MaterialNavigationBar.h"
@@ -19,15 +21,27 @@
 @class MDCAppBarViewController;
 @protocol MDCAppBarViewControllerAccessibilityPerformEscapeDelegate;
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UINavigationController instead: go/material-ios-top-app-bars/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(11, 12))
+
 /**
  MDCAppBarViewController is a flexible header view controller that manages a navigation bar and
  header stack view in order to provide the Material Top App Bar user interface.
  */
+API_DEPRECATED(
+    "🕘 Schedule time to migrate. "
+    "Use branded UINavigationController instead: go/material-ios-top-app-bars/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(11, 12))
+API_UNAVAILABLE(tvos, watchos)
 @interface MDCAppBarViewController : MDCFlexibleHeaderViewController
 
 /**
  The navigation bar often represents the information stored in a view controller's navigationItem
- propoerty, but it can also be directly configured.
+ property, but it can also be directly configured.
  */
 @property(nonatomic, strong, nonnull) MDCNavigationBar *navigationBar;
 
@@ -63,26 +77,6 @@
     accessibilityPerformEscapeDelegate;
 
 @end
-
-/**
- A delegate that can be implemented in order to respond to events specific to
- MDCAppBarViewController.
- */
-@protocol MDCAppBarViewControllerAccessibilityPerformEscapeDelegate <NSObject>
-@required
-
-/**
- Informs the receiver that the app bar view controller received an accessibilityPerformEscape event.
-
- The receiver should return @c YES if the modal view is successfully dismissed; otherwise,
- return @c NO. The value returned by this method is in turn returned to the
- @c accessibilityPerformEscape event.
- */
-- (BOOL)appBarViewControllerAccessibilityPerformEscape:
-    (nonnull MDCAppBarViewController *)appBarViewController;
-
-@end
-
 #pragma mark - To be deprecated
 
 /**
@@ -103,6 +97,12 @@
  @warning This API will be deprecated in favor of MDCAppBarViewController. Learn more at
  https://github.com/material-components/material-components-ios/blob/develop/components/AppBar/docs/migration-guide-appbar-appbarviewcontroller.md
  */
+API_DEPRECATED(
+    "🕘 Schedule time to migrate. "
+    "Use branded UINavigationController instead: go/material-ios-top-app-bars/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(11, 12))
+API_UNAVAILABLE(tvos, watchos)
 @interface MDCAppBar : NSObject
 
 /**
@@ -153,3 +153,5 @@
 @property(nonatomic) BOOL inferTopSafeAreaInsetFromViewController;
 
 @end
+
+API_DEPRECATED_END

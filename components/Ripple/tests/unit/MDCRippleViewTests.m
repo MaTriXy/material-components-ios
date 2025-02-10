@@ -12,10 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <CoreGraphics/CoreGraphics.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCRippleLayer.h"
-#import "MaterialRipple.h"
+#import "MDCRippleView.h"
+#import "MDCRippleViewDelegate.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCRippleLayer.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface FakeMDCRippleViewAnimationDelegate : NSObject <MDCRippleViewDelegate>
 @property(nonatomic, strong) MDCRippleView *rippleView;
@@ -65,7 +72,7 @@
   // Then
   XCTAssertNil(rippleView.rippleViewDelegate);
   XCTAssertEqualObjects(rippleView.rippleColor, [[UIColor alloc] initWithWhite:0
-                                                                         alpha:(CGFloat)0.16]);
+                                                                         alpha:(CGFloat)0.12]);
   XCTAssertEqual(rippleView.rippleStyle, MDCRippleStyleBounded);
   XCTAssertEqual(rippleView.maximumRadius, 0);
 }
@@ -273,4 +280,33 @@
   XCTAssertEqual(passedTraitCollection, fakeTraitCollection);
 }
 
+- (void)testInjectedRippleViewFindsRippleViewInHierarchy {
+  // Given
+  UIView *parentView = [[UIView alloc] init];
+  MDCRippleView *rippleView = [[MDCRippleView alloc] init];
+  [parentView addSubview:rippleView];
+
+  // When
+  MDCRippleView *injectedRippleView = [MDCRippleView injectedRippleViewForView:parentView];
+
+  // Then
+  XCTAssertEqual(rippleView, injectedRippleView);
+}
+
+- (void)testInjectedRippleViewCreatesRippleViewInstance {
+  // Given
+  UIView *firstLevelView = [[UIView alloc] init];
+  UIView *secondLevelView = [[UIView alloc] init];
+  [firstLevelView addSubview:secondLevelView];
+
+  // When
+  MDCRippleView *injectedRippleView = [MDCRippleView injectedRippleViewForView:firstLevelView];
+
+  // Then
+  XCTAssertNotNil(injectedRippleView);
+  XCTAssertEqualObjects(injectedRippleView.superview, firstLevelView);
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

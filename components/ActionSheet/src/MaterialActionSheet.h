@@ -12,4 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MDCActionSheetController.h"
+#import "MDCActionSheetAction.h"  // IWYU pragma: keep
+#import "MDCActionSheetController.h"  // IWYU pragma: keep
+#import "MDCActionSheetControllerDelegate.h"  // IWYU pragma: keep

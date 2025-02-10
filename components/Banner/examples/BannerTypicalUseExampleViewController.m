@@ -13,11 +13,10 @@
 // limitations under the License.
 
 #import "MaterialBanner.h"
-#import "MaterialButtons+Theming.h"
+#import "MaterialBanner+Theming.h"
 #import "MaterialButtons.h"
 #import "MaterialColorScheme.h"
 #import "MaterialContainerScheme.h"
-#import "MaterialTypography.h"
 #import "MaterialTypographyScheme.h"
 
 static const CGFloat exampleListTableViewHeight = 160.0f;
@@ -153,7 +152,7 @@ static NSString *const exampleSuperLongText =
   return @{
     @"breadcrumbs" : @[ @"Banner", @"Banner" ],
     @"primaryDemo" : @YES,
-    @"presentable" : @NO,
+    @"presentable" : @YES,
   };
 }
 
@@ -170,11 +169,7 @@ static NSString *const exampleSuperLongText =
   CGSize bannerViewSize = [self.bannerView sizeThatFits:self.view.bounds.size];
   // Adjust bannerViewContainer's frame
   CGFloat yOrigin = 0.0f;
-  if (@available(iOS 11.0, *)) {
-    yOrigin = self.view.safeAreaInsets.top;
-  } else {
-    yOrigin = self.topLayoutGuide.length;
-  }
+  yOrigin = self.view.safeAreaInsets.top;
 
   self.bannerView.frame = CGRectMake(0.0f, yOrigin, bannerViewSize.width, bannerViewSize.height);
 }
@@ -266,7 +261,6 @@ static NSString *const exampleSuperLongText =
   MDCBannerView *bannerView = [[MDCBannerView alloc] init];
   bannerView.textView.text = exampleShortText;
   bannerView.textView.font = self.typographyScheme.body2;
-  bannerView.mdc_adjustsFontForContentSizeCategory = YES;
   bannerView.backgroundColor = self.colorScheme.surfaceColor;
   UIEdgeInsets margins = UIEdgeInsetsZero;
   margins.left = exampleBannerContentPadding;
@@ -275,7 +269,6 @@ static NSString *const exampleSuperLongText =
   [self addBannerView:bannerView];
 
   MDCButton *button = bannerView.leadingButton;
-  [button applyTextThemeWithScheme:self.containerScheme];
   [button setTitle:@"Dismiss" forState:UIControlStateNormal];
   bannerView.trailingButton.hidden = YES;
   bannerView.imageView.hidden = YES;
@@ -290,7 +283,7 @@ static NSString *const exampleSuperLongText =
   [self showSingleLineStyleBanner];
   self.bannerView.imageView.hidden = NO;
   NSBundle *bundle = [NSBundle bundleForClass:[BannerTypicalUseExampleViewController class]];
-  self.bannerView.imageView.image = [[UIImage imageNamed:@"banner-email"
+  self.bannerView.imageView.image = [[UIImage imageNamed:@"system_icons/email"
                                                 inBundle:bundle
                            compatibleWithTraitCollection:nil]
       imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -313,13 +306,11 @@ static NSString *const exampleSuperLongText =
   [self addBannerView:bannerView];
 
   MDCButton *dismissButton = bannerView.leadingButton;
-  [dismissButton applyTextThemeWithScheme:self.containerScheme];
   [dismissButton setTitle:@"Dismiss" forState:UIControlStateNormal];
   [dismissButton addTarget:self
                     action:@selector(dismissBanner)
           forControlEvents:UIControlEventTouchUpInside];
   MDCButton *changeTextButton = bannerView.trailingButton;
-  [changeTextButton applyTextThemeWithScheme:self.containerScheme];
   [changeTextButton setTitle:@"Long dismiss" forState:UIControlStateNormal];
   [changeTextButton addTarget:self
                        action:@selector(dismissBanner)
@@ -330,7 +321,7 @@ static NSString *const exampleSuperLongText =
   [self showMultiLineAlignedButtonStyleBanner];
   self.bannerView.imageView.hidden = NO;
   NSBundle *bundle = [NSBundle bundleForClass:[BannerTypicalUseExampleViewController class]];
-  self.bannerView.imageView.image = [[UIImage imageNamed:@"banner-email"
+  self.bannerView.imageView.image = [[UIImage imageNamed:@"system_icons/email"
                                                 inBundle:bundle
                            compatibleWithTraitCollection:nil]
       imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -354,12 +345,10 @@ static NSString *const exampleSuperLongText =
 
   MDCButton *dismissButton = bannerView.leadingButton;
   [dismissButton setTitle:@"Dismiss" forState:UIControlStateNormal];
-  [dismissButton applyTextThemeWithScheme:self.containerScheme];
   [dismissButton addTarget:self
                     action:@selector(dismissBanner)
           forControlEvents:UIControlEventTouchUpInside];
   MDCButton *changeTextButton = bannerView.trailingButton;
-  [changeTextButton applyTextThemeWithScheme:self.containerScheme];
   [changeTextButton setTitle:@"Extra long long long dismiss" forState:UIControlStateNormal];
   [changeTextButton addTarget:self
                        action:@selector(dismissBanner)
@@ -370,7 +359,7 @@ static NSString *const exampleSuperLongText =
   [self showMultiLineStackedButtonStyleBanner];
   self.bannerView.imageView.hidden = NO;
   NSBundle *bundle = [NSBundle bundleForClass:[BannerTypicalUseExampleViewController class]];
-  self.bannerView.imageView.image = [[UIImage imageNamed:@"banner-email"
+  self.bannerView.imageView.image = [[UIImage imageNamed:@"system_icons/email"
                                                 inBundle:bundle
                            compatibleWithTraitCollection:nil]
       imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -393,8 +382,8 @@ static NSString *const exampleSuperLongText =
   [self addBannerView:bannerView];
 
   MDCButton *button = bannerView.leadingButton;
-  [button applyTextThemeWithScheme:self.containerScheme];
   [button setTitle:@"Dismiss" forState:UIControlStateNormal];
+  bannerView.trailingButton.hidden = YES;
   bannerView.imageView.hidden = YES;
   bannerView.showsDivider = YES;
 
@@ -418,7 +407,6 @@ static NSString *const exampleSuperLongText =
   [self addBannerView:bannerView];
 
   MDCButton *button = bannerView.leadingButton;
-  [button applyTextThemeWithScheme:self.containerScheme];
   [button setTitle:@"Dismiss" forState:UIControlStateNormal];
   bannerView.trailingButton.hidden = YES;
   bannerView.imageView.hidden = YES;
@@ -435,6 +423,7 @@ static NSString *const exampleSuperLongText =
   }
 
   MDCBannerView *bannerView = [[MDCBannerView alloc] init];
+  [self addBannerView:bannerView];
   NSMutableAttributedString *exampleString =
       [[NSMutableAttributedString alloc] initWithString:exampleLongText];
   [exampleString addAttribute:NSFontAttributeName
@@ -447,16 +436,13 @@ static NSString *const exampleSuperLongText =
                         value:@"http://www.google.com"
                         range:NSMakeRange([exampleLongText length] - 11, 11)];
   bannerView.textView.attributedText = exampleString;
-  bannerView.mdc_adjustsFontForContentSizeCategory = YES;
   bannerView.backgroundColor = self.colorScheme.surfaceColor;
   UIEdgeInsets margins = UIEdgeInsetsZero;
   margins.left = exampleBannerContentPadding;
   margins.right = exampleBannerContentPadding;
   bannerView.layoutMargins = margins;
-  [self addBannerView:bannerView];
 
   MDCButton *button = bannerView.leadingButton;
-  [button applyTextThemeWithScheme:self.containerScheme];
   [button setTitle:@"Dismiss" forState:UIControlStateNormal];
   bannerView.trailingButton.hidden = YES;
   bannerView.imageView.hidden = YES;
@@ -482,7 +468,6 @@ static NSString *const exampleSuperLongText =
   [self addBannerView:bannerView];
 
   MDCButton *button = bannerView.leadingButton;
-  [button applyTextThemeWithScheme:self.containerScheme];
   [button setTitle:@"Dismiss" forState:UIControlStateNormal];
   bannerView.trailingButton.hidden = YES;
   bannerView.imageView.hidden = YES;
@@ -495,6 +480,7 @@ static NSString *const exampleSuperLongText =
 
 - (void)addBannerView:(MDCBannerView *)bannerView {
   [self.view addSubview:bannerView];
+  [bannerView applyThemeWithScheme:self.containerScheme];
   self.bannerView = bannerView;
   UIAccessibilityPostNotification(UIAccessibilityLayoutChangedNotification, self.bannerView);
 }
@@ -528,6 +514,40 @@ static NSString *const exampleSuperLongText =
     [target performSelector:bannerExampleUseInfo.exampleUseSelector];
   }
 #pragma clang diagnostic pop
+}
+
+@end
+
+@implementation BannerTypicalUseExampleViewController (SnapshotTestingByConvention)
+
+- (NSDictionary<NSString *, void (^)(void)> *)testRunners {
+  NSMutableDictionary *runners = [NSMutableDictionary dictionary];
+  NSArray<BannerExampleUseInfo *> *examples = [self getBannerExampleList];
+  for (BannerExampleUseInfo *example in examples) {
+    __weak BannerTypicalUseExampleViewController *weakSelf = self;
+    NSString *defaultTestName = example.displayName;
+    runners[defaultTestName] = ^{
+      MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+      weakSelf.containerScheme = containerScheme;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+      [example.exampleUseTarget performSelector:example.exampleUseSelector];
+#pragma clang diagnostic pop
+    };
+    NSString *dynamic201907ColorSchemeTestName =
+        [NSString stringWithFormat:@"example.displayName_%@", @"dynamic201907ColorScheme"];
+    runners[dynamic201907ColorSchemeTestName] = ^{
+      MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+      containerScheme.colorScheme =
+          [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201907];
+      weakSelf.containerScheme = containerScheme;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+      [example.exampleUseTarget performSelector:example.exampleUseSelector];
+#pragma clang diagnostic pop
+    };
+  }
+  return runners;
 }
 
 @end

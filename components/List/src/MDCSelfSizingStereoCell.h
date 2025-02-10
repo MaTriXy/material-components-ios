@@ -15,6 +15,12 @@
 #import <UIKit/UIKit.h>
 
 #import "MDCBaseCell.h"
+#import "MDCSelfSizingStereoCellImageViewVerticalPosition.h"
+
+API_DEPRECATED_BEGIN("🕘 Schedule time to migrate. "
+                     "Use branded UITableView or UICollectionView instead: go/material-ios-lists. "
+                     "This is go/material-ios-migrations#not-scriptable 🕘",
+                     ios(12, 12))
 
 /**
  MDCSelfSizingStereoCell is intended to be an easy to use readymade implementation of a basic
@@ -35,7 +41,8 @@
  The client is expected NOT to manually set the frames of the view themselves or manipulate the view
  hierarchy in any way.
  */
-__attribute__((objc_subclassing_restricted)) @interface MDCSelfSizingStereoCell : MDCBaseCell
+__attribute__((objc_subclassing_restricted))
+@interface MDCSelfSizingStereoCell : MDCBaseCell
 
 /**
  The UIImageView responsible for displaying the leading image.
@@ -43,9 +50,21 @@ __attribute__((objc_subclassing_restricted)) @interface MDCSelfSizingStereoCell 
 @property(nonatomic, strong, readonly) UIImageView *leadingImageView;
 
 /**
+ This property influences the positioning of @c leadingImageView. The default value is @c .top.
+ */
+@property(nonatomic, assign)
+    MDCSelfSizingStereoCellImageViewVerticalPosition leadingImageViewVerticalPosition;
+
+/**
  The UIImageView responsible for displaying the trailing image.
  */
 @property(nonatomic, strong, readonly) UIImageView *trailingImageView;
+
+/**
+ This property influences the positioning of @c trailingImageView. The default value is @c .top.
+ */
+@property(nonatomic, assign)
+    MDCSelfSizingStereoCellImageViewVerticalPosition trailingImageViewVerticalPosition;
 
 /**
  The UILabel responsible for displaying the title text. By default, `numberOfLines` is set to 0 so
@@ -69,18 +88,6 @@ __attribute__((objc_subclassing_restricted)) @interface MDCSelfSizingStereoCell 
 @property(nonatomic, readwrite, setter=mdc_setAdjustsFontForContentSizeCategory:)
     BOOL mdc_adjustsFontForContentSizeCategory;
 
-/**
- Affects the fallback behavior for when a scaled font is not provided.
-
- If enabled, the font size will adjust even if a scaled font has not been provided for
- a given UIFont property on this component.
-
- If disabled, the font size will only be adjusted if a scaled font has been provided.
- This behavior most closely matches UIKit's.
-
- Default value is YES, but this flag will eventually default to NO and then be deprecated
- and deleted.
- */
-@property(nonatomic, assign) BOOL adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable;
-
 @end
+
+API_DEPRECATED_END

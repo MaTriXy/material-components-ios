@@ -57,7 +57,10 @@
   _inkTouchControllers = [[NSMutableArray alloc] init];
 
   for (UIView *view in self.shapes.subviews) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     MDCInkTouchController *inkTouchController = [[MDCInkTouchController alloc] initWithView:view];
+#pragma clang diagnostic pop
     inkTouchController.delegate = self;
     inkTouchController.defaultInkView.inkColor = blueColor;
     inkTouchController.defaultInkView.usesLegacyInkRipple = NO;
@@ -66,8 +69,11 @@
   }
   [containerView addSubview:self.shapes];
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   MDCInkTouchController *inkTouchController =
       [[MDCInkTouchController alloc] initWithView:self.legacyShape];
+#pragma clang diagnostic pop
   inkTouchController.delegate = self;
   inkTouchController.defaultInkView.inkColor = blueColor;
   [inkTouchController addInkView];
@@ -77,12 +83,15 @@
 
 #pragma mark - Private
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 - (void)inkTouchController:(MDCInkTouchController *)inkTouchController
          didProcessInkView:(MDCInkView *)inkView
            atTouchLocation:(CGPoint)location {
   NSLog(@"InkTouchController %p did process ink view: %p at touch location: %@", inkTouchController,
         inkView, NSStringFromCGPoint(location));
 }
+#pragma clang diagnostic pop
 
 #pragma mark - Supplemental
 
@@ -95,7 +104,6 @@
   boundedTitleLabel.text = @"Ink";
   boundedTitleLabel.textAlignment = NSTextAlignmentCenter;
   boundedTitleLabel.font = [MDCTypography captionFont];
-  boundedTitleLabel.alpha = [MDCTypography captionFontOpacity];
   [self.shapes addSubview:boundedTitleLabel];
 
   self.legacyShape.autoresizingMask =
@@ -110,22 +118,15 @@
   legacyTitleLabel.text = @"Legacy Ink";
   legacyTitleLabel.textAlignment = NSTextAlignmentCenter;
   legacyTitleLabel.font = [MDCTypography captionFont];
-  legacyTitleLabel.alpha = [MDCTypography captionFontOpacity];
   [self.legacyShape addSubview:legacyTitleLabel];
 }
 
 - (void)viewWillLayoutSubviews {
-  if (@available(iOS 11.0, *)) {
-    UIEdgeInsets safeAreaInsets = self.view.safeAreaInsets;
-    self.containerView.frame =
-        CGRectMake(safeAreaInsets.left, safeAreaInsets.top,
-                   CGRectGetWidth(self.view.frame) - safeAreaInsets.left - safeAreaInsets.right,
-                   CGRectGetHeight(self.view.frame) - safeAreaInsets.top - safeAreaInsets.bottom);
-  } else {
-    self.containerView.frame =
-        CGRectMake(0, self.topLayoutGuide.length, CGRectGetWidth(self.view.frame),
-                   CGRectGetHeight(self.view.frame) - self.topLayoutGuide.length);
-  }
+  UIEdgeInsets safeAreaInsets = self.view.safeAreaInsets;
+  self.containerView.frame =
+      CGRectMake(safeAreaInsets.left, safeAreaInsets.top,
+                 CGRectGetWidth(self.view.frame) - safeAreaInsets.left - safeAreaInsets.right,
+                 CGRectGetHeight(self.view.frame) - safeAreaInsets.top - safeAreaInsets.bottom);
 
   CGFloat offset = 8;
   CGFloat shapeDimension = 200;

@@ -15,6 +15,12 @@
 #import "MaterialAppBar.h"
 #import "MaterialColorScheme.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UINavigationController instead: go/material-ios-top-app-bars/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(11, 12))
+
 /**
  The Material Design color system's themer for instances of MDCAppBar.
 
@@ -22,9 +28,6 @@
  docs/theming.md#migration-guide-themers-to-theming-extensions
  */
 @interface MDCAppBarColorThemer : NSObject
-@end
-
-@interface MDCAppBarColorThemer (ToBeDeprecated)
 
 /**
  Applies a color scheme's properties to an MDCAppBarViewController instance using the primary
@@ -43,35 +46,6 @@
     toAppBarViewController:(nonnull MDCAppBarViewController *)appBarViewController;
 
 /**
- Applies a color scheme's properties to an MDCAppBarViewController instance using the surface
- mapping.
-
- Uses the surface color as the most important color for the component.
-
- @param colorScheme The color scheme to apply to the component instance.
- @param appBarViewController A component instance to which the color scheme should be applied.
-
- @warning This API will eventually be deprecated. The replacement API is:
- `MDCAppBarViewController`'s `-applySurfaceThemeWithScheme:`
- Learn more at docs/theming.md#migration-guide-themers-to-theming-extensions
- */
-+ (void)applySurfaceVariantWithColorScheme:(nonnull id<MDCColorScheming>)colorScheme
-                    toAppBarViewController:(nonnull MDCAppBarViewController *)appBarViewController;
-
-/**
- Applies a color scheme's properties to an MDCAppBar.
-
- @param colorScheme The color scheme to apply to the component instance.
- @param appBar A component instance to which the color scheme should be applied.
-
- @warning This API will eventually be deprecated. The replacement API is:
- `MDCAppBarViewController`'s `-applyPrimaryThemeWithScheme:`
- Learn more at docs/theming.md#migration-guide-themers-to-theming-extensions
- */
-+ (void)applyColorScheme:(nonnull id<MDCColorScheme>)colorScheme
-                toAppBar:(nonnull MDCAppBar *)appBar;
-
-/**
  Applies a color scheme's properties to an MDCAppBar using the primary mapping.
 
  Uses the primary color as the most important color for the component.
@@ -86,6 +60,25 @@
 + (void)applySemanticColorScheme:(nonnull id<MDCColorScheming>)colorScheme
                         toAppBar:(nonnull MDCAppBar *)appBar;
 
+@end
+
+@interface MDCAppBarColorThemer (Deprecated)
+
+/**
+ Applies a color scheme's properties to an MDCAppBar.
+
+ @param colorScheme The color scheme to apply to the component instance.
+ @param appBar A component instance to which the color scheme should be applied.
+
+ @warning This API will eventually be deprecated. The replacement API is:
+ `MDCAppBarViewController`'s `-applyPrimaryThemeWithScheme:`
+ Learn more at docs/theming.md#migration-guide-themers-to-theming-extensions
+ */
++ (void)applyColorScheme:(nonnull id<MDCColorScheme>)colorScheme
+                toAppBar:(nonnull MDCAppBar *)appBar
+    __deprecated_msg(
+        "Use a branded UINavigationController instead. See go/material-ios-app-bars for guidance.");
+
 /**
  Applies a color scheme's properties to an MDCAppBar using the surface mapping.
 
@@ -99,6 +92,28 @@
  Learn more at docs/theming.md#migration-guide-themers-to-theming-extensions
  */
 + (void)applySurfaceVariantWithColorScheme:(nonnull id<MDCColorScheming>)colorScheme
-                                  toAppBar:(nonnull MDCAppBar *)appBar;
+                                  toAppBar:(nonnull MDCAppBar *)appBar
+    __deprecated_msg(
+        "Use a branded UINavigationController instead. See go/material-ios-app-bars for guidance.");
+
+/**
+ Applies a color scheme's properties to an MDCAppBarViewController instance using the surface
+ mapping.
+
+ Uses the surface color as the most important color for the component.
+
+ @param colorScheme The color scheme to apply to the component instance.
+ @param appBarViewController A component instance to which the color scheme should be applied.
+
+ @warning This API will eventually be deprecated. The replacement API is:
+ `MDCAppBarViewController`'s `-applySurfaceThemeWithScheme:`
+ Learn more at docs/theming.md#migration-guide-themers-to-theming-extensions
+ */
++ (void)applySurfaceVariantWithColorScheme:(nonnull id<MDCColorScheming>)colorScheme
+                    toAppBarViewController:(nonnull MDCAppBarViewController *)appBarViewController
+    __deprecated_msg(
+        "Use a branded UINavigationController instead. See go/material-ios-app-bars for guidance.");
 
 @end
+
+API_DEPRECATED_END

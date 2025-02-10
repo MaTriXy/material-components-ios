@@ -14,8 +14,6 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialMath.h"
-#import "MaterialShadowLayer.h"
 #import "MaterialSlider.h"
 #import "ShadowRadiusLabel.h"
 
@@ -75,19 +73,19 @@ static const CGFloat kShadowElevationsSliderFrameHeight = 27;
 }
 
 - (NSString *)slider:(MDCSlider *)slider displayedStringForValue:(CGFloat)value {
-  NSInteger points = (NSInteger)MDCRound(value);
+  NSInteger points = (NSInteger)round(value);
   return [NSString stringWithFormat:@"%ld pt", (long)points];
 }
 
 // TODO: (#4848) [ShadowLayer] cornerRadius changes don't render
 - (void)sliderValueChanged:(MDCSlider *)slider {
-  NSInteger points = (NSInteger)MDCRound(slider.value);
+  NSInteger points = (NSInteger)round(slider.value);
   _paper.cornerRadius = (CGFloat)points;
   _elevationLabel.text = [NSString stringWithFormat:@"%ld pt", (long)points];
 }
 
 - (NSString *)slider:(MDCSlider *)slider accessibilityLabelForValue:(CGFloat)value {
-  NSInteger points = (NSInteger)MDCRound(slider.value);
+  NSInteger points = (NSInteger)round(slider.value);
   return [NSString stringWithFormat:@"%ld points", (long)points];
 }
 
@@ -113,14 +111,7 @@ static const CGFloat kShadowElevationsSliderFrameHeight = 27;
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
 
-  if (@available(iOS 11.0, *)) {
-    _shadowsView.frame = UIEdgeInsetsInsetRect(self.view.bounds, self.view.safeAreaInsets);
-  } else {
-    CGRect frame = self.view.bounds;
-    frame.origin.y += self.topLayoutGuide.length;
-    frame.size.height -= self.topLayoutGuide.length;
-    _shadowsView.frame = frame;
-  }
+  _shadowsView.frame = UIEdgeInsetsInsetRect(self.view.bounds, self.view.safeAreaInsets);
 }
 
 #pragma mark catalog by convention

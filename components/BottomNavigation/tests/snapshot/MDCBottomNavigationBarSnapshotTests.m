@@ -14,17 +14,27 @@
 
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
+#import "MDCBadgeAppearance.h"
 
-#import "../../src/private/MDCBottomNavigationItemView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomNavigationBarItem.h"
+#import "MDCBottomNavigationItemView.h"
+#pragma clang diagnostic pop
 
 #import "supplemental/MDCBottomNavigationSnapshotTestMutableTraitCollection.h"
 #import "supplemental/MDCBottomNavigationSnapshotTestUtilities.h"
 #import "supplemental/MDCFakeBottomNavigationBar.h"
-#import "MaterialAvailability.h"
-#import "MaterialBottomNavigation.h"
-#import "MDCBottomNavigationBar+MaterialTheming.h"
-#import "MaterialInk.h"
-#import "MaterialSnapshot.h"
+#import "MDCAvailability.h"
+#import "MDCBadgeAppearance.h"
+#import "MDCBottomNavigationBar.h"
+#import "MDCRippleTouchController.h"
+#import "MDCRippleView.h"
+#import "MDCSnapshotTestCase.h"
+#import "UIImage+MDCSnapshot.h"
+#import "UIView+MDCSnapshot.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 static const CGFloat kWidthWide = 1600;
 static const CGFloat kWidthNarrow = 240;
@@ -89,20 +99,10 @@ static const CGFloat kHeightShort = 48;
   [self snapshotVerifyView:backgroundView];
 }
 
-- (void)performInkTouchOnBar:(MDCBottomNavigationBar *)navigationBar item:(UITabBarItem *)item {
-  [navigationBar layoutIfNeeded];
-  MDCBottomNavigationItemView *itemView =
-      (MDCBottomNavigationItemView *)[navigationBar viewForItem:item];
-  [itemView.inkView startTouchBeganAtPoint:CGPointMake(CGRectGetMidX(itemView.bounds),
-                                                       CGRectGetMidY(itemView.bounds))
-                                  animated:NO
-                            withCompletion:nil];
-}
-
 - (void)configureBottomNavigation:(MDCFakeBottomNavigationBar *)bottomNavigation
                     withAlignment:(MDCBottomNavigationBarAlignment)alignment
                   titleVisibility:(MDCBottomNavigationBarTitleVisibility)titleVisibility
-                  traitCollection:(UITraitCollection *)traitCollection
+                  traitCollection:(nullable UITraitCollection *)traitCollection
                         allTitles:(NSString *)title {
   bottomNavigation.alignment = alignment;
   bottomNavigation.titleVisibility = titleVisibility;
@@ -138,12 +138,22 @@ static const CGFloat kHeightShort = 48;
 
 #pragma mark - Extreme sizes
 
+- (void)performRippleTouchOnBar:(MDCBottomNavigationBar *)navigationBar item:(UITabBarItem *)item {
+  [navigationBar layoutIfNeeded];
+  MDCBottomNavigationItemView *itemView =
+      (MDCBottomNavigationItemView *)[navigationBar viewForItem:item];
+  CGPoint point = CGPointMake(CGRectGetMidX(itemView.bounds), CGRectGetMidY(itemView.bounds));
+  [itemView.rippleTouchController.rippleView beginRippleTouchDownAtPoint:point
+                                                                animated:NO
+                                                              completion:nil];
+}
+
 - (void)testJustifiedUnspecifiedAlwaysFiveItemsNarrowWidthShortHeightLTR {
   // When
   self.navigationBar.titleVisibility = MDCBottomNavigationBarTitleVisibilityAlways;
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, kWidthNarrow, kHeightShort);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -155,7 +165,7 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, kWidthNarrow, kHeightShort);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -166,7 +176,7 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.titleVisibility = MDCBottomNavigationBarTitleVisibilityAlways;
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, kWidthWide, kHeightTall);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -178,7 +188,7 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.selectedItem = self.tabItem2;
   self.navigationBar.frame = CGRectMake(0, 0, kWidthWide, kHeightTall);
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -197,7 +207,7 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.traitCollectionOverride = traitCollection;
   CGSize fitSize = [self.navigationBar sizeThatFits:CGSizeMake(kWidthWide, kHeightTall)];
   self.navigationBar.frame = CGRectMake(0, 0, fitSize.width, fitSize.height);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // When
   self.tabItem1.titlePositionAdjustment = UIOffsetMake(20, -20);
@@ -218,7 +228,7 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.traitCollectionOverride = traitCollection;
   CGSize fitSize = [self.navigationBar sizeThatFits:CGSizeMake(kWidthWide, kHeightTall)];
   self.navigationBar.frame = CGRectMake(0, 0, fitSize.width, fitSize.height);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
 
   // When
@@ -240,7 +250,7 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.traitCollectionOverride = traitCollection;
   CGSize fitSize = [self.navigationBar sizeThatFits:CGSizeMake(kWidthWide, kHeightTall)];
   self.navigationBar.frame = CGRectMake(0, 0, fitSize.width, fitSize.height);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
 
   // When
   self.tabItem1.titlePositionAdjustment = UIOffsetMake(20, -20);
@@ -261,64 +271,12 @@ static const CGFloat kHeightShort = 48;
   self.navigationBar.traitCollectionOverride = traitCollection;
   CGSize fitSize = [self.navigationBar sizeThatFits:CGSizeMake(kWidthWide, kHeightTall)];
   self.navigationBar.frame = CGRectMake(0, 0, fitSize.width, fitSize.height);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
   [self changeToRTLAndArabicWithTitle:MDCBottomNavigationTestShortTitleArabic];
 
   // When
   self.tabItem1.titlePositionAdjustment = UIOffsetMake(20, -20);
   self.tabItem3.titlePositionAdjustment = UIOffsetMake(-20, 20);
-
-  // Then
-  [self generateAndVerifySnapshot];
-}
-
-#pragma mark - Theming Material baseline
-
-- (void)testMaterialBaselineTheme {
-  // Given
-  MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
-
-  // When
-  [self.navigationBar applyPrimaryThemeWithScheme:containerScheme];
-  self.navigationBar.items = @[ self.tabItem1, self.tabItem2, self.tabItem3 ];
-  self.navigationBar.titleVisibility = MDCBottomNavigationBarTitleVisibilityAlways;
-  self.navigationBar.selectedItem = self.tabItem2;
-  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
-                                        MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem2];
-
-  // Then
-  [self generateAndVerifySnapshot];
-}
-
-- (void)testCustomColorScheme {
-  // Given
-  MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
-  MDCSemanticColorScheme *colorScheme =
-      [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
-  colorScheme.primaryColor = UIColor.orangeColor;
-  colorScheme.onPrimaryColor = UIColor.purpleColor;
-  colorScheme.secondaryColor = UIColor.yellowColor;
-  colorScheme.onSecondaryColor = UIColor.cyanColor;
-  colorScheme.surfaceColor = UIColor.lightGrayColor;
-  colorScheme.onSurfaceColor = UIColor.magentaColor;
-  colorScheme.backgroundColor = UIColor.blueColor;
-  colorScheme.onBackgroundColor = UIColor.brownColor;
-  colorScheme.errorColor = UIColor.greenColor;
-  colorScheme.primaryColorVariant = UIColor.whiteColor;
-  containerScheme.colorScheme = colorScheme;
-
-  containerScheme.typographyScheme =
-      [[MDCTypographyScheme alloc] initWithDefaults:MDCTypographySchemeDefaultsMaterial201804];
-
-  // When
-  [self.navigationBar applyPrimaryThemeWithScheme:containerScheme];
-  self.navigationBar.items = @[ self.tabItem1, self.tabItem2, self.tabItem3 ];
-  self.navigationBar.titleVisibility = MDCBottomNavigationBarTitleVisibilityAlways;
-  self.navigationBar.selectedItem = self.tabItem2;
-  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
-                                        MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem2];
 
   // Then
   [self generateAndVerifySnapshot];
@@ -335,7 +293,7 @@ static const CGFloat kHeightShort = 48;
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
   self.navigationBar.selectedItemTintColor = UIColor.orangeColor;
   self.navigationBar.unselectedItemTintColor = UIColor.blackColor;
   self.navigationBar.selectedItem = self.tabItem2;
@@ -357,7 +315,7 @@ static const CGFloat kHeightShort = 48;
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
   self.navigationBar.selectedItemTintColor = UIColor.orangeColor;
   self.navigationBar.unselectedItemTintColor = UIColor.blackColor;
   self.navigationBar.selectedItem = self.tabItem2;
@@ -379,7 +337,7 @@ static const CGFloat kHeightShort = 48;
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
   self.navigationBar.selectedItemTintColor = UIColor.orangeColor;
   self.navigationBar.unselectedItemTintColor = UIColor.blackColor;
   self.navigationBar.selectedItem = self.tabItem2;
@@ -401,7 +359,7 @@ static const CGFloat kHeightShort = 48;
                         allTitles:MDCBottomNavigationTestLongTitleLatin];
   self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
                                         MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
+  [self performRippleTouchOnBar:self.navigationBar item:self.tabItem1];
   self.navigationBar.selectedItemTintColor = UIColor.orangeColor;
   self.navigationBar.unselectedItemTintColor = UIColor.blackColor;
   self.navigationBar.selectedItem = self.tabItem2;
@@ -446,7 +404,7 @@ static const CGFloat kHeightShort = 48;
 
 #pragma mark - Badging
 
-- (void)testCustomBadgeColorsSetAfterItems {
+- (void)testCustomBadgeColorsOverrideDefaultBadgeAppearanceWhenSetAfterBarItems {
   // Given
   self.tabItem1.badgeValue = @"";
   self.tabItem2.badgeValue = @"Gray on Yellow";
@@ -455,17 +413,34 @@ static const CGFloat kHeightShort = 48;
                                         MDCBottomNavigationBarTestHeightTypical);
 
   // When
-  if (@available(iOS 10.0, *)) {
-    self.tabItem3.badgeColor = UIColor.greenColor;
-  }
-  self.navigationBar.itemBadgeBackgroundColor = UIColor.yellowColor;
-  self.navigationBar.itemBadgeTextColor = UIColor.darkGrayColor;
+  MDCBadgeAppearance *greenAppearance = [[MDCBadgeAppearance alloc] init];
+  greenAppearance.font = [UIFont systemFontOfSize:8.0];
+  greenAppearance.backgroundColor = UIColor.greenColor;
+  greenAppearance.textColor = UIColor.darkGrayColor;
+  MDCBottomNavigationBarItem *barItem1 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem1];
+  MDCBottomNavigationBarItem *barItem2 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem2];
+  MDCBottomNavigationBarItem *barItem3 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem3
+                                          badgeAppearance:greenAppearance];
+  MDCBottomNavigationBarItem *barItem4 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem4];
+  MDCBottomNavigationBarItem *barItem5 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem5];
+  self.navigationBar.barItems = @[ barItem1, barItem2, barItem3, barItem4, barItem5 ];
+
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = [UIFont systemFontOfSize:8.0];
+  badgeAppearance.backgroundColor = UIColor.yellowColor;
+  badgeAppearance.textColor = UIColor.darkGrayColor;
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
 
   // Then
   [self generateAndVerifySnapshot];
 }
 
-- (void)testCustomBadgeColorsSetBeforeItems {
+- (void)testCustomBadgeColorsOverrideDefaultBadgeAppearanceWhenSetBeforeBarItems {
   // Given
   self.tabItem1.badgeValue = @"";
   self.tabItem2.badgeValue = @"Gray on Yellow";
@@ -474,11 +449,112 @@ static const CGFloat kHeightShort = 48;
                                         MDCBottomNavigationBarTestHeightTypical);
 
   // When
-  if (@available(iOS 10.0, *)) {
-    self.tabItem3.badgeColor = UIColor.greenColor;
-  }
-  self.navigationBar.itemBadgeBackgroundColor = UIColor.yellowColor;
-  self.navigationBar.itemBadgeTextColor = UIColor.darkGrayColor;
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = [UIFont systemFontOfSize:8.0];
+  badgeAppearance.backgroundColor = UIColor.yellowColor;
+  badgeAppearance.textColor = UIColor.darkGrayColor;
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
+  MDCBadgeAppearance *greenAppearance = [[MDCBadgeAppearance alloc] init];
+  greenAppearance.font = [UIFont systemFontOfSize:8.0];
+  greenAppearance.backgroundColor = UIColor.greenColor;
+  greenAppearance.textColor = UIColor.darkGrayColor;
+  MDCBottomNavigationBarItem *barItem1 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem1];
+  MDCBottomNavigationBarItem *barItem2 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem2];
+  MDCBottomNavigationBarItem *barItem3 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem3
+                                          badgeAppearance:greenAppearance];
+  MDCBottomNavigationBarItem *barItem4 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem4];
+  MDCBottomNavigationBarItem *barItem5 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem5];
+  self.navigationBar.barItems = @[ barItem1, barItem2, barItem3, barItem4, barItem5 ];
+
+  // Then
+  [self generateAndVerifySnapshot];
+}
+
+- (void)testClearBadgeColorRendersClearBackgroundAndDefaultFont {
+  // Given
+  self.tabItem1.badgeValue = @"";
+  self.tabItem2.badgeValue = @"Black on Clear";
+  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
+                                        MDCBottomNavigationBarTestHeightTypical);
+
+  // When
+  MDCBadgeAppearance *normalAppearance = [[MDCBadgeAppearance alloc] init];
+  normalAppearance.font = nil;
+  normalAppearance.backgroundColor = UIColor.clearColor;
+  normalAppearance.textColor = UIColor.blackColor;
+  MDCBottomNavigationBarItem *barItem1 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem1];
+  MDCBottomNavigationBarItem *barItem2 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem2
+                                          badgeAppearance:normalAppearance];
+  MDCBottomNavigationBarItem *barItem3 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem3];
+  MDCBottomNavigationBarItem *barItem4 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem4];
+  MDCBottomNavigationBarItem *barItem5 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem5];
+  self.navigationBar.barItems = @[ barItem1, barItem2, barItem3, barItem4, barItem5 ];
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = [UIFont systemFontOfSize:8.0];
+  badgeAppearance.backgroundColor = UIColor.clearColor;
+  badgeAppearance.textColor = nil;
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
+
+  // Then
+  [self generateAndVerifySnapshot];
+}
+
+- (void)testNilBadgeColorsRendersTintBackgroundAndNavigationBarDefaultTextColor {
+  // Given
+  self.tabItem1.badgeValue = @"";
+  self.tabItem2.badgeValue = @"White on Tint Color";
+  self.tabItem3.badgeValue = @"Black on Green";
+  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
+                                        MDCBottomNavigationBarTestHeightTypical);
+
+  // When
+  MDCBadgeAppearance *greenAppearance = [[MDCBadgeAppearance alloc] init];
+  greenAppearance.font = [UIFont systemFontOfSize:8.0];
+  greenAppearance.backgroundColor = UIColor.greenColor;
+  greenAppearance.textColor = UIColor.blackColor;
+  MDCBottomNavigationBarItem *barItem1 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem1];
+  MDCBottomNavigationBarItem *barItem2 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem2];
+  MDCBottomNavigationBarItem *barItem3 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem3
+                                          badgeAppearance:greenAppearance];
+  MDCBottomNavigationBarItem *barItem4 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem4];
+  MDCBottomNavigationBarItem *barItem5 =
+      [[MDCBottomNavigationBarItem alloc] initWithBarItem:self.tabItem5];
+  self.navigationBar.barItems = @[ barItem1, barItem2, barItem3, barItem4, barItem5 ];
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = [UIFont systemFontOfSize:8.0];
+  badgeAppearance.backgroundColor = nil;
+  badgeAppearance.textColor = nil;
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
+
+  // Then
+  [self generateAndVerifySnapshot];
+}
+
+- (void)testDefaultBadgeTextFont {
+  // Given
+  self.tabItem1.badgeValue = @"";
+  self.tabItem2.badgeValue = @"10";
+  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
+                                        MDCBottomNavigationBarTestHeightTypical);
+
+  // When
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = nil;
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
   self.navigationBar.items =
       @[ self.tabItem1, self.tabItem2, self.tabItem3, self.tabItem4, self.tabItem5 ];
 
@@ -486,23 +562,42 @@ static const CGFloat kHeightShort = 48;
   [self generateAndVerifySnapshot];
 }
 
-- (void)testNilBadgeColorsRendersClearBackgroundAndUILabelDefaultTextColor {
+- (void)testCustomBadgeTextFontSetBeforeItems {
   // Given
   self.tabItem1.badgeValue = @"";
-  self.tabItem2.badgeValue = @"Black on Clear";
-  self.tabItem3.badgeValue = @"Black on Green";
-  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthiPad,
+  self.tabItem2.badgeValue = @"10";
+  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
                                         MDCBottomNavigationBarTestHeightTypical);
 
   // When
-  if (@available(iOS 10.0, *)) {
-    self.tabItem3.badgeColor = UIColor.greenColor;
-  }
-  self.navigationBar.itemBadgeBackgroundColor = nil;
-  self.navigationBar.itemBadgeTextColor = nil;
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = [UIFont systemFontOfSize:10.0];
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
+  self.navigationBar.items =
+      @[ self.tabItem1, self.tabItem2, self.tabItem3, self.tabItem4, self.tabItem5 ];
+
+  // Then
+  [self generateAndVerifySnapshot];
+}
+
+- (void)testCustomBadgeTextFontSetAfterItemsUsesDefaultBadgeColor {
+  // Given
+  self.tabItem1.badgeValue = @"";
+  self.tabItem2.badgeValue = @"10";
+  self.navigationBar.frame = CGRectMake(0, 0, MDCBottomNavigationBarTestWidthTypical,
+                                        MDCBottomNavigationBarTestHeightTypical);
+
+  // When
+  self.navigationBar.items =
+      @[ self.tabItem1, self.tabItem2, self.tabItem3, self.tabItem4, self.tabItem5 ];
+  MDCBadgeAppearance *badgeAppearance = [[MDCBadgeAppearance alloc] init];
+  badgeAppearance.font = [UIFont systemFontOfSize:10.0];
+  self.navigationBar.itemBadgeAppearance = badgeAppearance;
 
   // Then
   [self generateAndVerifySnapshot];
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

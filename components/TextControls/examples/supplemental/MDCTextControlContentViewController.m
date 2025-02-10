@@ -16,16 +16,13 @@
 
 #import "MaterialButtons.h"
 
-#import "MDCBaseTextField.h"
 #import "MaterialButtons+Theming.h"
 #import "MaterialColorScheme.h"
 
-#import "MDCFilledTextField+MaterialTheming.h"
-#import "MDCFilledTextField.h"
-#import "MDCOutlinedTextField+MaterialTheming.h"
-#import "MDCOutlinedTextField.h"
 
 #import "MDCTraitEnvironmentChangeDelegate.h"
+#import "MaterialContainerScheme.h"
+#import "MaterialTypographyScheme+Scheming.h"
 
 @interface MDCTextControlContentViewController ()
 
@@ -74,10 +71,6 @@ This button allows the user to signal that they want to toggle the layout direct
 @implementation MDCTextControlContentViewController
 
 #pragma mark Object Lifecycle
-
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
 
 #pragma mark View Controller Overrides
 
@@ -151,10 +144,7 @@ This button allows the user to signal that they want to toggle the layout direct
   [button addTarget:self action:selector forControlEvents:UIControlEventTouchUpInside];
   [button applyContainedThemeWithScheme:self.containerScheme];
   [button sizeToFit];
-  button.enabled = NO;
-  if (@available(iOS 10.0, *)) {
-    button.enabled = YES;
-  }
+  button.enabled = YES;
   return button;
 }
 
@@ -247,12 +237,10 @@ This button allows the user to signal that they want to toggle the layout direct
   CGFloat originY = CGRectGetMinY(self.view.bounds);
   CGFloat width = CGRectGetWidth(self.view.bounds);
   CGFloat height = CGRectGetHeight(self.view.bounds);
-  if (@available(iOS 11.0, *)) {
-    originX += self.view.safeAreaInsets.left;
-    originY += self.view.safeAreaInsets.top;
-    width -= (self.view.safeAreaInsets.left + self.view.safeAreaInsets.right);
-    height -= (self.view.safeAreaInsets.top + self.view.safeAreaInsets.bottom);
-  }
+  originX += self.view.safeAreaInsets.left;
+  originY += self.view.safeAreaInsets.top;
+  width -= (self.view.safeAreaInsets.left + self.view.safeAreaInsets.right);
+  height -= (self.view.safeAreaInsets.top + self.view.safeAreaInsets.bottom);
   CGRect frame = CGRectMake(originX, originY, width, height);
   self.scrollView.frame = frame;
 }
@@ -315,7 +303,8 @@ This button allows the user to signal that they want to toggle the layout direct
 - (void)applyThemesToButtons {
   [self.allButtons enumerateObjectsUsingBlock:^(MDCButton *button, NSUInteger idx, BOOL *stop) {
     if (self.isErrored) {
-      MDCSemanticColorScheme *colorScheme = [[MDCSemanticColorScheme alloc] init];
+      MDCSemanticColorScheme *colorScheme =
+          [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
       colorScheme.primaryColor = colorScheme.errorColor;
       MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
       containerScheme.colorScheme = colorScheme;
@@ -407,20 +396,18 @@ This button allows the user to signal that they want to toggle the layout direct
 #pragma mark IBAction handling
 
 - (void)handleToggleDarkModeButtonTapped {
-  if (@available(iOS 12.0, *)) {
-    UIUserInterfaceStyle currentUserInterfaceStyle = self.traitCollection.userInterfaceStyle;
-    UIUserInterfaceStyle newUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
-    if (currentUserInterfaceStyle == UIUserInterfaceStyleLight) {
-      newUserInterfaceStyle = UIUserInterfaceStyleDark;
-    } else if (currentUserInterfaceStyle == UIUserInterfaceStyleDark) {
-      newUserInterfaceStyle = UIUserInterfaceStyleLight;
-    } else {
-      return;
-    }
-    [self.traitEnvironmentChangeDelegate
-        childViewControllerDidRequestUserInterfaceStyle:self
-                                     userInterfaceStyle:newUserInterfaceStyle];
+  UIUserInterfaceStyle currentUserInterfaceStyle = self.traitCollection.userInterfaceStyle;
+  UIUserInterfaceStyle newUserInterfaceStyle = UIUserInterfaceStyleUnspecified;
+  if (currentUserInterfaceStyle == UIUserInterfaceStyleLight) {
+    newUserInterfaceStyle = UIUserInterfaceStyleDark;
+  } else if (currentUserInterfaceStyle == UIUserInterfaceStyleDark) {
+    newUserInterfaceStyle = UIUserInterfaceStyleLight;
+  } else {
+    return;
   }
+  [self.traitEnvironmentChangeDelegate
+      childViewControllerDidRequestUserInterfaceStyle:self
+                                   userInterfaceStyle:newUserInterfaceStyle];
   [self.view setNeedsLayout];
 }
 
@@ -438,23 +425,21 @@ This button allows the user to signal that they want to toggle the layout direct
 }
 
 - (void)handleToggleLayoutDirectionButtonTapped {
-  if (@available(iOS 12.0, *)) {
-    UITraitEnvironmentLayoutDirection currentTraitEnvironmentLayoutDirection =
-        self.traitCollection.layoutDirection;
-    UITraitEnvironmentLayoutDirection newTraitEnvironmentLayoutDirection =
-        UITraitEnvironmentLayoutDirectionUnspecified;
-    if (currentTraitEnvironmentLayoutDirection == UITraitEnvironmentLayoutDirectionRightToLeft) {
-      newTraitEnvironmentLayoutDirection = UITraitEnvironmentLayoutDirectionLeftToRight;
-    } else if (currentTraitEnvironmentLayoutDirection ==
-               UITraitEnvironmentLayoutDirectionLeftToRight) {
-      newTraitEnvironmentLayoutDirection = UITraitEnvironmentLayoutDirectionRightToLeft;
-    } else {
-      return;
-    }
-    [self.traitEnvironmentChangeDelegate
-        childViewControllerDidRequestLayoutDirection:self
-                                     layoutDirection:newTraitEnvironmentLayoutDirection];
+  UITraitEnvironmentLayoutDirection currentTraitEnvironmentLayoutDirection =
+      self.traitCollection.layoutDirection;
+  UITraitEnvironmentLayoutDirection newTraitEnvironmentLayoutDirection =
+      UITraitEnvironmentLayoutDirectionUnspecified;
+  if (currentTraitEnvironmentLayoutDirection == UITraitEnvironmentLayoutDirectionRightToLeft) {
+    newTraitEnvironmentLayoutDirection = UITraitEnvironmentLayoutDirectionLeftToRight;
+  } else if (currentTraitEnvironmentLayoutDirection ==
+             UITraitEnvironmentLayoutDirectionLeftToRight) {
+    newTraitEnvironmentLayoutDirection = UITraitEnvironmentLayoutDirectionRightToLeft;
+  } else {
+    return;
   }
+  [self.traitEnvironmentChangeDelegate
+      childViewControllerDidRequestLayoutDirection:self
+                                   layoutDirection:newTraitEnvironmentLayoutDirection];
   [self.view setNeedsLayout];
 }
 

@@ -14,18 +14,19 @@
 
 #import "MDCTextControlTextAreaContentViewController.h"
 
-#import "MaterialButtons.h"
-
+#import "MDCTextControlContentViewController.h"
 #import "MDCBaseTextArea.h"
-#import "MaterialButtons+Theming.h"
 #import "MaterialColorScheme.h"
+#import "MaterialContainerScheme.h"
 
-#import "MDCFilledTextArea+MaterialTheming.h"
+#import "MDCTextControlLabelBehavior.h"
 #import "MDCFilledTextArea.h"
-#import "MDCOutlinedTextArea+MaterialTheming.h"
 #import "MDCOutlinedTextArea.h"
+#import "MDCOutlinedTextArea+MaterialTheming.h"
 
 @interface MDCTextControlTextAreaContentViewController () <UITextViewDelegate>
+@property(nonatomic, assign) BOOL shouldAddDebugBorder;
+@property(nonatomic, assign) BOOL shouldAddDebugLeadingView;
 @end
 
 @implementation MDCTextControlTextAreaContentViewController
@@ -36,16 +37,28 @@
   MDCFilledTextArea *textArea = [[MDCFilledTextArea alloc] init];
   textArea.textView.delegate = self;
   textArea.labelBehavior = MDCTextControlLabelBehaviorFloats;
-  textArea.label.text = @"Phone number";
-  textArea.leadingAssistiveLabel.text = @"This is a string.";
-  [textArea applyThemeWithScheme:self.containerScheme];
+  textArea.label.text = @"This is label text";
+  textArea.leadingAssistiveLabel.text = @"This is assistive label text.";
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextArea:textArea];
+  }
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextArea:textArea];
+  }
   return textArea;
 }
 
 - (MDCOutlinedTextArea *)createMaterialOutlinedTextArea {
   MDCOutlinedTextArea *textArea = [[MDCOutlinedTextArea alloc] init];
   textArea.textView.delegate = self;
-  textArea.label.text = @"Phone number";
+  textArea.label.text = @"This is label text";
+  textArea.leadingAssistiveLabel.text = @"This is assistive label text.";
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextArea:textArea];
+  }
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextArea:textArea];
+  }
   [textArea applyThemeWithScheme:self.containerScheme];
   return textArea;
 }
@@ -53,7 +66,14 @@
 - (MDCBaseTextArea *)createDefaultBaseTextArea {
   MDCBaseTextArea *textArea = [[MDCBaseTextArea alloc] init];
   textArea.textView.delegate = self;
-  textArea.label.text = @"This is a floating label";
+  textArea.label.text = @"This is label text";
+  textArea.leadingAssistiveLabel.text = @"This is assistive label text.";
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextArea:textArea];
+  }
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextArea:textArea];
+  }
   return textArea;
 }
 
@@ -61,18 +81,49 @@
   [self.view setNeedsLayout];
 }
 
+- (void)addBorderToTextArea:(MDCBaseTextArea *)textArea {
+  textArea.layer.borderColor = UIColor.redColor.CGColor;
+  textArea.layer.borderWidth = 1;
+}
+
+- (void)addLeadingViewToTextArea:(MDCBaseTextArea *)textArea {
+  UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
+  imageView.tintColor = self.containerScheme.colorScheme.primaryColor;
+  UIImage *image = [[UIImage imageNamed:@"system_icons/cake"]
+      imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  imageView.image = image;
+  textArea.leadingView = imageView;
+  textArea.leadingViewMode = UITextFieldViewModeAlways;
+}
+
 #pragma mark Overrides
 
 - (void)initializeScrollViewSubviewsArray {
   [super initializeScrollViewSubviewsArray];
 
+  self.shouldAddDebugBorder = NO;
+  self.shouldAddDebugLeadingView = NO;
+
+  MDCFilledTextArea *filledTextAreaWithoutFloatingLabel = [self createMaterialFilledTextArea];
+  filledTextAreaWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+  MDCOutlinedTextArea *outlinedTextAreaWithoutFloatingLabel = [self createMaterialOutlinedTextArea];
+  outlinedTextAreaWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+  MDCBaseTextArea *baseTextAreaWithoutFloatingLabel = [self createDefaultBaseTextArea];
+  baseTextAreaWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+
   NSArray *textAreaRelatedScrollViewSubviews = @[
     [self createLabelWithText:@"MDCFilledTextArea:"],
     [self createMaterialFilledTextArea],
+    [self createLabelWithText:@"MDCFilledTextArea without floating label:"],
+    filledTextAreaWithoutFloatingLabel,
     [self createLabelWithText:@"MDCOutlinedTextArea:"],
     [self createMaterialOutlinedTextArea],
+    [self createLabelWithText:@"MDCOutlinedTextArea without floating label:"],
+    outlinedTextAreaWithoutFloatingLabel,
     [self createLabelWithText:@"MDCBaseTextArea:"],
     [self createDefaultBaseTextArea],
+    [self createLabelWithText:@"MDCBaseTextArea without floating label:"],
+    baseTextAreaWithoutFloatingLabel,
   ];
   NSMutableArray *mutableScrollViewSubviews = [self.scrollViewSubviews mutableCopy];
   self.scrollViewSubviews =
@@ -94,20 +145,18 @@
 - (void)enforcePreferredFonts {
   [super enforcePreferredFonts];
 
-  if (@available(iOS 10.0, *)) {
-    [self.allTextAreas
-        enumerateObjectsUsingBlock:^(MDCBaseTextArea *textArea, NSUInteger idx, BOOL *stop) {
-          textArea.textView.adjustsFontForContentSizeCategory = YES;
-          textArea.textView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody
-                                       compatibleWithTraitCollection:textArea.traitCollection];
-          textArea.leadingAssistiveLabel.font =
-              [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
-                  compatibleWithTraitCollection:textArea.traitCollection];
-          textArea.trailingAssistiveLabel.font =
-              [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
-                  compatibleWithTraitCollection:textArea.traitCollection];
-        }];
-  }
+  [self.allTextAreas
+      enumerateObjectsUsingBlock:^(MDCBaseTextArea *textArea, NSUInteger idx, BOOL *stop) {
+        textArea.textView.adjustsFontForContentSizeCategory = YES;
+        textArea.textView.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody
+                                     compatibleWithTraitCollection:textArea.traitCollection];
+        textArea.leadingAssistiveLabel.font =
+            [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
+                compatibleWithTraitCollection:textArea.traitCollection];
+        textArea.trailingAssistiveLabel.font =
+            [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
+                compatibleWithTraitCollection:textArea.traitCollection];
+      }];
 }
 
 - (void)handleResignFirstResponderTapped {
@@ -148,10 +197,7 @@
       enumerateObjectsUsingBlock:^(MDCBaseTextArea *textArea, NSUInteger idx, BOOL *stop) {
         BOOL isEven = idx % 2 == 0;
         if (self.isErrored) {
-          if ([textArea isKindOfClass:[MDCFilledTextArea class]]) {
-            MDCFilledTextArea *filledTextArea = (MDCFilledTextArea *)textArea;
-            [filledTextArea applyErrorThemeWithScheme:self.containerScheme];
-          } else if ([textArea isKindOfClass:[MDCOutlinedTextArea class]]) {
+          if ([textArea isKindOfClass:[MDCOutlinedTextArea class]]) {
             MDCOutlinedTextArea *outlinedTextArea = (MDCOutlinedTextArea *)textArea;
             [outlinedTextArea applyErrorThemeWithScheme:self.containerScheme];
           }
@@ -163,10 +209,7 @@
             textArea.leadingAssistiveLabel.text = @"This is an error.";
           }
         } else {
-          if ([textArea isKindOfClass:[MDCFilledTextArea class]]) {
-            MDCFilledTextArea *filledTextArea = (MDCFilledTextArea *)textArea;
-            [filledTextArea applyThemeWithScheme:self.containerScheme];
-          } else if ([textArea isKindOfClass:[MDCOutlinedTextArea class]]) {
+          if ([textArea isKindOfClass:[MDCOutlinedTextArea class]]) {
             MDCOutlinedTextArea *outlinedTextArea = (MDCOutlinedTextArea *)textArea;
             [outlinedTextArea applyThemeWithScheme:self.containerScheme];
           }

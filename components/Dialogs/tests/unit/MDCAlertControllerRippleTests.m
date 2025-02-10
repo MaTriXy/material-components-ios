@@ -14,9 +14,17 @@
 
 #import <XCTest/XCTest.h>
 
-#import "MaterialDialogs.h"
+#import "MDCButton.h"
+#import "MDCAlertController.h"
+#import "MDCAlertControllerView.h"
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCAlertActionManager.h"
 #import "MDCAlertControllerView+Private.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Subclasses for testing
 
@@ -54,7 +62,7 @@
   MDCAlertControllerView *view = (MDCAlertControllerView *)self.alert.view;
   XCTAssertFalse(self.alert.enableRippleBehavior);
   XCTAssertFalse(view.enableRippleBehavior);
-  NSArray<MDCButton *> *buttons = view.actionManager.buttonsInActionOrder;
+  NSArray<MDCButton *> *buttons = (NSArray<MDCButton *> *)view.actionManager.buttonsInActionOrder;
   for (MDCButton *button in buttons) {
     XCTAssertFalse(button.enableRippleBehavior);
   }
@@ -71,10 +79,12 @@
   MDCAlertControllerView *view = (MDCAlertControllerView *)self.alert.view;
   XCTAssertTrue(self.alert.enableRippleBehavior);
   XCTAssertTrue(view.enableRippleBehavior);
-  NSArray<MDCButton *> *buttons = view.actionManager.buttonsInActionOrder;
+  NSArray<MDCButton *> *buttons = (NSArray<MDCButton *> *)view.actionManager.buttonsInActionOrder;
   for (MDCButton *button in buttons) {
     XCTAssertTrue(button.enableRippleBehavior);
   }
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

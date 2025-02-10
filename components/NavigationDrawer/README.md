@@ -3,78 +3,29 @@ title: "NavigationDrawer"
 layout: detail
 section: components
 excerpt: "Navigation drawers provide access to destinations and app functionality, such as switching accounts."
-iconId: list
 path: /catalog/navigation-drawer/
 api_doc_root: true
 -->
-
-<!-- This file was auto-generated using ./scripts/generate_readme NavigationDrawer -->
 
 # Navigation Drawer
 
 [![Open bugs badge](https://img.shields.io/badge/dynamic/json.svg?label=open%20bugs&url=https%3A%2F%2Fapi.github.com%2Fsearch%2Fissues%3Fq%3Dis%253Aopen%2Blabel%253Atype%253ABug%2Blabel%253A%255BNavigationDrawer%255D&query=%24.total_count)](https://github.com/material-components/material-components-ios/issues?q=is%3Aopen+is%3Aissue+label%3Atype%3ABug+label%3A%5BNavigationDrawer%5D)
 
-Navigation drawers provide access to destinations and app functionality, such as switching accounts. They can either be permanently on-screen or controlled by a navigation menu icon.
+[Navigation drawers](https://material.io/components/navigation-drawer) provide access to destinations and app functionality, such as switching accounts. They can either be permanently on-screen or controlled by a navigation menu icon.
 
-Navigation drawers are recommended for:
-  <li class="icon-list-item icon-list-item">Apps with five or more top-level destinations.</li>
-  <li class="icon-list-item icon-list-item">Apps with two or more levels of navigation hierarchy.</li>
-  <li class="icon-list-item icon-list-item">Quick navigation between unrelated destinations.</li>
-</ul>
+![Bottom navigation example](docs/assets/bottom-drawer-hero.png)
 
-## Design & API documentation
+**Contents**
 
-<ul class="icon-list">
-  <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/go/design-navigation-drawer">Material Design guidelines: Navigation Drawer</a></li>
-  <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Classes/MDCBottomDrawerPresentationController.html">MDCBottomDrawerPresentationController</a></li>
-  <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Classes/MDCBottomDrawerTransitionController.html">MDCBottomDrawerTransitionController</a></li>
-  <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Classes/MDCBottomDrawerViewController.html">MDCBottomDrawerViewController</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Protocols/MDCBottomDrawerHeader.html">MDCBottomDrawerHeader</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Protocols/MDCBottomDrawerPresentationControllerDelegate.html">MDCBottomDrawerPresentationControllerDelegate</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Protocols/MDCBottomDrawerViewControllerDelegate.html">MDCBottomDrawerViewControllerDelegate</a></li>
-  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Enums.html">Enumerations</a></li>
-  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/navigation-drawer/api-docs/Enums/MDCBottomDrawerState.html">MDCBottomDrawerState</a></li>
-</ul>
-
-## Table of contents
-
-- [Overview](#overview)
-  - [Navigation Drawer Classes](#navigation-drawer-classes)
-- [Installation](#installation)
-  - [Installation with CocoaPods](#installation-with-cocoapods)
-  - [Importing](#importing)
-- [Usage](#usage)
-  - [Typical use: using the `MDCBottomDrawerViewController` with/without a header.](#typical-use-using-the-`mdcbottomdrawerviewcontroller`-withwithout-a-header.)
-  - [Typical use: presenting in a drawer without a header.](#typical-use-presenting-in-a-drawer-without-a-header.)
-  - [Typical use: using the `MDCBottomDrawerViewController` with a need for performant scrolling.](#typical-use-using-the-`mdcbottomdrawerviewcontroller`-with-a-need-for-performant-scrolling.)
+* [Using navigation drawers](#using-navigation-drawers)
+* [Bottom navigation drawer](#bottom-navigation-drawer)
+* [Theming](#theming)
 
 - - -
 
-## Overview
+## Using navigation drawers
 
-Navigation Drawer currently provides the [Bottom Drawer](https://developer.apple.com/documentation/uikit/uiaccessibilityelement/1619577-accessibilitylabel) presentation style.
-
-The Navigation Drawer is architected by implementing a custom `UIPresentationController` and a `UIViewControllerTransitioningDelegate` named `MDCBottomDrawerPresentationController` and `MDCBottomDrawerTransitionController` respectively.
-This allows us to use the default API Apple provides for `UIViewController` presentation (more on usage [below](#usage)).
-
-Through the `MDCBottomDrawerViewController` class, the Navigation Drawer allows you to pass a `contentViewController` to act as the content of the drawer, and also a `headerViewController` which will stick to the top once the drawer is in full screen.
-
-`MDCBottomDrawerViewController` also provides a settable `trackingScrollView` property that should be set to the `UITableView` or `UICollectionView` inside your content, if and only if that view fills the entire bounds, and if you are seeking for a more performant solution of having the algorithm only load your view as you scroll and not all at once.
-
-Lastly, your headerViewController conforms to the `MDCBottomDrawerHeader` protocol, which implements the method `updateDrawerHeaderTransitionRatio:(CGFloat)transitionToTopRatio`. This method provides `transitionToTopRatio`, which moves between 0 to 1 as the transition of the header view
- transforms from being above the content to becoming sticky on the top. It is 0 when the drawer is above the content and starts changing as the header view expands to cover the status bar and safe area based on the completion rate. It is 1 once the header finishes its transition to become sticky on the top and it's height is at the size of its preferredContentSize + the safe area.
-
-### Navigation Drawer Classes
-
-#### MDCBottomDrawerViewController
-
-`MDCBottomDrawerViewController` is a `UIViewController` that allows you to provide your drawer content via the `contentViewController` and your desired header (optional) through the `headerViewController` property.
-
-## Installation
-
-<!-- Extracted from docs/../../../docs/component-installation.md -->
-
-### Installation with CocoaPods
+### Installing
 
 Add the following to your `Podfile`:
 
@@ -91,7 +42,7 @@ pod install
 
 ### Importing
 
-To import the component:
+From there, import the relevant target or file.
 
 <!--<div class="material-code-render" markdown="1">-->
 #### Swift
@@ -106,12 +57,28 @@ import MaterialComponents.MaterialNavigationDrawer
 ```
 <!--</div>-->
 
+## Making navigation drawers accessible
 
-## Usage
+While `MDCBottomDrawerViewController` supports the accessibility escape "Z" gesture, it is advisible that the content view controller provides its own dismiss action affordance. Note that it is the responsibility of the header and content view controllers to implement any custom accessibility behavior.
 
-<!-- Extracted from docs/typical-use-drawer.md -->
+## Bottom navigation drawer
 
-### Typical use: using the `MDCBottomDrawerViewController` with/without a header.
+Both bottom navigation drawers and side navigation drawers exist, but we only offer a bottom navigation drawer implementation.
+
+Our bottom navigation drawer implementation is centered around `MDCBottomDrawerViewController`, a `UIViewController` subclass. `MDCBottomDrawerViewController` has a `contentViewController` property, whose view is displayed as the primary content of the drawer, as well as a `headerViewController` property, whose view is positioned above the content view controller and sticks to the top when the drawer is full-screen. For more information on implementing custom view controller classes see [Apple's View Controller Programming Guide](https://developer.apple.com/library/archive/featuredarticles/ViewControllerPGforiPhoneOS/DefiningYourSubclass.html#//apple_ref/doc/uid/TP40007457-CH7-SW1).
+
+Bottom navigation drawers are recommended for:
+* Apps with five or more top-level destinations.
+* Apps with two or more levels of navigation hierarchy.
+* Quick navigation between unrelated destinations.
+
+`MDCBottomDrawerViewController` presentation makes use of the `UIPresentationController` subclass `MDCBottomDrawerPresentationController`, as well as `MDCBottomDrawerTransitionController`, which conforms to `UIViewControllerTransitioningDelegate`.
+
+If the primary content displayed in a bottom drawer is a [`UITableView`](https://developer.apple.com/library/archive/documentation/UserExperience/Conceptual/TableView_iPhone/CreateConfigureTableView/CreateConfigureTableView.html) or [`UICollectionView`](https://developer.apple.com/library/archive/documentation/WindowsViews/Conceptual/CollectionViewPGforIOS/Introduction/Introduction.html), specifically one that fills the content area, we recommend setting it as the `trackingScrollView` property for more performant scrolling.
+
+It is important that the view controller used as the `headerViewController` conforms to the `MDCBottomDrawerHeader` protocol, which implements the method `-updateDrawerHeaderTransitionRatio:`. This method provides `transitionToTopRatio`, a `CGFloat` that moves between 0 to 1 as the header view transitions from being positioned above the content to being sticky at the top of the screen. The transition begins as the header view begins to cover the status bar and safe area and ends once the header has reached the top of the screen.
+
+### Example using the `MDCBottomDrawerViewController` with/without a header
 
 <!--<div class="material-code-render" markdown="1">-->
 #### Swift
@@ -133,9 +100,7 @@ bottomDrawerViewController.headerViewController = [UIViewController new];
 ```
 <!--</div>-->
 
-<!-- Extracted from docs/typical-use-drawer-no-header.md -->
-
-### Typical use: presenting in a drawer without a header.
+### Example presenting a drawer without a header
 
 <!--<div class="material-code-render" markdown="1">-->
 #### Swift
@@ -157,9 +122,7 @@ contentViewController.modalPresentationStyle = UIModalPresentationCustom;
 ```
 <!--</div>-->
 
-<!-- Extracted from docs/typical-use-performant-drawer.md -->
-
-### Typical use: using the `MDCBottomDrawerViewController` with a need for performant scrolling.
+### Example using `trackingScrollView`
 
 <!--<div class="material-code-render" markdown="1">-->
 #### Swift
@@ -185,4 +148,52 @@ bottomDrawerViewController.trackingScrollView = contentViewController.view;
 ```
 <!--</div>-->
 
+## Theming
 
+While `MDCBottomDrawerViewController` does have a theming extension, it should not be relied on for ensuring the content and header are themed correctly. It only sets properties like corner radius, scrim color, and handle color. To display sufficiently themed content with `MDCBottomDrawerViewController` you must make sure the content and header view controllers are themed independently.
+
+To make use of the bottom drawer theming extension you need to install it wth Cocoapods. First, add the following line to your `Podfile`:
+
+```bash
+pod MaterialComponents/NavigationDrawer+Theming
+```
+
+<!--{: .code-renderer.code-renderer--install }-->
+
+Then run the installer:
+
+```bash
+pod install
+```
+
+Next, import the theming target, and call the correct theming method.
+
+<!--<div class="material-code-render" markdown="1">-->
+#### Swift
+```swift
+import MaterialComponents.MaterialNavigationDrawer
+import MaterialComponents.MaterialNavigationDrawer_Theming
+
+...
+ // Create a navigation drawer
+let bottomDrawerViewController = MDCBottomDrawerViewController()
+ // Create or use your app's Container Scheme
+let containerScheme = MDCContainerScheme()
+ // Theme the bottom drawer
+bottomDrawerViewController.applyTheme(withScheme: containerScheme)
+```
+
+#### Objective-C
+```objc
+#import "MaterialNavigationDrawer.h"
+#import "MaterialNavigationDrawer+Theming.h"
+
+...
+ // Create a navigation drawer
+MDCBottomDrawerViewController *bottomDrawerViewController = [[MDCBottomDrawerViewController alloc] init];
+ // Create or use your app's Container Scheme
+MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+ // Theme the bottom drawer
+[bottomDrawerViewController applyThemeWithScheme:containerScheme];
+```
+<!--</div>-->

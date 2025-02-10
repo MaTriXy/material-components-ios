@@ -14,12 +14,22 @@
 
 #import <XCTest/XCTest.h>
 
-#import "MaterialSnackbar.h"
-#import "MaterialTypography.h"
-#import "supplemental/MDCFakeMDCSnackbarManagerDelegate.h"
+#import "MDCButton.h"
+#import "MDCShadowElevations.h"
+#import "MDCSnackbarManager.h"
+#import "MDCSnackbarMessage.h"
+#import "MDCSnackbarMessageView.h"
+#import "MDCFakeMDCSnackbarManagerDelegate.h"
 
-#import "../../src/private/MDCSnackbarManagerInternal.h"
-#import "../../src/private/MDCSnackbarOverlayView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSnackbarManagerInternal.h"
+#import "MDCSnackbarOverlayView.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
+
+static const int64_t kDispatchTimeWait = (int64_t)((CGFloat)0.2 * NSEC_PER_SEC);
 
 @interface MDCSnackbarManagerInternal (Testing)
 @property(nonatomic) MDCSnackbarMessageView *currentSnackbar;
@@ -31,7 +41,6 @@
 @end
 @interface MDCSnackbarMessageView (Testing)
 @property(nonatomic, strong) UILabel *label;
-@property(nonatomic, strong) NSMutableArray<MDCButton *> *actionButtons;
 @end
 
 /** Fake MDCChipView for unit testing. */
@@ -51,9 +60,9 @@
 @end
 
 @interface MDCSnackbarMessageViewTests : XCTestCase
-@property(nonatomic, strong) MDCSnackbarManager *manager;
-@property(nonatomic, strong) FakeMDCSnackbarManagerDelegate *delegate;
-@property(nonatomic, strong) MDCSnackbarMessage *message;
+@property(nonatomic, strong, nullable) MDCSnackbarManager *manager;
+@property(nonatomic, strong, nullable) FakeMDCSnackbarManagerDelegate *delegate;
+@property(nonatomic, strong, nullable) MDCSnackbarMessage *message;
 @end
 
 @implementation MDCSnackbarMessageViewTests
@@ -75,6 +84,61 @@
   self.manager = nil;
 
   [super tearDown];
+}
+
+- (void)testMessageDescription {
+  // Given
+  NSString *text = @"the message text";
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+  action.title = @"Tap Me";
+
+  // When
+  self.message.text = text;
+  self.message.action = action;
+
+  // Then
+  XCTAssertNotNil(self.message.description);
+  XCTAssertTrue([self.message.description containsString:@"text:"]);
+  XCTAssertTrue([self.message.description containsString:text]);
+  XCTAssertTrue([self.message.description containsString:@"action:"]);
+  XCTAssertTrue([self.message.description containsString:action.title]);
+  XCTAssertTrue([self.message.description containsString:@"viewClass:"]);
+  XCTAssertTrue([self.message.description containsString:@"MDCSnackbarMessageView"]);
+}
+
+- (void)testSettingMessageActionWithNilTitleAsserts {
+  // Given
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+
+  // When/Then
+  XCTAssertThrows(self.message.action = action);
+}
+
+- (void)testSettingMessageActionWithEmptyTitleAsserts {
+  // Given
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+  action.title = @"";
+
+  // When/Then
+  XCTAssertThrows(self.message.action = action);
+}
+
+- (void)testDescription {
+  // Given
+  XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
+  dispatch_async(dispatch_get_main_queue(), ^{
+    [expectation fulfill];
+  });
+
+  // When
+  [self.manager showMessage:self.message];
+  [self waitForExpectationsWithTimeout:3 handler:nil];
+
+  // Then
+  MDCSnackbarMessageView *messageView = self.delegate.presentedView;
+  XCTAssertNotNil(messageView.description);
+  XCTAssertTrue([messageView.description containsString:@"message:"]);
+  XCTAssertTrue([messageView.description containsString:@"MDCSnackbarMessage"]);
 }
 
 - (void)testDefaultColors {
@@ -194,9 +258,8 @@
   XCTAssertFalse(self.manager.internalManager.overlayView.accessibilityViewIsModal);
 }
 
-- (void)testWhenSnackbarAccessibiltyViewIsModalIsYesWithActions {
+- (void)testSnackbarAccessibilityViewIsModalIsYesWithActions {
   // Given
-  self.manager.internalManager.isVoiceOverRunningOverride = YES;
   MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
   action.title = @"Tap Me";
   self.message.action = action;
@@ -214,11 +277,9 @@
   XCTAssertTrue(self.manager.internalManager.overlayView.accessibilityViewIsModal);
 }
 
-- (void)testWhenSnackbarAccessibiltyViewIsModalIsYesWithActionsAndWithoutVoiceOver {
+- (void)testSnackbarAccessibiltyViewIsModalIsNoWithoutActions {
   // Given
-  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
-  action.title = @"Tap Me";
-  self.message.action = action;
+  self.manager.internalManager.isVoiceOverRunningOverride = YES;
   self.manager.shouldEnableAccessibilityViewIsModal = YES;
 
   // When
@@ -233,9 +294,13 @@
   XCTAssertFalse(self.manager.internalManager.overlayView.accessibilityViewIsModal);
 }
 
-- (void)testWhenSnackbarAccessibiltyViewIsModalIsYesWhenWithNoActions {
+- (void)testSnackbarAccessibilityViewIsModalIsNoWithoutVoiceOverWithLegacyBehavior {
   // Given
-  self.manager.internalManager.isVoiceOverRunningOverride = YES;
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+  action.title = @"Tap Me";
+  self.message.action = action;
+  self.message.usesLegacyDismissalBehavior = YES;
+  self.manager.internalManager.isVoiceOverRunningOverride = NO;
   self.manager.shouldEnableAccessibilityViewIsModal = YES;
 
   // When
@@ -287,9 +352,50 @@
   XCTAssertTrue(self.manager.internalManager.overlayView.accessibilityViewIsModal);
 }
 
+- (void)testSnackbarViewShowWhenShouldShowMessageWhenVoiceOverIsRunningIsYES {
+  // Given
+  self.manager.internalManager.isVoiceOverRunningOverride = YES;
+  self.manager.shouldShowMessageWhenVoiceOverIsRunning = YES;
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+  action.title = @"Tap Me";
+  self.message.action = action;
+
+  // When
+  [self.manager showMessage:self.message];
+  XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
+  dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, kDispatchTimeWait);
+  dispatch_after(popTime, dispatch_get_main_queue(), ^{
+    [expectation fulfill];
+  });
+  [self waitForExpectationsWithTimeout:3 handler:nil];
+
+  // Then
+  XCTAssertNotNil(self.manager.internalManager.currentSnackbar);
+}
+
+- (void)testSnackbarViewNotShowWhenShouldShowMessageWhenVoiceOverIsRunningIsNO {
+  // Given
+  self.manager.internalManager.isVoiceOverRunningOverride = YES;
+  self.manager.shouldShowMessageWhenVoiceOverIsRunning = NO;
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+  action.title = @"Tap Me";
+  self.message.action = action;
+
+  // When
+  [self.manager showMessage:self.message];
+  XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
+  dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, kDispatchTimeWait);
+  dispatch_after(popTime, dispatch_get_main_queue(), ^{
+    [expectation fulfill];
+  });
+  [self waitForExpectationsWithTimeout:3 handler:nil];
+
+  // Then
+  XCTAssertNil(self.manager.internalManager.currentSnackbar);
+}
+
 - (void)testManagerForwardsButtonProperties {
   // Given
-  self.manager.disabledButtonAlpha = (CGFloat)0.5;
   self.manager.uppercaseButtonTitle = NO;
   self.manager.buttonInkColor = UIColor.redColor;
   MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
@@ -305,10 +411,11 @@
   [self waitForExpectationsWithTimeout:3 handler:nil];
 
   // Then
-  MDCButton *actionButton = self.manager.internalManager.currentSnackbar.actionButtons.firstObject;
-  XCTAssertFalse(actionButton.uppercaseTitle);
-  XCTAssertEqual(actionButton.disabledAlpha, 0.5);
-  XCTAssertEqualObjects(UIColor.redColor, actionButton.inkColor);
+  UIButton *actionButton = self.manager.internalManager.currentSnackbar.actionButton;
+  XCTAssertTrue([actionButton isKindOfClass:[MDCButton class]]);
+  MDCButton *button = (MDCButton *)actionButton;
+  XCTAssertFalse(button.uppercaseTitle);
+  XCTAssertEqualObjects(UIColor.redColor, button.inkColor);
 }
 
 - (void)testTraitCollectionDidChangeCalledWhenTraitCollectionChanges {
@@ -364,7 +471,7 @@
   MDCSnackbarMessageView *messageView = [[MDCSnackbarMessageView alloc] init];
   messageView.elevation = 5;
   __block BOOL blockCalled = NO;
-  messageView.mdc_elevationDidChangeBlock = ^(MDCSnackbarMessageView *object, CGFloat elevation) {
+  messageView.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 
@@ -380,7 +487,7 @@
   MDCSnackbarMessageView *messageView = [[MDCSnackbarMessageView alloc] init];
   messageView.elevation = 5;
   __block BOOL blockCalled = NO;
-  messageView.mdc_elevationDidChangeBlock = ^(MDCSnackbarMessageView *object, CGFloat elevation) {
+  messageView.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 
@@ -399,83 +506,6 @@
   XCTAssertLessThan(messageView.mdc_overrideBaseElevation, 0);
 }
 
-- (void)testMessageViewMessageDynamicTypeBehavior {
-  if (@available(iOS 10.0, *)) {
-    // Given
-    MDCSnackbarMessageViewTestsFakeView *messageView =
-        [[MDCSnackbarMessageViewTestsFakeView alloc] init];
-    messageView.mdc_adjustsFontForContentSizeCategory = YES;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    messageView.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = NO;
-#pragma clang diagnostic pop
-    UIFont *messageFont = [UIFont systemFontOfSize:15.0 weight:UIFontWeightMedium];
-    MDCFontScaler *fontScaler = [[MDCFontScaler alloc] initForMaterialTextStyle:MDCTextStyleBody1];
-    messageFont = [fontScaler scaledFontWithFont:messageFont];
-    messageFont = [messageFont mdc_scaledFontAtDefaultSize];
-    messageView.messageFont = messageFont;
-    CGFloat originalMessageFontSize = messageView.label.font.pointSize;
-
-    // When
-    UIContentSizeCategory size = UIContentSizeCategoryExtraExtraExtraLarge;
-    UITraitCollection *traitCollection =
-        [UITraitCollection traitCollectionWithPreferredContentSizeCategory:size];
-    messageView.traitCollectionOverride = traitCollection;
-    [NSNotificationCenter.defaultCenter
-        postNotificationName:UIContentSizeCategoryDidChangeNotification
-                      object:nil];
-
-    // Then
-    CGFloat actualMessageFontSize = messageView.label.font.pointSize;
-    XCTAssertGreaterThan(actualMessageFontSize, originalMessageFontSize);
-  }
-}
-
-- (void)testMessageViewButtonDynamicTypeBehavior {
-  if (@available(iOS 10.0, *)) {
-    // Given
-    MDCSnackbarMessageViewTestsFakeView *messageView =
-        [[MDCSnackbarMessageViewTestsFakeView alloc] init];
-    messageView.mdc_adjustsFontForContentSizeCategory = YES;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    messageView.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = NO;
-#pragma clang diagnostic pop
-    MDCButton *button = [[MDCButton alloc] init];
-    [messageView.actionButtons addObject:button];
-    UIFont *buttonFont = [UIFont systemFontOfSize:10.0 weight:UIFontWeightMedium];
-    MDCFontScaler *fontScaler = [[MDCFontScaler alloc] initForMaterialTextStyle:MDCTextStyleButton];
-    buttonFont = [fontScaler scaledFontWithFont:buttonFont];
-    buttonFont = [buttonFont mdc_scaledFontAtDefaultSize];
-    messageView.buttonFont = buttonFont;
-    CGFloat originalButtonFontSize = [button titleFontForState:UIControlStateNormal].pointSize;
-
-    // When
-    UIContentSizeCategory size = UIContentSizeCategoryExtraExtraExtraLarge;
-    UITraitCollection *traitCollection =
-        [UITraitCollection traitCollectionWithPreferredContentSizeCategory:size];
-    messageView.traitCollectionOverride = traitCollection;
-    [NSNotificationCenter.defaultCenter
-        postNotificationName:UIContentSizeCategoryDidChangeNotification
-                      object:nil];
-
-    // Then
-    CGFloat actualButtonFontSize = [button titleFontForState:UIControlStateNormal].pointSize;
-    XCTAssertGreaterThan(actualButtonFontSize, originalButtonFontSize);
-  }
-}
-
-- (void)testMessageViewAdjustsFontForContentSizeCategoryWhenScaledFontIsUnavailableDefaultValue {
-  // Given
-  MDCSnackbarMessageView *messageView = [[MDCSnackbarMessageView alloc] init];
-
-  // Then
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  XCTAssertTrue(messageView.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable);
-#pragma clang diagnostic pop
-}
-
 - (void)testMessageStaysWhenFocusOnShowIsEnabled {
   // Given
   self.manager.internalManager.isVoiceOverRunningOverride = YES;
@@ -485,12 +515,38 @@
   // When
   [self.manager showMessage:self.message];
   XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
-  dispatch_time_t popTime =
-      dispatch_time(DISPATCH_TIME_NOW, (int64_t)((CGFloat)0.2 * NSEC_PER_SEC));
+  dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, kDispatchTimeWait);
   dispatch_after(popTime, dispatch_get_main_queue(), ^{
     [expectation fulfill];
   });
   [self waitForExpectationsWithTimeout:3 handler:nil];
+
+  // Then
+  XCTAssertFalse(self.manager.internalManager.currentSnackbar.accessibilityElementsHidden);
+}
+
+- (void)testAccessibilityElementsVisibleWhenVoiceOverStatusEnabled {
+  // Given
+  MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
+  action.title = @"Tap Me";
+  self.message.action = action;
+
+  [self.manager showMessage:self.message];
+  XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
+  // Wait for the snackbar to be displayed.
+  dispatch_async(dispatch_get_main_queue(), ^{
+    // Wait for the completion block to run after displaying the snackbar.
+    dispatch_async(dispatch_get_main_queue(), ^{
+      [expectation fulfill];
+    });
+  });
+  [self waitForExpectationsWithTimeout:3 handler:nil];
+  XCTAssertFalse(self.manager.internalManager.currentSnackbar.accessibilityElementsHidden);
+  // When
+  self.manager.internalManager.isVoiceOverRunningOverride = YES;
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:UIAccessibilityVoiceOverStatusDidChangeNotification
+                    object:nil];
 
   // Then
   XCTAssertFalse(self.manager.internalManager.currentSnackbar.accessibilityElementsHidden);
@@ -524,8 +580,7 @@
   // When
   [self.manager showMessage:self.message];
   XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
-  dispatch_time_t popTime =
-      dispatch_time(DISPATCH_TIME_NOW, (int64_t)((CGFloat)0.2 * NSEC_PER_SEC));
+  dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, kDispatchTimeWait);
   dispatch_after(popTime, dispatch_get_main_queue(), ^{
     [expectation fulfill];
   });
@@ -541,10 +596,116 @@
   self.message.duration = kSnackbarDuration;
   // When
   [self.manager showMessage:self.message];
-  self.delegate.disappearExpectation = [self expectationWithDescription:@"disappeared"];
+  self.delegate.didDisappearExpectation = [self expectationWithDescription:@"didDisappear"];
   // Then
   // Expect 'snackbarDidDisappear' delegate method to be called.
   [self waitForExpectationsWithTimeout:3 handler:nil];
 }
 
+- (void)testSnackbarWillDisappearDelegateCalled {
+  // Given
+  const CGFloat kSnackbarDuration = (CGFloat)0.1;
+  self.message.duration = kSnackbarDuration;
+  // When
+  [self.manager showMessage:self.message];
+  self.delegate.willDisappearExpectation = [self expectationWithDescription:@"willDisappear"];
+  // Then
+  // Expect 'snackbarWillDisappear' delegate method to be called.
+  [self waitForExpectationsWithTimeout:3 handler:nil];
+}
+
+- (void)testSettingPresentationHostViewOverrideDisplaysSnackbarInCorrectView {
+  // Given
+  UIView *customView = [[UIView alloc] init];
+  self.message.presentationHostViewOverride = customView;
+
+  // When
+  [self.manager showMessage:self.message];
+  XCTestExpectation *expectation = [self expectationWithDescription:@"completed"];
+  dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, kDispatchTimeWait);
+  dispatch_after(popTime, dispatch_get_main_queue(), ^{
+    [expectation fulfill];
+  });
+  [self waitForExpectationsWithTimeout:3 handler:nil];
+
+  // Then
+  XCTAssertTrue([customView.subviews count] > 0);
+  XCTAssertEqual([customView.subviews.firstObject class], [MDCSnackbarOverlayView class]);
+}
+
+/**
+ * This test creates a snackbar with 'shouldDismissOnOverlayTap' enabled, presents it, waits for the
+ * snackbar to appear, and then taps the screen.  The snackbar should dismiss at this point.
+ */
+- (void)testDismissOnScreenTap {
+  // Given
+  self.message.shouldDismissOnOverlayTap = YES;
+  self.message.duration = 0;
+  self.delegate.didDisappearExpectation = [self expectationWithDescription:@"didDisappear"];
+  self.delegate.willPresentExpectation = [self expectationWithDescription:@"willPresent"];
+
+  // When
+  [self.manager showMessage:self.message];
+  [self waitForExpectations:@[ self.delegate.willPresentExpectation ] timeout:0.5];
+  [self.manager.internalManager.overlayView pointInside:CGPointMake(3, 3) withEvent:nil];
+
+  // Then
+  [self waitForExpectationsWithTimeout:0.5 handler:nil];
+}
+
+/**
+ * This test is identical to the one above, but we do *not* tap the screen, and check to make sure
+ * the snackbar has *not* been dismissed.
+ */
+- (void)testDismissOnScreenTap_NoTap {
+  // Given
+  self.message.shouldDismissOnOverlayTap = YES;
+  self.message.duration = 0;
+  self.delegate.willPresentExpectation = [self expectationWithDescription:@"willPresent"];
+
+  // When
+  [self.manager showMessage:self.message];
+  [self waitForExpectationsWithTimeout:0.5 handler:nil];
+
+  // Then
+  [NSThread sleepForTimeInterval:0.5];
+  // Unfortunately, there is no way to to assert an expectation  has *not* fired after a time
+  // interval. Instead we rely on 'internalManager.currentSnackbar' to be nil iff the snackbar is
+  // dismissed.
+  XCTAssertNotNil(self.manager.internalManager.currentSnackbar);
+}
+
+/**
+ * In a similar vein to the tests above, this test ensures the snackbar does *not* dismiss on tap if
+ * the user doesn't enable shouldDismissOnScreenTap.
+ */
+- (void)testNotDismissedOnScreenTap {
+  // Given
+  self.message.duration = 0;
+  self.delegate.willPresentExpectation = [self expectationWithDescription:@"willPresent"];
+
+  // When
+  [self.manager showMessage:self.message];
+  [self waitForExpectationsWithTimeout:0.5 handler:nil];
+
+  // Then
+  [NSThread sleepForTimeInterval:0.5];
+  // Unfortunately, there is no way to to assert an expectation has *not* fired after a time
+  // interval. Instead we rely on 'internalManager.currentSnackbar' to be nil iff the snackbar is
+  // dismissed.
+  XCTAssertNotNil(self.manager.internalManager.currentSnackbar);
+}
+
+- (void)testsnackbarIsPresentingDelegateCalled {
+  // Given
+  self.delegate.willPresentExpectation = [self expectationWithDescription:@"willPresent"];
+  self.delegate.isPresentingExpectation = [self expectationWithDescription:@"isPresenting"];
+  // When
+  [self.manager showMessage:self.message];
+  // Then
+  [self waitForExpectationsWithTimeout:0.2 handler:nil];
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

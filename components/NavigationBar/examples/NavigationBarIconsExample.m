@@ -13,7 +13,8 @@
 // limitations under the License.
 #import <UIKit/UIKit.h>
 
-#import <MDFInternationalization/MDFInternationalization.h>
+#import "MaterialColorScheme.h"
+#import "MaterialTypographyScheme.h"
 
 #import "MaterialIcons+ic_arrow_back.h"
 #import "MaterialIcons+ic_info.h"
@@ -59,7 +60,7 @@
                                         toNavigationBar:self.navigationBar];
 
   UIBarButtonItem *backButtonItem = [[UIBarButtonItem alloc]
-      initWithImage:[[[MDCIcons imageFor_ic_arrow_back] mdf_imageWithHorizontallyFlippedOrientation]
+      initWithImage:[[[MDCIcons imageFor_ic_arrow_back] imageWithHorizontallyFlippedOrientation]
                         imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]
               style:UIBarButtonItemStylePlain
              target:self
@@ -85,19 +86,8 @@
   self.navigationItem.rightBarButtonItem = trailingButtonItem;
   self.navigationItem.backBarButtonItem = backButtonItem;
 
-  if (@available(iOS 11.0, *)) {
-    [self.view.safeAreaLayoutGuide.topAnchor constraintEqualToAnchor:self.navigationBar.topAnchor]
-        .active = YES;
-  } else {
-    [NSLayoutConstraint constraintWithItem:self.topLayoutGuide
-                                 attribute:NSLayoutAttributeBottom
-                                 relatedBy:NSLayoutRelationEqual
-                                    toItem:self.navigationBar
-                                 attribute:NSLayoutAttributeTop
-                                multiplier:1.0
-                                  constant:0]
-        .active = YES;
-  }
+  [self.view.safeAreaLayoutGuide.topAnchor constraintEqualToAnchor:self.navigationBar.topAnchor]
+      .active = YES;
   NSDictionary *viewsBindings = NSDictionaryOfVariableBindings(_navigationBar);
 
   [NSLayoutConstraint

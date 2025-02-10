@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import UIKit
 import CoreGraphics
+import UIKit
 import MaterialComponents.MaterialAppBar
-import MaterialComponents.MaterialAppBar_Theming
-import MaterialComponents.MaterialContainerScheme
+import MaterialComponents.MaterialAppBar_Theming 
 import MaterialComponents.MaterialTabs
-import MaterialComponents.MaterialFlexibleHeader_CanAlwaysExpandToMaximumHeight
+import MaterialComponents.MaterialContainerScheme
 
 // This example demonstrates the issue found in GitHub issue #5412
 class AppBarJumpExample: UIViewController {
@@ -26,16 +25,16 @@ class AppBarJumpExample: UIViewController {
   lazy var appBarViewController: MDCAppBarViewController = self.makeAppBar()
   @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
 
-  fileprivate let firstTab = SimpleComposedTableViewController()
-  fileprivate let secondTab = SimpleComposedTableViewController()
-  private var currentTab: SimpleComposedTableViewController? = nil
+  fileprivate let firstTab = SiblingOfTrackingScrollViewViewController()
+  fileprivate let secondTab = SiblingOfTrackingScrollViewViewController()
+  private var currentTab: SiblingOfTrackingScrollViewViewController? = nil
 
   lazy var tabBar: MDCTabBar = {
     let tabBar = MDCTabBar()
 
     tabBar.items = [
-      UITabBarItem(title: "First", image: nil, tag:0),
-      UITabBarItem(title: "Second", image: nil, tag:1)
+      UITabBarItem(title: "First", image: nil, tag: 0),
+      UITabBarItem(title: "Second", image: nil, tag: 1),
     ]
 
     tabBar.delegate = self
@@ -69,7 +68,7 @@ class AppBarJumpExample: UIViewController {
     switchToTab(firstTab)
   }
 
-  fileprivate func switchToTab(_ tab: SimpleComposedTableViewController) {
+  fileprivate func switchToTab(_ tab: SiblingOfTrackingScrollViewViewController) {
 
     appBarViewController.headerView.trackingScrollWillChange(toScroll: tab.tableView)
 
@@ -115,7 +114,6 @@ class AppBarJumpExample: UIViewController {
     // Give the tab bar enough height to accomodate all possible item appearances.
     appBarViewController.headerView.minMaxHeightIncludesSafeArea = false
     appBarViewController.inferTopSafeAreaInsetFromViewController = true
-    appBarViewController.headerView.canAlwaysExpandToMaximumHeight = true
     appBarViewController.headerView.sharedWithManyScrollViews = true
 
     appBarViewController.headerView.minimumHeight = 56
@@ -155,4 +153,3 @@ extension AppBarJumpExample {
     return true
   }
 }
-

@@ -14,6 +14,11 @@
 
 #import <UIKit/UIKit.h>
 
+API_DEPRECATED_BEGIN("🤖👀 Use a branded MDCTabBarView instead. "
+                     "See go/material-ios-tabs and go/material-ios-tabbar-migration for more info. "
+                     "This has go/material-ios-migrations#scriptable-potential 🤖👀.",
+                     ios(12, 12))
+
 /** Defines how a tab bar indicator should appear in a specific context. */
 @interface MDCTabBarIndicatorAttributes : NSObject <NSCopying>
 
@@ -21,3 +26,5 @@
 @property(nonatomic, nullable) UIBezierPath *path;
 
 @end
+
+API_DEPRECATED_END

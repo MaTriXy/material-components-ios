@@ -14,12 +14,17 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/UIFont+MaterialTypographyPrivate.h"
-#import "MaterialTypography.h"
+#import "MDCFontTextStyle.h"
+#import "MDCTypography.h"
+#import "UIFont+MaterialTypography.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "UIFont+MaterialTypographyPrivate.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 static const CGFloat kEpsilon = (CGFloat)0.001;
-static const CGFloat kOpacityLight = (CGFloat)0.54;
-static const CGFloat kOpacityMedium = (CGFloat)0.87;
 /**
  For our tests we are following a Given When Then structure as defined in
  http://martinfowler.com/bliki/GivenWhenThen.html
@@ -42,7 +47,7 @@ static const CGFloat kOpacityMedium = (CGFloat)0.87;
 
 @implementation BodoniOrnamentsFontLoader
 
-- (UIFont *)lightFontOfSize:(CGFloat)fontSize {
+- (nullable UIFont *)lightFontOfSize:(CGFloat)fontSize {
   return [UIFont fontWithName:@"Bodoni Ornaments" size:fontSize];
 }
 
@@ -50,7 +55,7 @@ static const CGFloat kOpacityMedium = (CGFloat)0.87;
   return [UIFont fontWithName:@"Bodoni Ornaments" size:fontSize];
 }
 
-- (UIFont *)mediumFontOfSize:(CGFloat)fontSize {
+- (nullable UIFont *)mediumFontOfSize:(CGFloat)fontSize {
   return [UIFont fontWithName:@"Bodoni Ornaments" size:fontSize];
 }
 
@@ -58,135 +63,7 @@ static const CGFloat kOpacityMedium = (CGFloat)0.87;
 
 @implementation TypographyTests
 
-#pragma mark - Font opacity
-
-- (void)testDisplay4FontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography display4FontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityLight, kEpsilon,
-                             @"Opacity of display 4 must be correct.");
-}
-- (void)testDisplay3FontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography display3FontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityLight, kEpsilon,
-                             @"Opacity of display 3 must be correct.");
-}
-- (void)testDisplay2FontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography display2FontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityLight, kEpsilon,
-                             @"Opacity of display 2 must be correct.");
-}
-- (void)testDisplay1FontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography display1FontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityLight, kEpsilon,
-                             @"Opacity of display 1 must be correct.");
-}
-
-- (void)testHeadlineFontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography headlineFontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityMedium, kEpsilon,
-                             @"Opacity of headline must be correct.");
-}
-
-- (void)testTitleFontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography titleFontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityMedium, kEpsilon,
-                             @"Opacity of headline must be correct.");
-}
-
-- (void)testSubheadFontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography subheadFontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityMedium, kEpsilon,
-                             @"Opacity of subhead must be correct.");
-}
-
-- (void)testBody2FontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography body2FontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityMedium, kEpsilon,
-                             @"Opacity of body 2 must be correct.");
-}
-
-- (void)testBody1FontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography body1FontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityMedium, kEpsilon,
-                             @"Opacity of body 1 must be correct.");
-}
-
-- (void)testCaptionFontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography captionFontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityLight, kEpsilon,
-                             @"Opacity of caption must be correct.");
-}
-
-- (void)testButtonFontOpacity {
-  // When
-  CGFloat opacity = [MDCTypography buttonFontOpacity];
-
-  // Then
-  XCTAssertEqualWithAccuracy(opacity, kOpacityMedium, kEpsilon,
-                             @"Opacity of button must be correct.");
-}
-
 #pragma mark - font name and size
-
-- (void)testDisplay4Font {
-  // Given
-  // When
-  UIFont *font = [MDCTypography display4Font];
-
-  // Then
-  XCTAssertEqualWithAccuracy(font.pointSize, 112, kEpsilon,
-                             @"The font size of display 4 must be 112.");
-}
-
-- (void)testDisplay3Font {
-  // Given
-  // When
-  UIFont *font = [MDCTypography display3Font];
-
-  // Then
-  XCTAssertEqualWithAccuracy(font.pointSize, 56, kEpsilon,
-                             @"The font size of display 3 must be 56.");
-}
-
-- (void)testDisplay2Font {
-  // Given
-  // When
-  UIFont *font = [MDCTypography display2Font];
-
-  // Then
-  XCTAssertEqualWithAccuracy(font.pointSize, 45, kEpsilon,
-                             @"The font size of display 2 must be 45.");
-}
 
 - (void)testDisplay1Font {
   // Given
@@ -261,75 +138,6 @@ static const CGFloat kOpacityMedium = (CGFloat)0.87;
   XCTAssertEqualWithAccuracy(font.pointSize, 14, kEpsilon, @"The font size of button must be 14.");
 }
 
-- (void)testItalicFontFromFont {
-  // Given
-  CGFloat size = 8;
-  MDCSystemFontLoader *fontLoader = [[MDCSystemFontLoader alloc] init];
-  UIFont *normalFont = [UIFont systemFontOfSize:size];
-  UIFont *italicFont = [UIFont italicSystemFontOfSize:size];
-  UIFont *mediumFont = [fontLoader mediumFontOfSize:size];
-  UIFontDescriptor *fontDescriptor =
-      [mediumFont.fontDescriptor fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitItalic];
-  UIFont *italicMediumFont = [UIFont fontWithDescriptor:fontDescriptor size:0];
-
-  // Then
-  XCTAssertEqualObjects([MDCTypography italicFontFromFont:mediumFont], italicMediumFont);
-  XCTAssertEqualObjects([MDCTypography italicFontFromFont:normalFont], italicFont);
-}
-
-- (void)testBoldFontFromFont {
-  // Given
-  CGFloat size = 8;
-  MDCSystemFontLoader *fontLoader = [[MDCSystemFontLoader alloc] init];
-  UIFont *normalFont = [UIFont systemFontOfSize:size];
-  UIFont *boldFont = [UIFont boldSystemFontOfSize:size];
-  UIFont *italicFont = [UIFont italicSystemFontOfSize:size];
-  UIFontDescriptor *fontDescriptor = [[UIFont systemFontOfSize:size].fontDescriptor
-      fontDescriptorWithSymbolicTraits:UIFontDescriptorTraitItalic | UIFontDescriptorTraitBold];
-  UIFont *italicBoldFont = [UIFont fontWithDescriptor:fontDescriptor size:0];
-  UIFont *fontLoaderRegularFont = [fontLoader regularFontOfSize:size];
-  UIFont *fontLoaderBoldFont = [fontLoader boldFontOfSize:size];
-
-  // Then
-  XCTAssertEqualObjects([MDCTypography boldFontFromFont:italicFont], italicBoldFont);
-  XCTAssertEqualObjects([MDCTypography boldFontFromFont:normalFont], boldFont);
-  // For some reason the fonts are not equal, the names are the same though.
-  XCTAssertEqualObjects([MDCTypography boldFontFromFont:fontLoaderRegularFont].fontName,
-                        fontLoaderBoldFont.fontName);
-}
-
-- (void)testBoldFontFromFontWithNoBold {
-  // Given
-  BodoniOrnamentsFontLoader *fontLoader = [[BodoniOrnamentsFontLoader alloc] init];
-  [MDCTypography setFontLoader:fontLoader];
-  UIFont *font = [MDCTypography buttonFont];
-
-  // When
-  UIFont *boldFont = [MDCTypography boldFontFromFont:font];
-
-  // Then
-  XCTAssertNotNil(boldFont);
-
-  // Cleanup
-  [MDCTypography setFontLoader:[[MDCSystemFontLoader alloc] init]];
-}
-
-- (void)testItalicFontFromFontWithNoItalic {
-  // Given
-  BodoniOrnamentsFontLoader *fontLoader = [[BodoniOrnamentsFontLoader alloc] init];
-  [MDCTypography setFontLoader:fontLoader];
-  UIFont *font = [MDCTypography buttonFont];
-
-  // When
-  UIFont *italicFont = [MDCTypography italicFontFromFont:font];
-
-  // Then
-  XCTAssertNotNil(italicFont);
-
-  // Cleanup
-  [MDCTypography setFontLoader:[[MDCSystemFontLoader alloc] init]];
-}
-
 - (void)testFontFamilyMatchesSystemFontFamily {
   // Given
   NSArray<NSNumber *> *allFontStyles = @[
@@ -340,9 +148,6 @@ static const CGFloat kOpacityMedium = (CGFloat)0.87;
     @(MDCFontTextStyleSubheadline),
     @(MDCFontTextStyleTitle),
     @(MDCFontTextStyleDisplay1),
-    @(MDCFontTextStyleDisplay2),
-    @(MDCFontTextStyleDisplay3),
-    @(MDCFontTextStyleDisplay4),
     @(MDCFontTextStyleButton),
   ];
 
@@ -370,3 +175,5 @@ static const CGFloat kOpacityMedium = (CGFloat)0.87;
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

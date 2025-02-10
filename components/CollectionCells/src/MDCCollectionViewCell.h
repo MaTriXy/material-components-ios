@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialInk.h"
-
 #import <UIKit/UIKit.h>
+
+#import "MaterialInk.h"  // IWYU pragma: keep
+#import "MaterialRipple.h"  // IWYU pragma: keep
+
+API_DEPRECATED_BEGIN("🕘 Schedule time to migrate. "
+                     "Use branded UITableView or UICollectionView instead: go/material-ios-lists. "
+                     "This is go/material-ios-migrations#not-scriptable 🕘",
+                     ios(12, 12))
 
 /** The available cell accessory view types. Based on UITableViewCellAccessoryType. */
 typedef NS_ENUM(NSUInteger, MDCCollectionViewCellAccessoryType) {
@@ -101,6 +107,28 @@ FOUNDATION_EXPORT NSString *_Nonnull const kDeselectedCellAccessibilityHintKey;
 - (void)setEditing:(BOOL)editing animated:(BOOL)animated;
 
 /** View containing the ink effect. */
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 @property(nonatomic, strong, nullable) MDCInkView *inkView;
+#pragma clang diagnostic pop
+
+/**
+ This property determines if an @c MDCCollectionViewCell should use the @c MDCInkView behavior or
+ not.
+
+ By setting this property to @c YES, @c MDCRippleView is used to provide the user visual
+ touch feedback, instead of the legacy @c MDCInkView.
+
+ @note Defaults to @c NO.
+ */
+@property(nonatomic, assign) BOOL enableRippleBehavior;
+
+/**
+The rippleView for the cell that is initiated on tap. The ripple view is the successor of ink
+view, and can be used by setting `enableRippleBehavior` to YES.
+*/
+@property(nonatomic, strong, nullable) MDCRippleView *rippleView;
 
 @end
+
+API_DEPRECATED_END

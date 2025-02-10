@@ -14,13 +14,22 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MDCTextInput.h"
+// TODO(b/151929968): Delete import of delegate headers when client code has been migrated to no
+// longer import delegates as transitive dependencies.
 #import "MaterialElevation.h"
+#import "MDCMultilineTextInputLayoutDelegate.h"
+#import "MDCTextInput.h"
 
 @class MDCIntrinsicHeightTextView;
 
 @protocol MDCMultilineTextInputDelegate;
 @protocol MDCMultilineTextInputLayoutDelegate;
+
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
 
 /**
   Material Design themed mutiline text field (multiline text input).
@@ -75,6 +84,13 @@
 @property(nonatomic, nullable, strong) IBOutlet MDCIntrinsicHeightTextView *textView;
 
 /**
+ * Whether or not the multiline text field should use its contraints to calculate its intrinsic
+ * content size. Default is NO, in which case the multiline text field gives an approximate
+ * intrinsic content size using its subviews.
+ */
+@property(nonatomic) BOOL useConstraintsForIntrinsicContentSize;
+
+/**
  A block that is invoked when the @c MDCMultilineTextField receives a call to @c
  traitCollectionDidChange:. The block is called after the call to the superclass.
  */
@@ -84,21 +100,31 @@
 
 @end
 
-/** Delegate for MDCTextInput size changes. */
-@protocol MDCMultilineTextInputLayoutDelegate <NSObject>
+@interface MDCMultilineTextField (UIAccessibility)
 
-@optional
 /**
- Notifies the delegate that the text field's content size changed, requiring the size provided for
- best display.
+The default value of isAccessibilityElement for MDCMultilneTextField is false. When
+isAccessibilityElement is false, the entire view is treated as a container. VoiceOver traverses
+each accessibility element within MDCMultilineTextField and reads the accessibilityLabel of each
+element. Since MDCMutlilineTextField acts merely as a container, setting accessibilityLabel on
+MDCMultilineTextField has no effect.
 
- If using auto layout, this method is unnecessary; this is a way for views not implementing auto
- layout to know when to grow and shrink height to accomodate changes in content.
+If isAccessibilityElement is set to true, the entire MDCMultilineTextField is treated as one
+accessibility element, as opposed to a container. The accessibilityLabel for MDCMultilineTextField
+will be a computed property. The value returned will be a concatenation of accessibilityLabel of the
+elements contained within the MDCMultilineTextField. If accessibilityLabel for MDCMultilineTextField
+is set, the assigned value is used in place of placeholder label's accessibilityLabel when
+concatenating.
 
- @param multilineTextField  The text field for which the content size changed.
- @param size                The size required by the text view to fit all of its content.
+*/
+
+@property(nonatomic) BOOL isAccessibilityElement;
+
+/**
+ See comments for isAccessibilityElement
  */
-- (void)multilineTextField:(id<MDCMultilineTextInput> _Nonnull)multilineTextField
-      didChangeContentSize:(CGSize)size;
+@property(nullable, nonatomic, copy) NSString *accessibilityLabel;
 
 @end
+
+API_DEPRECATED_END

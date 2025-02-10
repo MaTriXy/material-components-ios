@@ -12,34 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import UIKit
 import CoreGraphics
+import UIKit
 import MaterialComponents.MaterialAppBar
-import MaterialComponents.MaterialAppBar_Theming
-import MaterialComponents.MaterialContainerScheme
+import MaterialComponents.MaterialAppBar_Theming 
 import MaterialComponents.MaterialTabs
-import MaterialComponents.MaterialFlexibleHeader_CanAlwaysExpandToMaximumHeight
+import MaterialComponents.MaterialContainerScheme
 
 // An example that demonstrates the behavior of an App Bar with Tabs and manually swapped tab view
 // controllers. This example is distinct from a typical tab bar view controller in that it does not
-// make use of a horizontally-paging scroll view. This example also makes use of the
-// canAlwaysExpandToMaximumHeight API to allow the header to maintain its expanded state when
-// swapping between tabs.
+// make use of a horizontally-paging scroll view.
 class AppBarManualTabsExample: UIViewController {
 
   lazy var appBarViewController: MDCAppBarViewController = self.makeAppBar()
   @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
 
-  fileprivate let firstTab = SimpleInheritedTableViewController()
-  fileprivate let secondTab = SimpleInheritedTableViewController()
-  private var currentTab: SimpleInheritedTableViewController? = nil
+  fileprivate let firstTab = ChildOfTrackingScrollViewViewController()
+  fileprivate let secondTab = ChildOfTrackingScrollViewViewController()
+  private var currentTab: ChildOfTrackingScrollViewViewController? = nil
 
   lazy var tabBar: MDCTabBar = {
     let tabBar = MDCTabBar()
 
     tabBar.items = [
-      UITabBarItem(title: "First", image: nil, tag:0),
-      UITabBarItem(title: "Second", image: nil, tag:1)
+      UITabBarItem(title: "First", image: nil, tag: 0),
+      UITabBarItem(title: "Second", image: nil, tag: 1),
     ]
 
     tabBar.delegate = self
@@ -73,7 +70,7 @@ class AppBarManualTabsExample: UIViewController {
     switchToTab(firstTab)
   }
 
-  fileprivate func switchToTab(_ tab: SimpleInheritedTableViewController) {
+  fileprivate func switchToTab(_ tab: ChildOfTrackingScrollViewViewController) {
     appBarViewController.headerView.trackingScrollWillChange(toScroll: tab.tableView)
 
     if let currentTab = currentTab {
@@ -119,7 +116,6 @@ class AppBarManualTabsExample: UIViewController {
     // Give the tab bar enough height to accomodate all possible item appearances.
     appBarViewController.headerView.minMaxHeightIncludesSafeArea = false
     appBarViewController.inferTopSafeAreaInsetFromViewController = true
-    appBarViewController.headerView.canAlwaysExpandToMaximumHeight = true
     appBarViewController.headerView.sharedWithManyScrollViews = true
 
     appBarViewController.headerView.minimumHeight = 56

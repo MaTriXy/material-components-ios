@@ -20,17 +20,16 @@
 #import "MaterialButtons.h"
 #import "MaterialColorScheme.h"
 #import "MaterialContainerScheme.h"
-#import "MaterialTypographyScheme.h"
 
-@interface ActionSheetTypicalUseExampleViewController
-    : UIViewController <MDCActionSheetControllerDelegate>
+@interface ActionSheetTypicalUseExample : UIViewController <MDCActionSheetControllerDelegate>
 
 @property(nonatomic, strong) MDCButton *showButton;
+@property(nonatomic, strong) MDCActionSheetController *actionSheet;
 @property(nonatomic, strong) id<MDCContainerScheming> containerScheme;
 
 @end
 
-@implementation ActionSheetTypicalUseExampleViewController
+@implementation ActionSheetTypicalUseExample
 
 - (instancetype)init {
   self = [super init];
@@ -72,16 +71,18 @@
 - (void)showActionSheet {
   MDCActionSheetController *actionSheet = [[MDCActionSheetController alloc] init];
   MDCActionSheetAction *homeAction =
-      [MDCActionSheetAction actionWithTitle:@"Home" image:[UIImage imageNamed:@"Home"] handler:nil];
+      [MDCActionSheetAction actionWithTitle:@"Home"
+                                      image:[UIImage imageNamed:@"system_icons/home"]
+                                    handler:nil];
   MDCActionSheetAction *favoriteAction =
       [MDCActionSheetAction actionWithTitle:@"Favorite"
-                                      image:[UIImage imageNamed:@"Favorite"]
+                                      image:[UIImage imageNamed:@"system_icons/favorite"]
                                     handler:^(MDCActionSheetAction *action) {
                                       NSLog(@"Favorite Action");
                                     }];
   MDCActionSheetAction *emailAction =
       [MDCActionSheetAction actionWithTitle:@"Email"
-                                      image:[UIImage imageNamed:@"Email"]
+                                      image:[UIImage imageNamed:@"system_icons/email"]
                                     handler:^(MDCActionSheetAction *action) {
                                       NSLog(@"Email Action");
                                     }];
@@ -90,6 +91,7 @@
   [actionSheet addAction:emailAction];
   [actionSheet applyThemeWithScheme:self.containerScheme];
   actionSheet.delegate = self;
+  self.actionSheet = actionSheet;
   [self presentViewController:actionSheet animated:YES completion:nil];
 }
 
@@ -98,9 +100,14 @@
   NSLog(@"Did dismiss");
 }
 
+- (void)actionSheetControllerDismissalAnimationCompleted:
+    (MDCActionSheetController *)actionSheetController {
+  NSLog(@"%@", NSStringFromSelector(_cmd));
+}
+
 @end
 
-@implementation ActionSheetTypicalUseExampleViewController (CatalogByConvention)
+@implementation ActionSheetTypicalUseExample (CatalogByConvention)
 
 + (NSDictionary *)catalogMetadata {
   return @{
@@ -108,6 +115,37 @@
     @"primaryDemo" : @YES,
     @"presentable" : @YES,
   };
+}
+
+@end
+
+@implementation ActionSheetTypicalUseExample (SnapshotTestingByConvention)
+
+- (void)testDefaults {
+  // Given
+  [self resetStates];
+  MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+  self.containerScheme = containerScheme;
+
+  // When
+  [self showActionSheet];
+}
+
+- (void)testDynamic201907ColorScheme {
+  // Given
+  [self resetStates];
+  MDCContainerScheme *containerScheme = [[MDCContainerScheme alloc] init];
+  containerScheme.colorScheme =
+      [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201907];
+  self.containerScheme = containerScheme;
+
+  // When
+  [self showActionSheet];
+}
+
+- (void)resetStates {
+  [self.actionSheet dismissViewControllerAnimated:NO completion:nil];
+  self.actionSheet = nil;
 }
 
 @end

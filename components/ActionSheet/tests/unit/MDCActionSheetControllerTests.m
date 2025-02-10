@@ -14,10 +14,19 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCActionSheetHeaderView.h"
-#import "MDCActionSheetTestHelper.h"
-#import "MaterialMath.h"
-#import "MaterialShadowElevations.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCActionSheetHeaderView.h"
+#pragma clang diagnostic pop
+#import "MDCActionSheetAction.h"
+#import "MDCActionSheetController.h"
+#import "ActionSheetTestHelpers.h"
+#import "MDCBottomSheetPresentationController.h"
+#import "MDCBottomSheetTransitionController.h"
+#import "UIViewController+MaterialBottomSheet.h"
+#import "MDCShadowElevations.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 static const CGFloat kSafeAreaAmount = 20;
 static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
@@ -32,7 +41,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 @end
 
 @interface MDCActionSheetControllerTests : XCTestCase
-@property(nonatomic, strong) MDCActionSheetController *actionSheet;
+@property(nonatomic, strong, nullable) MDCActionSheetController *actionSheet;
 @end
 
 @interface MDCFakeView : UIView
@@ -125,7 +134,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
   // Given
   self.actionSheet.message = @"Test message";
 
-  NSArray *colors = [MDCActionSheetTestHelper colorsToTest];
+  NSArray *colors = [ActionSheetTestHelpers colorsToTest];
   for (UIColor *color in colors) {
     // When
     self.actionSheet.messageTextColor = color;
@@ -139,7 +148,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
   // Given
   self.actionSheet.title = @"Test title";
 
-  NSArray *colors = [MDCActionSheetTestHelper colorsToTest];
+  NSArray *colors = [ActionSheetTestHelpers colorsToTest];
   for (UIColor *color in colors) {
     // When
     self.actionSheet.titleTextColor = color;
@@ -151,7 +160,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 
 - (void)testCustomBackgroundColor {
   // Given
-  NSArray *colors = [MDCActionSheetTestHelper colorsToTest];
+  NSArray *colors = [ActionSheetTestHelpers colorsToTest];
   for (UIColor *color in colors) {
     // When
     self.actionSheet.backgroundColor = color;
@@ -259,11 +268,30 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
   XCTAssertFalse(self.actionSheet.addLeadingPaddingToCell);
 }
 
+- (void)testPassThroughPropertiesToPresentationControllerWorkAfterItsInitialization {
+  // Given
+  [self.actionSheet addAction:[MDCActionSheetAction actionWithTitle:@"An action"
+                                                              image:nil
+                                                            handler:nil]];
+  NSString *expectedScrimAccessibilityLabel =
+      @"Accessibility label to be passed to presentation controller";
+  __unused UIView *forceLoadedViewResultingInInitializationOfPresentationController =
+      self.actionSheet.view;
+
+  // When
+  self.actionSheet.transitionController.scrimAccessibilityLabel = expectedScrimAccessibilityLabel;
+
+  // Then
+  NSString *actualScrimAccessibilityLabel =
+      self.actionSheet.mdc_bottomSheetPresentationController.scrimAccessibilityLabel;
+  XCTAssertEqualObjects(expectedScrimAccessibilityLabel, actualScrimAccessibilityLabel);
+}
+
 #pragma mark - Opening height
 
 - (CGRect)setUpActionSheetWithHeight:(CGFloat)height
-                            andTitle:(NSString *)title
-                          andMessage:(NSString *)message {
+                            andTitle:(nullable NSString *)title
+                          andMessage:(nullable NSString *)message {
   // Given
   CGRect viewRect = CGRectMake(0, 0, 200, height);
   self.actionSheet.view.bounds = viewRect;
@@ -271,7 +299,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
   self.actionSheet.message = message;
 
   // When
-  [MDCActionSheetTestHelper addNumberOfActions:100 toActionSheet:self.actionSheet];
+  [ActionSheetTestHelpers addNumberOfActions:100 toActionSheet:self.actionSheet];
   [self.actionSheet.view setNeedsLayout];
   [self.actionSheet.view layoutIfNeeded];
   return viewRect;
@@ -286,7 +314,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 
   CGFloat cellHeight =
       self.actionSheet.tableView.contentSize.height / (CGFloat)self.actionSheet.actions.count;
-  cellHeight = MDCCeil(cellHeight);
+  cellHeight = ceil(cellHeight);
   CGFloat halfCellHeight = cellHeight * (CGFloat)0.5;
   CGFloat headerHeight = CGRectGetHeight(self.actionSheet.header.frame);
 
@@ -315,7 +343,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 
   CGFloat cellHeight =
       self.actionSheet.tableView.contentSize.height / (CGFloat)self.actionSheet.actions.count;
-  cellHeight = MDCCeil(cellHeight);
+  cellHeight = ceil(cellHeight);
   CGFloat halfCellHeight = cellHeight * (CGFloat)0.5;
   CGFloat headerHeight = CGRectGetHeight(self.actionSheet.header.frame);
 
@@ -350,7 +378,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 
   CGFloat cellHeight =
       self.actionSheet.tableView.contentSize.height / (CGFloat)self.actionSheet.actions.count;
-  cellHeight = MDCCeil(cellHeight);
+  cellHeight = ceil(cellHeight);
   CGFloat halfCellHeight = cellHeight * (CGFloat)0.5;
   CGFloat headerHeight = CGRectGetHeight(self.actionSheet.header.frame);
 
@@ -377,7 +405,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 
   CGFloat cellHeight =
       self.actionSheet.tableView.contentSize.height / (CGFloat)self.actionSheet.actions.count;
-  cellHeight = MDCCeil(cellHeight);
+  cellHeight = ceil(cellHeight);
   CGFloat halfCellHeight = cellHeight * (CGFloat)0.5;
   CGFloat headerHeight = CGRectGetHeight(self.actionSheet.header.frame);
 
@@ -404,7 +432,7 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
 
   CGFloat cellHeight =
       self.actionSheet.tableView.contentSize.height / (CGFloat)self.actionSheet.actions.count;
-  cellHeight = MDCCeil(cellHeight);
+  cellHeight = ceil(cellHeight);
   CGFloat halfCellHeight = cellHeight * (CGFloat)0.5;
   CGFloat headerHeight = CGRectGetHeight(self.actionSheet.header.frame);
 
@@ -549,4 +577,60 @@ static const CGFloat kDefaultDividerOpacity = (CGFloat)0.12;
   XCTAssertGreaterThan(self.actionSheet.tableView.contentInset.top, originalTableContentInset);
 }
 
+- (void)testViewForActionWhenNoActionsAdded {
+  // Given
+  self.actionSheet.view.bounds = CGRectMake(0, 0, 500, 500);
+  MDCActionSheetAction *action = [MDCActionSheetAction actionWithTitle:@"Foo"
+                                                                 image:nil
+                                                               handler:nil];
+
+  // When
+  UIView *view = [self.actionSheet viewForAction:action];
+
+  // Then
+  XCTAssertNil(view);
+}
+
+- (void)testViewForActionWhenMultipleActionsAreAdded {
+  // Given
+  self.actionSheet.view.bounds = CGRectMake(0, 0, 500, 500);
+  MDCActionSheetAction *actionOne = [MDCActionSheetAction actionWithTitle:@"Foo"
+                                                                    image:nil
+                                                                  handler:nil];
+  MDCActionSheetAction *actionTwo = [MDCActionSheetAction actionWithTitle:@"Bar"
+                                                                    image:nil
+                                                                  handler:nil];
+  [self.actionSheet addAction:actionOne];
+  [self.actionSheet addAction:actionTwo];
+
+  // When
+  UIView *view = [self.actionSheet viewForAction:actionTwo];
+
+  // Then
+  XCTAssertNotNil(view);
+}
+
+- (void)testViewForActionWhenActionHasNotBeenAddedThenAdded {
+  // Given
+  self.actionSheet.view.bounds = CGRectMake(0, 0, 500, 500);
+  MDCActionSheetAction *action = [MDCActionSheetAction actionWithTitle:@"Foo"
+                                                                 image:nil
+                                                               handler:nil];
+
+  // When
+  UIView *view = [self.actionSheet viewForAction:action];
+
+  // Then
+  XCTAssertNil(view);
+
+  // When
+  [self.actionSheet addAction:action];
+  view = [self.actionSheet viewForAction:action];
+
+  // Then
+  XCTAssertNotNil(view);
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

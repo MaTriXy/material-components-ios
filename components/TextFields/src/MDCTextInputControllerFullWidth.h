@@ -14,6 +14,12 @@
 
 #import "MDCTextInputController.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 /**
  Material Design compliant text field for full width applications like email forms.
  https://material.io/go/design-text-fields#text-fields-field-variations
@@ -67,3 +73,5 @@
 @property(class, nonatomic, null_resettable, strong) UIColor *backgroundColorDefault;
 
 @end
+
+API_DEPRECATED_END

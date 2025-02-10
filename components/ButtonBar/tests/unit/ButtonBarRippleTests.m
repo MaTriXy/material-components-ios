@@ -14,10 +14,14 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCAppBarButtonBarBuilder.h"
-#import "MaterialButtonBar.h"
-#import "MaterialInk.h"
-#import "MaterialRipple.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCAppBarButtonBarBuilder.h"
+#pragma clang diagnostic pop
+#import "MDCButtonBar.h"
+#import "MDCButton.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCAppBarButtonBarBuilder (UnitTests)
 + (void)configureButton:(MDCButton *)destinationButton
@@ -140,3 +144,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

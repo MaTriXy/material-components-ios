@@ -15,16 +15,14 @@
 #import "MDCItemBarCell.h"
 #import "MDCItemBarCell+Private.h"
 
-#import <MDFInternationalization/MDFInternationalization.h>
-
+#import "MDCInkTouchController.h"
+#import "MDCInkView.h"
+#import "MDCRippleTouchController.h"
+#import "MDCRippleView.h"
 #import "MDCItemBarBadge.h"
-#import "MDCItemBarStringConstants.h"
 #import "MDCItemBarStyle.h"
-#import "MaterialAnimationTiming.h"
-#import "MaterialInk.h"
-#import "MaterialMath.h"
-#import "MaterialRipple.h"
-#import "MaterialTypography.h"
+#import "MDCTypography.h"
+#import "MDCMath.h"
 
 /// Size of image in points.
 static const CGSize kImageSize = {24, 24};
@@ -57,8 +55,10 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
 
 @property(nonatomic, strong) UIImageView *imageView;
 @property(nonatomic, strong) MDCItemBarBadge *badge;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 @property(nonatomic, strong) MDCInkTouchController *inkTouchController;
-@property(nonatomic, strong) MDCRippleTouchController *rippleTouchController;
+#pragma clang diagnostic pop
 
 @property(nonatomic, strong) MDCItemBarStyle *style;
 
@@ -84,7 +84,10 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
     [self updateSubviews];
 
     // Set up ink controller to splash ink on taps.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     _inkTouchController = [[MDCInkTouchController alloc] initWithView:self];
+#pragma clang diagnostic pop
     [_inkTouchController addInkView];  // Ink should always be on top of other views
 
     _rippleTouchController = [[MDCRippleTouchController alloc] init];
@@ -222,15 +225,15 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
                atIndex:(NSInteger)itemIndex
                  count:(NSInteger)itemCount {
   self.title = item.title;
+  self.selectedImage = item.selectedImage;
   self.image = item.image;
   self.badgeValue = item.badgeValue;
-  if (@available(iOS 10.0, *)) {
-    if (item.badgeColor) {
-      self.style.badgeColor = item.badgeColor;
-      self.badge.badgeColor = item.badgeColor;
-    }
+  if (item.badgeColor) {
+    self.style.badgeColor = item.badgeColor;
+    self.badge.badgeColor = item.badgeColor;
   }
   self.accessibilityIdentifier = item.accessibilityIdentifier;
+  self.accessibilityLabel = item.accessibilityLabel;
 
   _itemIndex = itemIndex;
   _itemCount = itemCount;
@@ -269,8 +272,7 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
   // Determine badge center
   if (_style.shouldDisplayBadge) {
     CGFloat badgeOffset = (imageBounds.size.width / 2) + (badgeSize.width / 2);
-    if (self.mdf_effectiveUserInterfaceLayoutDirection ==
-        UIUserInterfaceLayoutDirectionRightToLeft) {
+    if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
       badgeOffset *= -1;
     }
 
@@ -347,6 +349,7 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
   BOOL animate = (self.window != nil);
 
   [super setSelected:selected];
+  [self updateDisplayedImage];
   [self updateTitleTextColor];
   [self updateImageTintColor];
   [self updateAccessibilityTraits];
@@ -365,40 +368,15 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
 - (nullable NSString *)accessibilityLabel {
   NSMutableArray *labelComponents = [NSMutableArray array];
 
-  // Use untransformed title as accessibility label to ensure accurate reading.
-  NSString *titleComponent = _title;
+  // If a custom accessibility label has not been set on UITabBarItem,
+  // then use untransformed title as accessibility label to ensure accurate reading.
+  NSString *titleComponent = [super accessibilityLabel] ?: _title;
   if (titleComponent.length > 0) {
     [labelComponents addObject:titleComponent];
   }
 
   if (_badgeValue.length > 0 && !_badge.hidden) {
     [labelComponents addObject:_badgeValue];
-  }
-
-  NSOperatingSystemVersion iOS10Version = {10, 0, 0};
-  NSProcessInfo *processInfo = [NSProcessInfo processInfo];
-  BOOL isBelowiOS10 = ![processInfo isOperatingSystemAtLeastVersion:iOS10Version];
-
-  // On iOS 10+, MDCTabBar will receive the UIAccessibilityTraitTabBar, so this logic is
-  // unnecessary.
-  if (isBelowiOS10) {
-    // Describe as "tab, X of Y"
-    NSString *tabLabel =
-        [[self class] localizedStringWithKey:kMDCItemBarStringKeyAccessibilityTabElementLabel];
-    if (tabLabel) {
-      [labelComponents addObject:tabLabel];
-    }
-
-    NSString *positionFormat =
-        [[self class] localizedStringWithKey:kMDCItemBarStringKeyAccessibilityTabPositionFormat];
-    if (positionFormat) {
-      if (_itemIndex != NSNotFound && _itemCount > 0) {
-        int position = (int)(_itemIndex + 1);
-        NSString *localizedPosition =
-            [NSString localizedStringWithFormat:positionFormat, position, (int)_itemCount];
-        [labelComponents addObject:localizedPosition];
-      }
-    }
   }
 
   // Speak components with a pause in between.
@@ -566,7 +544,7 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
   if (animated) {
     [CATransaction begin];
     CAMediaTimingFunction *translateTimingFunction =
-        [CAMediaTimingFunction mdc_functionWithType:MDCAnimationTimingFunctionTranslate];
+        [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     [CATransaction setAnimationTimingFunction:translateTimingFunction];
     [UIView animateWithDuration:kSelectionAnimationDuration
                           delay:0
@@ -585,7 +563,10 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
 }
 
 - (void)updateInk {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   MDCInkView *inkView = _inkTouchController.defaultInkView;
+#pragma clang diagnostic pop
   inkView.inkColor = _style.inkColor;
   inkView.inkStyle = _style.inkStyle;
   inkView.usesLegacyInkRipple = NO;
@@ -593,6 +574,7 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
 }
 
 - (void)updateRipple {
+  self.rippleTouchController.shouldProcessRippleWithScrollViewGestures = NO;
   MDCRippleView *rippleView = self.rippleTouchController.rippleView;
   rippleView.rippleColor = _style.rippleColor;
   rippleView.rippleStyle = _style.rippleStyle;
@@ -618,7 +600,11 @@ static const NSTimeInterval kSelectionAnimationDuration = 0.3;
 }
 
 - (void)updateDisplayedImage {
-  _imageView.image = _image;
+  if (self.isSelected && self.selectedImage != nil) {
+    self.imageView.image = self.selectedImage;
+  } else {
+    self.imageView.image = self.image;
+  }
 }
 
 - (void)updateDisplayedTitle {

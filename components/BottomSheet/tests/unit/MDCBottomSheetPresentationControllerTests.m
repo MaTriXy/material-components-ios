@@ -12,13 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialBottomSheet.h"
+#import "MDCBottomSheetPresentationController.h"
 
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCDraggableView.h"
-#import "../../src/private/MDCSheetContainerView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCDraggableView.h"
+#import "MDCSheetContainerView.h"
+#pragma clang diagnostic pop
+#import "MDCBottomSheetPresentationControllerDelegate.h"
+#import "MDCSheetState.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCBottomSheetDelegateTest
     : UIViewController <MDCBottomSheetPresentationControllerDelegate>
@@ -49,7 +56,7 @@
 
 // Exposing internal methods for unit testing
 @interface MDCBottomSheetPresentationController (Testing)
-@property(nonatomic, strong) MDCSheetContainerView *sheetView;
+@property(nonatomic, strong, nullable) MDCSheetContainerView *sheetView;
 - (void)updatePreferredSheetHeight;
 @end
 
@@ -59,6 +66,7 @@
 - (CGPoint)targetPoint;
 - (void)draggableView:(MDCDraggableView *)view didPanToOffset:(CGFloat)offset;
 - (BOOL)draggableView:(MDCDraggableView *)view shouldBeginDraggingWithVelocity:(CGPoint)velocity;
+- (void)draggableView:(MDCDraggableView *)view draggingEndedWithVelocity:(CGPoint)velocity;
 @end
 
 /**
@@ -71,6 +79,7 @@
        @c setFrame: in case there are side-effects in UIView.
  */
 @interface FakeSheetView : MDCSheetContainerView
+@property(nonatomic, assign) UIEdgeInsets customSafeAreaInsets;
 @end
 
 @implementation FakeSheetView {
@@ -86,11 +95,15 @@
 
   _frame = frame;
 }
+
+- (UIEdgeInsets)safeAreaInsets {
+  return _customSafeAreaInsets;
+}
 @end
 
 @interface MDCBottomSheetPresentationControllerTests : XCTestCase
-@property(nonatomic, strong) FakeSheetView *sheetView;
-@property(nonatomic, strong) MDCBottomSheetPresentationController *presentationController;
+@property(nonatomic, strong, nullable) FakeSheetView *sheetView;
+@property(nonatomic, strong, nullable) MDCBottomSheetPresentationController *presentationController;
 @property(nonatomic, strong, nullable) MDCBottomSheetDelegateTest *delegateTest;
 @end
 
@@ -104,7 +117,8 @@
   // receives an updated value for `preferredSheetHeight`.
   self.sheetView = [[FakeSheetView alloc] initWithFrame:CGRectZero
                                             contentView:[[UIView alloc] init]
-                                             scrollView:[[UIScrollView alloc] init]];
+                                             scrollView:[[UIScrollView alloc] init]
+                               simulateScrollViewBounce:YES];
 
   // Only used as a required `-init` parameters for MDCBottomSheetPresentationController
   UIViewController *stubPresentingViewController = [[UIViewController alloc] init];
@@ -260,7 +274,8 @@
   FakeSheetView *sheetView =
       [[FakeSheetView alloc] initWithFrame:smallFrame
                                contentView:[[UIView alloc] initWithFrame:smallFrame]
-                                scrollView:scrollView];
+                                scrollView:scrollView
+                  simulateScrollViewBounce:YES];
 
   self.presentationController.sheetView = sheetView;
   self.presentationController.preferredSheetHeight = 5000;
@@ -272,6 +287,72 @@
   XCTAssertEqualWithAccuracy(CGRectGetHeight(sheetView.frame), CGRectGetHeight(smallFrame), 0.001);
 }
 
+- (void)testDefaultAdjustHeightForSafeAreaInsets {
+  XCTAssertTrue(self.presentationController.adjustHeightForSafeAreaInsets);
+}
+
+- (void)testAdjustHeightForSafeAreaInsetsIsNo {
+  // Given
+  CGFloat preferredSheetHeight = 200;
+  CGFloat inset = 20;
+  self.sheetView.customSafeAreaInsets = UIEdgeInsetsMake(inset, inset, inset, inset);
+  self.presentationController.preferredSheetHeight = preferredSheetHeight;
+  self.presentationController.adjustHeightForSafeAreaInsets = NO;
+
+  // When
+  [self.presentationController updatePreferredSheetHeight];
+
+  // Then
+  XCTAssertEqualWithAccuracy(self.sheetView.preferredSheetHeight, preferredSheetHeight, 0.001);
+}
+
+- (void)testAdjustHeightForSafeAreaInsetsSetBeforeHeightIsSet {
+  // Given
+  CGFloat preferredSheetHeight = 200;
+  CGFloat inset = 20;
+  self.sheetView.customSafeAreaInsets = UIEdgeInsetsMake(inset, inset, inset, inset);
+  self.presentationController.adjustHeightForSafeAreaInsets = NO;
+  self.presentationController.preferredSheetHeight = preferredSheetHeight;
+
+  // When
+  [self.presentationController updatePreferredSheetHeight];
+
+  // Then
+  XCTAssertEqualWithAccuracy(self.sheetView.preferredSheetHeight, preferredSheetHeight, 0.001);
+}
+
+- (void)testAdjustHeightForSafeAreaInsetsIsYes {
+  // Given
+  CGFloat preferredSheetHeight = 200;
+  CGFloat inset = 20;
+  self.sheetView.customSafeAreaInsets = UIEdgeInsetsMake(inset, inset, inset, inset);
+  self.presentationController.preferredSheetHeight = preferredSheetHeight;
+  self.presentationController.adjustHeightForSafeAreaInsets = YES;
+
+  // When
+  [self.presentationController updatePreferredSheetHeight];
+
+  // Then
+  XCTAssertEqualWithAccuracy(self.sheetView.preferredSheetHeight, preferredSheetHeight + inset,
+                             0.001);
+}
+
+- (void)testadjustHeightForSafeAreaInsetsChangesToNo {
+  // Given
+  CGFloat preferredSheetHeight = 200;
+  CGFloat inset = 20;
+  self.sheetView.customSafeAreaInsets = UIEdgeInsetsMake(inset, inset, inset, inset);
+  self.presentationController.adjustHeightForSafeAreaInsets = YES;
+  self.presentationController.preferredSheetHeight = preferredSheetHeight;
+  self.presentationController.adjustHeightForSafeAreaInsets = NO;
+
+  // When
+  [self.presentationController updatePreferredSheetHeight];
+
+  // Then
+  XCTAssertEqualWithAccuracy(self.sheetView.preferredSheetHeight, preferredSheetHeight, 0.001);
+}
+
 - (void)testSheetViewFrameMatchesScrollViewFrame {
   // Given
   CGFloat scrollViewHeight = 100;
@@ -280,7 +361,8 @@
   MDCSheetContainerView *fakeSheet =
       [[MDCSheetContainerView alloc] initWithFrame:fakeFrame
                                        contentView:[[UIView alloc] initWithFrame:fakeFrame]
-                                        scrollView:scrollView];
+                                        scrollView:scrollView
+                          simulateScrollViewBounce:YES];
 
   // When
   [fakeSheet setNeedsLayout];
@@ -340,7 +422,7 @@
   XCTAssertFalse(self.sheetView.dismissOnDraggingDownSheet);
 }
 
-- (void)testSettingDismissOnDraggingDownSheetViewBlocksGesture {
+- (void)testSettingDismissOnDraggingDownSheetViewDoesNotBlocksGesture {
   // Given
   self.sheetView.dismissOnDraggingDownSheet = NO;
 
@@ -349,7 +431,109 @@
                            shouldBeginDraggingWithVelocity:CGPointMake(0, 0)];
 
   // Then
-  XCTAssertFalse(shouldBeginDragging);
+  XCTAssertTrue(shouldBeginDragging);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetToNoViewShouldNotCloseWithDragDown {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = NO;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, 1)];
+
+  // Then
+  XCTAssertNotEqual(self.sheetView.sheetState, MDCSheetStateClosed);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetToNoViewShouldNotCloseWithDragDownWithPreferredHeight {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = NO;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+  self.sheetView.preferredSheetHeight = 222;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, 1)];
+
+  // Then
+  XCTAssertNotEqual(self.sheetView.sheetState, MDCSheetStateClosed);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetViewToYesShouldCloseWithDragDown {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = YES;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, 1)];
+
+  // Then
+  XCTAssertEqual(self.sheetView.sheetState, MDCSheetStateClosed);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetViewToYesShouldCloseWithDragDownWithPreferredHeight {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = YES;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+  self.sheetView.preferredSheetHeight = 222;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, 1)];
+
+  // Then
+  XCTAssertEqual(self.sheetView.sheetState, MDCSheetStateClosed);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetToNoViewShouldNotCloseWithDragUp {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = NO;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, -1)];
+
+  // Then
+  XCTAssertNotEqual(self.sheetView.sheetState, MDCSheetStateClosed);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetToNoViewShouldNotCloseWithDragUpWithPreferredHeight {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = NO;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+  self.sheetView.preferredSheetHeight = 222;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, -1)];
+
+  // Then
+  XCTAssertNotEqual(self.sheetView.sheetState, MDCSheetStateClosed);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetViewToYesShouldCloseWithDragUp {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = YES;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, -1)];
+
+  // Then
+  XCTAssertEqual(self.sheetView.sheetState, MDCSheetStatePreferred);
+}
+
+- (void)testSettingDismissOnDraggingDownSheetViewToYesShouldCloseWithDragUpWithPreferredHeight {
+  // Given
+  self.sheetView.dismissOnDraggingDownSheet = YES;
+  self.sheetView.sheetState = MDCSheetStatePreferred;
+  self.sheetView.preferredSheetHeight = 222;
+
+  // When
+  [self.sheetView draggableView:self.sheetView.sheet draggingEndedWithVelocity:CGPointMake(0, -1)];
+
+  // Then
+  XCTAssertEqual(self.sheetView.sheetState, MDCSheetStatePreferred);
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

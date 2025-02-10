@@ -712,30 +712,6 @@ static NSString *const kLongTitle5Arabic =
   [self generateSnapshotAndVerifyForView:controller.view];
 }
 
-- (void)testThreeActionsSufficientSizeShortTextLTRWithDefaultPresentationStyleOniOS13 {
-  // Given
-  self.actionSheetController = [MDCActionSheetController actionSheetControllerWithTitle:nil];
-  [self.actionSheetController addAction:self.action1];
-  [self.actionSheetController addAction:self.action2];
-  [self.actionSheetController addAction:self.action3];
-  self.actionSheetController.view.bounds = CGRectMake(0, 0, 320, 200);
-
-  // When
-  UIWindow *window = [[[UIApplication sharedApplication] delegate] window];
-  UIViewController *currentViewController = window.rootViewController;
-  XCTestExpectation *expectation =
-      [[XCTestExpectation alloc] initWithDescription:@"Action sheet is presented"];
-  [currentViewController presentViewController:self.actionSheetController
-                                      animated:NO
-                                    completion:^{
-                                      [expectation fulfill];
-                                    }];
-
-  // Then
-  [self waitForExpectations:@[ expectation ] timeout:5];
-  [self snapshotVerifyViewForIOS13:window];
-}
-
 - (void)testActionSheetWithHeaderShown {
   // Given
   self.actionSheetController = [MDCActionSheetController actionSheetControllerWithTitle:@"Foo"];
@@ -765,6 +741,25 @@ static NSString *const kLongTitle5Arabic =
   self.actionSheetController.showsHeaderDivider = YES;
   self.actionSheetController.headerDividerColor = UIColor.blackColor;
   [self.actionSheetController.view setNeedsLayout];
+  [self.actionSheetController.view layoutIfNeeded];
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.actionSheetController.view];
+}
+
+- (void)testActionSheetWhenActionImageIsSetAfterBeingSetAsAction {
+  // Given
+  self.actionSheetController = [MDCActionSheetController actionSheetControllerWithTitle:nil];
+  MDCActionSheetAction *action = [MDCActionSheetAction actionWithTitle:kShortTitle1Latin
+                                                                 image:nil
+                                                               handler:nil];
+  [self.actionSheetController addAction:action];
+
+  // When
+  [self.actionSheetController.view setNeedsLayout];
+  [self.actionSheetController.view layoutIfNeeded];
+  [self.actionSheetController viewWillAppear:NO];
+  action.image = [UIImage mdc_testImageOfSize:CGSizeMake(24, 24)];
   [self.actionSheetController.view layoutIfNeeded];
 
   // Then

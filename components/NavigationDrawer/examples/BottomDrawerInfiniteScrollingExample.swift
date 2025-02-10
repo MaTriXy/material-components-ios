@@ -14,11 +14,12 @@
 
 import UIKit
 import MaterialComponents.MaterialBottomAppBar
-import MaterialComponents.MaterialColorScheme
 import MaterialComponents.MaterialNavigationDrawer
+import MaterialComponents.MaterialNavigationDrawer_Theming 
+import MaterialComponents.MaterialColorScheme
 
 class BottomDrawerInfiniteScrollingExample: UIViewController {
-  @objc var colorScheme = MDCSemanticColorScheme()
+  @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
   let bottomAppBar = MDCBottomAppBarView()
 
   let headerViewController = DrawerHeaderViewController()
@@ -26,38 +27,41 @@ class BottomDrawerInfiniteScrollingExample: UIViewController {
 
   override func viewDidLoad() {
     super.viewDidLoad()
-    view.backgroundColor = colorScheme.backgroundColor
-    contentViewController.colorScheme = colorScheme
-
+    view.backgroundColor = containerScheme.colorScheme.backgroundColor
+    contentViewController.colorScheme = containerScheme.colorScheme as? MDCSemanticColorScheme
     bottomAppBar.isFloatingButtonHidden = true
     let barButtonLeadingItem = UIBarButtonItem()
-    let menuImage = UIImage(named:"Menu")?.withRenderingMode(.alwaysTemplate)
+    let menuImage = UIImage(named: "system_icons/menu")?.withRenderingMode(
+      .alwaysTemplate)
     barButtonLeadingItem.image = menuImage
     barButtonLeadingItem.target = self
     barButtonLeadingItem.action = #selector(presentNavigationDrawer)
-    bottomAppBar.leadingBarButtonItems = [ barButtonLeadingItem ]
+    barButtonLeadingItem.accessibilityIdentifier = "BottomDrawer.button"
+    bottomAppBar.leadingBarButtonItems = [barButtonLeadingItem]
 
-    bottomAppBar.barTintColor = colorScheme.surfaceColor;
-    let barItemTintColor = colorScheme.onSurfaceColor.withAlphaComponent(0.6)
+    bottomAppBar.barTintColor = containerScheme.colorScheme.surfaceColor
+    let barItemTintColor = containerScheme.colorScheme.onSurfaceColor.withAlphaComponent(0.6)
     bottomAppBar.leadingBarItemsTintColor = barItemTintColor
     bottomAppBar.trailingBarItemsTintColor = barItemTintColor
-    bottomAppBar.floatingButton.setBackgroundColor(colorScheme.primaryColor, for: .normal)
-    bottomAppBar.floatingButton.setTitleColor(colorScheme.onPrimaryColor, for: .normal)
-    bottomAppBar.floatingButton.setImageTintColor(colorScheme.onPrimaryColor, for: .normal)
+    bottomAppBar.floatingButton.setBackgroundColor(
+      containerScheme.colorScheme.primaryColor, for: .normal)
+    bottomAppBar.floatingButton.setTitleColor(
+      containerScheme.colorScheme.onPrimaryColor, for: .normal)
+    bottomAppBar.floatingButton.setImageTintColor(
+      containerScheme.colorScheme.onPrimaryColor, for: .normal)
 
     view.addSubview(bottomAppBar)
   }
 
   private func layoutBottomAppBar() {
     let size = bottomAppBar.sizeThatFits(view.bounds.size)
-    var bottomBarViewFrame = CGRect(x: 0,
-                                    y: view.bounds.size.height - size.height,
-                                    width: size.width,
-                                    height: size.height)
-    if #available(iOS 11.0, *) {
-      bottomBarViewFrame.size.height += view.safeAreaInsets.bottom
-      bottomBarViewFrame.origin.y -= view.safeAreaInsets.bottom
-    }
+    var bottomBarViewFrame = CGRect(
+      x: 0,
+      y: view.bounds.size.height - size.height,
+      width: size.width,
+      height: size.height)
+    bottomBarViewFrame.size.height += view.safeAreaInsets.bottom
+    bottomBarViewFrame.origin.y -= view.safeAreaInsets.bottom
     bottomAppBar.frame = bottomBarViewFrame
   }
 
@@ -69,16 +73,16 @@ class BottomDrawerInfiniteScrollingExample: UIViewController {
 
   @objc private func presentNavigationDrawer() {
     let bottomDrawerViewController = MDCBottomDrawerViewController()
-    bottomDrawerViewController.maximumInitialDrawerHeight = 400;
+    bottomDrawerViewController.maximumInitialDrawerHeight = 400
     bottomDrawerViewController.contentViewController = contentViewController
     contentViewController.drawerVC = bottomDrawerViewController
     bottomDrawerViewController.setTopCornersRadius(12, for: .collapsed)
     bottomDrawerViewController.headerViewController = headerViewController
     bottomDrawerViewController.trackingScrollView = contentViewController.tableView
+    bottomDrawerViewController.shouldIncludeSafeAreaInContentHeight = true
     bottomDrawerViewController.isTopHandleHidden = false
-    bottomDrawerViewController.headerViewController?.view.backgroundColor = colorScheme.surfaceColor;
-    bottomDrawerViewController.contentViewController?.view.backgroundColor = colorScheme.surfaceColor;
-    bottomDrawerViewController.scrimColor = colorScheme.onSurfaceColor.withAlphaComponent(0.32)
+    bottomDrawerViewController.applyTheme(withScheme: containerScheme)
+    bottomDrawerViewController.maximumDrawerHeight = 600
     present(bottomDrawerViewController, animated: true, completion: nil)
   }
 }
@@ -113,7 +117,9 @@ class DrawerContentTableViewController: UITableViewController {
     self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
   }
 
-  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
+    -> UITableViewCell
+  {
     let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
     cell.textLabel?.text = "cell #\(indexPath.item)"
     cell.backgroundColor = colorScheme.surfaceColor
@@ -122,7 +128,7 @@ class DrawerContentTableViewController: UITableViewController {
   }
 
   override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    if (supportScrollToTop == false) {
+    if supportScrollToTop == false {
       return numberOfRows
     }
     return 100
@@ -134,7 +140,7 @@ class DrawerContentTableViewController: UITableViewController {
 
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     tableView.deselectRow(at: indexPath, animated: true)
-    if (supportScrollToTop == false) {
+    if supportScrollToTop == false {
       toggleNumberOfRows()
       tableView.reloadData()
       self.preferredContentSize = tableView.contentSize
@@ -155,7 +161,6 @@ extension BottomDrawerInfiniteScrollingExample {
     return [
       "breadcrumbs": ["Navigation Drawer", "Bottom Drawer Infinite Scrolling"],
       "description": "Navigation Drawer",
-      "primaryDemo": true,
       "presentable": true,
     ]
   }

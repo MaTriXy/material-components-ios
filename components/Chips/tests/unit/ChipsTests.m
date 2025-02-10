@@ -16,7 +16,9 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/MDCChipField.h"
+#import "MaterialElevation.h"
+#import "MaterialTextFields.h"
+#import "MDCFontScaler.h"
 #import "MaterialTypography.h"
 
 // Expose internal methods for testing
@@ -30,12 +32,28 @@
 /** Used to set the value of @c traitCollection. */
 @property(nonatomic, strong) UITraitCollection *traitCollectionOverride;
 
+/** Used to determine whether invalidateIntrinsicContentSize has been called. */
+@property(nonatomic, assign) BOOL invalidateIntrinsicContentSizeWasCalled;
+
+/** Used to determine whether setNeedsLayout has been called. */
+@property(nonatomic, assign) BOOL setNeedsLayoutWasCalled;
+
 @end
 
 @implementation MDCChipsTestsFakeChipView
 
 - (UITraitCollection *)traitCollection {
   return self.traitCollectionOverride ?: [super traitCollection];
+}
+
+- (void)invalidateIntrinsicContentSize {
+  [super invalidateIntrinsicContentSize];
+  self.invalidateIntrinsicContentSizeWasCalled = YES;
+}
+
+- (void)setNeedsLayout {
+  [super setNeedsLayout];
+  self.setNeedsLayoutWasCalled = YES;
 }
 
 @end
@@ -410,41 +428,54 @@ static inline UIImage *TestImage(CGSize size) {
   XCTAssertEqual(controlViewCount, (NSUInteger)1);
 }
 
-- (void)testChipViewDynamicTypeBehavior {
-  if (@available(iOS 10.0, *)) {
-    // Given
-    MDCChipsTestsFakeChipView *chipView = [[MDCChipsTestsFakeChipView alloc] init];
-    chipView.mdc_adjustsFontForContentSizeCategory = YES;
-    chipView.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = NO;
-    UIFont *titleFont = [UIFont systemFontOfSize:14.0 weight:UIFontWeightMedium];
-    MDCFontScaler *fontScaler = [[MDCFontScaler alloc] initForMaterialTextStyle:MDCTextStyleBody2];
-    titleFont = [fontScaler scaledFontWithFont:titleFont];
-    titleFont = [titleFont mdc_scaledFontAtDefaultSize];
-    chipView.titleFont = titleFont;
-    chipView.titleLabel.text = @"Chip";
-    CGFloat originalFontSize = chipView.titleLabel.font.pointSize;
-
-    // When
-    UIContentSizeCategory size = UIContentSizeCategoryExtraExtraLarge;
-    UITraitCollection *traitCollection =
-        [UITraitCollection traitCollectionWithPreferredContentSizeCategory:size];
-    chipView.traitCollectionOverride = traitCollection;
-    [NSNotificationCenter.defaultCenter
-        postNotificationName:UIContentSizeCategoryDidChangeNotification
-                      object:nil];
-
-    // Then
-    CGFloat actualFontSize = chipView.titleLabel.font.pointSize;
-    XCTAssertGreaterThan(actualFontSize, originalFontSize);
-  }
-}
-
-- (void)testChipViewAdjustsFontForContentSizeCategoryWhenScaledFontIsUnavailableDefaultValue {
+- (void)testSettingImageViewImageResultsInCallsToInvalidateIntrinsicContentSize {
   // Given
-  MDCChipView *chipView = [[MDCChipView alloc] init];
+  MDCChipsTestsFakeChipView *chipView = [[MDCChipsTestsFakeChipView alloc] init];
+  chipView.invalidateIntrinsicContentSizeWasCalled = NO;
+
+  // When
+  chipView.imageView.image = TestImage(CGSizeMake(20, 20));
 
   // Then
-  XCTAssertTrue(chipView.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable);
+  XCTAssertTrue(chipView.invalidateIntrinsicContentSizeWasCalled);
+}
+
+- (void)testSettingImageViewImageResultsInCallsToSetNeedsLayout {
+  // Given
+  MDCChipsTestsFakeChipView *chipView = [[MDCChipsTestsFakeChipView alloc] init];
+  chipView.setNeedsLayoutWasCalled = NO;
+
+  // When
+  chipView.imageView.image = TestImage(CGSizeMake(20, 20));
+
+  // Then
+  XCTAssertTrue(chipView.setNeedsLayoutWasCalled);
+}
+
+- (void)testChipViewDynamicTypeBehavior {
+  // Given
+  MDCChipsTestsFakeChipView *chipView = [[MDCChipsTestsFakeChipView alloc] init];
+  chipView.mdc_adjustsFontForContentSizeCategory = YES;
+  UIFont *titleFont = [UIFont systemFontOfSize:14.0 weight:UIFontWeightMedium];
+  MDCFontScaler *fontScaler = [[MDCFontScaler alloc] initForMaterialTextStyle:MDCTextStyleBody2];
+  titleFont = [fontScaler scaledFontWithFont:titleFont];
+  titleFont = [titleFont mdc_scaledFontAtDefaultSize];
+  chipView.titleFont = titleFont;
+  chipView.titleLabel.text = @"Chip";
+  CGFloat originalFontSize = chipView.titleLabel.font.pointSize;
+
+  // When
+  UIContentSizeCategory size = UIContentSizeCategoryExtraExtraLarge;
+  UITraitCollection *traitCollection =
+      [UITraitCollection traitCollectionWithPreferredContentSizeCategory:size];
+  chipView.traitCollectionOverride = traitCollection;
+  [NSNotificationCenter.defaultCenter
+      postNotificationName:UIContentSizeCategoryDidChangeNotification
+                    object:nil];
+
+  // Then
+  CGFloat actualFontSize = chipView.titleLabel.font.pointSize;
+  XCTAssertGreaterThan(actualFontSize, originalFontSize);
 }
 
 - (void)testTraitCollectionDidChangeBlockCalledWithExpectedParameters {

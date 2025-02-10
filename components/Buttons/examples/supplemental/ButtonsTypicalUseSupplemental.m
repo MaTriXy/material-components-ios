@@ -18,15 +18,15 @@
  */
 
 #import "ButtonsTypicalUseSupplemental.h"
-#import "MaterialButtons.h"
-#import "MaterialMath.h"
-#import "MaterialTypography.h"
+#import "MDCButton.h"
+#import "MDCTypography.h"
+#import "MDCMath.h"
 
 static const CGFloat kViewOffsetToCenter = 20;
 
 #pragma mark - ButtonsTypicalUseViewController
 
-@implementation ButtonsTypicalUseExampleViewController (CatalogByConvention)
+@implementation ButtonsTypicalUseExample (CatalogByConvention)
 
 + (NSDictionary *)catalogMetadata {
   return @{
@@ -40,25 +40,12 @@ static const CGFloat kViewOffsetToCenter = 20;
 
 @end
 
-@implementation ButtonsShapesExampleViewController (CatalogByConvention)
-
-+ (NSDictionary *)catalogMetadata {
-  return @{
-    @"breadcrumbs" : @[ @"Buttons", @"Shaped Buttons" ],
-    @"primaryDemo" : @NO,
-    @"presentable" : @YES,
-  };
-}
-
-@end
-
 @implementation ButtonsTypicalUseViewController
 
 - (UILabel *)addLabelWithText:(NSString *)text {
   UILabel *label = [[UILabel alloc] init];
   label.text = text;
   label.font = [MDCTypography captionFont];
-  label.alpha = [MDCTypography captionFontOpacity];
   [label sizeToFit];
   [self.view addSubview:label];
 
@@ -66,22 +53,7 @@ static const CGFloat kViewOffsetToCenter = 20;
 }
 
 - (CGRect)contentBounds {
-  CGRect bounds = self.view.bounds;
-  __block CGRect contentBounds = CGRectZero;
-
-  void (^preiOS11Behavior)(void) = ^{
-    CGRect safeAreaBounds;
-    CGRectDivide(bounds, &safeAreaBounds, &contentBounds, self.topLayoutGuide.length,
-                 CGRectMinYEdge);
-  };
-  if (@available(iOS 11.0, *)) {
-    UIEdgeInsets safeAreaInsets = self.view.safeAreaInsets;
-    contentBounds = UIEdgeInsetsInsetRect(bounds, safeAreaInsets);
-  } else {
-    preiOS11Behavior();
-  }
-
-  return contentBounds;
+  return UIEdgeInsetsInsetRect(self.view.bounds, self.view.safeAreaInsets);
 }
 
 - (void)viewDidLayoutSubviews {
@@ -122,6 +94,14 @@ static const CGFloat kViewOffsetToCenter = 20;
     CGFloat labelOffset = (CGRectGetHeight(button.bounds) - CGRectGetHeight(label.bounds)) / 2;
     label.center = CGPointMake(centerX - (CGRectGetWidth(label.bounds) / 2) - kViewOffsetToCenter,
                                heightSum + labelOffset + (CGRectGetHeight(label.bounds) / 2));
+
+    // Pin the label's frame to pixel boundaries to reduce snapshot flakiness due to inaccuracies in
+    // floating point rounding behavior on the GPU when taking snapshots.
+    CGRect labelFrame = label.frame;
+    labelFrame.origin.x = floor(labelFrame.origin.x);
+    labelFrame.origin.y = floor(labelFrame.origin.y);
+    label.frame = labelFrame;
+
     heightSum += CGRectGetHeight(button.bounds);
     if (i < self.buttons.count - 1) {
       heightSum += button.enabled ? 24 : 36;

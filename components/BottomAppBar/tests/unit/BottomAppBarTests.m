@@ -12,13 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialBottomAppBar.h"
+#import "MDCBottomAppBarView.h"
 
 #import <CoreGraphics/CoreGraphics.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCBottomAppBarLayer.h"
-#import "MaterialNavigationBar.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomAppBarLayer.h"
+#pragma clang diagnostic pop
+#import "MDCFloatingButton.h"
+#import "MDCNavigationBar.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCBottomAppBarLayer (Testing)
 - (UIBezierPath *)drawWithPathToCut:(UIBezierPath *)bottomBarPath
@@ -42,7 +48,7 @@
 @end
 
 @interface BottomAppBarTests : XCTestCase
-@property(nonatomic, strong) MDCBottomAppBarView *bottomAppBar;
+@property(nonatomic, strong, nullable) MDCBottomAppBarView *bottomAppBar;
 @end
 
 @implementation BottomAppBarTests
@@ -132,31 +138,27 @@
 
 - (int)numberOfPointsInPath:(UIBezierPath *)bezierPath {
   __block int numberOfPoints = 0;
-  if (@available(iOS 11.0, *)) {
-    CGPathApplyWithBlock(bezierPath.CGPath, ^(const CGPathElement *_Nonnull element) {
-      switch (element->type) {
-        case kCGPathElementMoveToPoint:
-          numberOfPoints = numberOfPoints + 1;
-          break;
-        case kCGPathElementAddLineToPoint:
-          numberOfPoints = numberOfPoints + 1;
-          break;
-        case kCGPathElementAddCurveToPoint:
-          numberOfPoints = numberOfPoints + 3;
-          break;
-        case kCGPathElementAddQuadCurveToPoint:
-          numberOfPoints = numberOfPoints + 2;
-          break;
-        case kCGPathElementCloseSubpath:
-          break;
-        default:
-          break;
-      }
-    });
-    return numberOfPoints;
-  } else {
-    return numberOfPoints;
-  }
+  CGPathApplyWithBlock(bezierPath.CGPath, ^(const CGPathElement *_Nonnull element) {
+    switch (element->type) {
+      case kCGPathElementMoveToPoint:
+        numberOfPoints = numberOfPoints + 1;
+        break;
+      case kCGPathElementAddLineToPoint:
+        numberOfPoints = numberOfPoints + 1;
+        break;
+      case kCGPathElementAddCurveToPoint:
+        numberOfPoints = numberOfPoints + 3;
+        break;
+      case kCGPathElementAddQuadCurveToPoint:
+        numberOfPoints = numberOfPoints + 2;
+        break;
+      case kCGPathElementCloseSubpath:
+        break;
+      default:
+        break;
+    }
+  });
+  return numberOfPoints;
 }
 
 - (void)testTraitCollectionDidChangeBlockCalledWhenTraitCollectionChanges {
@@ -208,10 +210,9 @@
   const CGFloat finalElevation = 6;
   bottomAppBar.elevation = finalElevation - 1;
   __block CGFloat newElevation = -1;
-  bottomAppBar.mdc_elevationDidChangeBlock =
-      ^(MDCBottomAppBarView *blockAppBar, CGFloat elevation) {
-        newElevation = elevation;
-      };
+  bottomAppBar.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
+    newElevation = elevation;
+  };
 
   // When
   bottomAppBar.elevation = bottomAppBar.elevation + 1;
@@ -225,10 +226,9 @@
   MDCBottomAppBarView *bottomAppBar = [[MDCBottomAppBarView alloc] init];
   bottomAppBar.elevation = 5;
   __block BOOL blockCalled = NO;
-  bottomAppBar.mdc_elevationDidChangeBlock =
-      ^(MDCBottomAppBarView *blockAppBar, CGFloat elevation) {
-        blockCalled = YES;
-      };
+  bottomAppBar.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
+    blockCalled = YES;
+  };
 
   // When
   bottomAppBar.elevation = bottomAppBar.elevation;
@@ -246,3 +246,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

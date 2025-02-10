@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <MDFInternationalization/MDFInternationalization.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCItemBar.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCItemBar.h"
+#pragma clang diagnostic pop
 #import "MDCTabBar.h"
 
 // Returns the underlying collection view from a given tabBar. If one cannot be extracted, returns
@@ -98,7 +100,7 @@ static NSArray<UICollectionViewCell *> *SortedCellsFromCollectionView(
       (UICollectionViewFlowLayout *)collectionView.collectionViewLayout;
 
   // When
-  _tabBar.mdf_semanticContentAttribute = UISemanticContentAttributeUnspecified;
+  _tabBar.semanticContentAttribute = UISemanticContentAttributeUnspecified;
 
   // Then
   CGFloat leftInset = flowLayout.sectionInset.left;
@@ -116,13 +118,13 @@ static NSArray<UICollectionViewCell *> *SortedCellsFromCollectionView(
       (UICollectionViewFlowLayout *)collectionView.collectionViewLayout;
 
   // When
-  _tabBar.mdf_semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
+  _tabBar.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
   [_tabBar setNeedsLayout];
   [_tabBar layoutIfNeeded];
 
   // Then
-  XCTAssertEqual(_tabBar.mdf_semanticContentAttribute, UISemanticContentAttributeForceRightToLeft);
-  XCTAssertEqual(_tabBar.mdf_effectiveUserInterfaceLayoutDirection,
+  XCTAssertEqual(_tabBar.semanticContentAttribute, UISemanticContentAttributeForceRightToLeft);
+  XCTAssertEqual(_tabBar.effectiveUserInterfaceLayoutDirection,
                  UIUserInterfaceLayoutDirectionRightToLeft);
   NSArray<UICollectionViewCell *> *sortedVisibleItems =
       SortedCellsFromCollectionView(collectionView);

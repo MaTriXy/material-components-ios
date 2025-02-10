@@ -15,8 +15,6 @@
 #import <XCTest/XCTest.h>
 
 #import "MaterialBanner.h"
-#import "MaterialButtons.h"
-#import "MaterialTypography.h"
 
 @interface MDCBannerViewTestsDynamicTypeContentSizeCategoryOverrideWindow : UIWindow
 
@@ -45,12 +43,9 @@
 }
 
 - (UITraitCollection *)traitCollection {
-  if (@available(iOS 10.0, *)) {
-    UITraitCollection *traitCollection = [UITraitCollection
-        traitCollectionWithPreferredContentSizeCategory:self.contentSizeCategoryOverride];
-    return traitCollection;
-  }
-  return [super traitCollection];
+  UITraitCollection *traitCollection = [UITraitCollection
+      traitCollectionWithPreferredContentSizeCategory:self.contentSizeCategoryOverride];
+  return traitCollection;
 }
 
 @end
@@ -71,41 +66,6 @@
   self.banner = nil;
 
   [super tearDown];
-}
-
-- (void)testBannerViewDynamicTypeBehavior {
-  if (@available(iOS 10.0, *)) {
-    // Given
-    self.banner.trailingButton.hidden = YES;
-    self.banner.mdc_adjustsFontForContentSizeCategory = YES;
-    UIFont *font = [UIFont systemFontOfSize:10.0 weight:UIFontWeightRegular];
-    MDCFontScaler *fontScaler = [[MDCFontScaler alloc] initForMaterialTextStyle:MDCTextStyleBody2];
-    UIFont *scalableFont = [fontScaler scaledFontWithFont:font];
-    scalableFont = [scalableFont mdc_scaledFontAtDefaultSize];
-    self.banner.textView.font = scalableFont;
-    self.banner.textView.text = @"Banner Text";
-    CGFloat originalTextFontSize = self.banner.textView.font.pointSize;
-    MDCButton *leadingButton = self.banner.leadingButton;
-    [leadingButton setTitleFont:scalableFont forState:UIControlStateNormal];
-    CGFloat originalButtonFontSize =
-        [self.banner.leadingButton titleFontForState:UIControlStateNormal].pointSize;
-
-    // When
-    MDCBannerViewTestsDynamicTypeContentSizeCategoryOverrideWindow *extraExtraLargeContainer =
-        [[MDCBannerViewTestsDynamicTypeContentSizeCategoryOverrideWindow alloc]
-            initWithContentSizeCategoryOverride:UIContentSizeCategoryExtraExtraLarge];
-    [extraExtraLargeContainer addSubview:self.banner];
-    [NSNotificationCenter.defaultCenter
-        postNotificationName:UIContentSizeCategoryDidChangeNotification
-                      object:nil];
-
-    // Then
-    CGFloat actualTextFontSize = self.banner.textView.font.pointSize;
-    XCTAssertGreaterThan(actualTextFontSize, originalTextFontSize);
-    CGFloat actualButtonFontSize =
-        [self.banner.leadingButton titleFontForState:UIControlStateNormal].pointSize;
-    XCTAssertGreaterThan(actualButtonFontSize, originalButtonFontSize);
-  }
 }
 
 - (void)testTraitCollectionDidChangeBlockCalledWithExpectedParameters {

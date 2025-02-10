@@ -12,11 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialSnapshot.h"
+#import "MDCBottomDrawerHeader.h"
+#import "MDCBottomDrawerViewController.h"
+#import "MDCBottomDrawerViewController+MaterialTheming.h"
+#import "MDCBottomDrawerSnapshotTestMutableTraitCollection.h"
+#import "MDCSemanticColorScheme.h"
+#import "MDCContainerScheme.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomDrawerContainerViewController.h"
+#import "MDCSnapshotTestCase.h"
+#import "UIView+MDCSnapshot.h"
+#pragma clang diagnostic pop
 
-#import "../../src/private/MDCBottomDrawerContainerViewController.h"
-#import "MaterialNavigationDrawer.h"
-#import "supplemental/MDCBottomDrawerSnapshotTestMutableTraitCollection.h"
+NS_ASSUME_NONNULL_BEGIN
 
 /** Fake MDCBottomDrawerContainerViewController for snapshot testing. */
 @interface FakeBottomDrawerContainerViewController : MDCBottomDrawerContainerViewController
@@ -52,13 +61,17 @@
 @interface MDCBottomDrawerControllerSnapshotTests : MDCSnapshotTestCase
 
 /** The view controller of the snapshotted view. */
-@property(nonatomic, strong) MDCBottomDrawerViewController *bottomDrawerViewController;
+@property(nonatomic, strong, nullable) MDCBottomDrawerViewController *bottomDrawerViewController;
 
 /** The container view controller for the header and content, used for mocking some properties. */
-@property(nonatomic, strong) FakeBottomDrawerContainerViewController *containerViewController;
+@property(nonatomic, strong, nullable)
+    FakeBottomDrawerContainerViewController *containerViewController;
 
 /** Presenting view controller of the Bottom Drawer Container view controller. */
 @property(nonatomic, strong) UIViewController *presentingViewController;
+
+/** A container scheme. */
+@property(nonatomic, strong) MDCContainerScheme *containerScheme;
 
 @end
 
@@ -81,6 +94,7 @@
   self.bottomDrawerViewController.contentViewController = contentViewController;
   self.bottomDrawerViewController.headerViewController = headerViewController;
   self.presentingViewController = [[UIViewController alloc] init];
+  self.containerScheme = [[MDCContainerScheme alloc] init];
 }
 
 - (void)tearDown {
@@ -115,6 +129,57 @@
   self.bottomDrawerViewController.headerViewController.preferredContentSize = CGSizeMake(375, 80);
   [self.bottomDrawerViewController.view addSubview:self.containerViewController.view];
   [self.bottomDrawerViewController addChildViewController:self.containerViewController];
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.bottomDrawerViewController.view];
+}
+
+- (void)testPresentedDrawerWithTheming {
+  // Given
+  self.presentingViewController.view.frame = CGRectMake(0, 0, 375, 667);
+  self.containerViewController = [[FakeBottomDrawerContainerViewController alloc]
+      initWithOriginalPresentingViewController:self.presentingViewController
+                            trackingScrollView:nil];
+  self.containerViewController.contentViewController =
+      self.bottomDrawerViewController.contentViewController;
+  self.containerViewController.headerViewController =
+      self.bottomDrawerViewController.headerViewController;
+
+  // When
+  self.bottomDrawerViewController.view.bounds = CGRectMake(0, 0, 375, 667);
+  self.bottomDrawerViewController.contentViewController.preferredContentSize =
+      CGSizeMake(375, 1000);
+  self.bottomDrawerViewController.headerViewController.preferredContentSize = CGSizeMake(375, 80);
+  [self.bottomDrawerViewController.view addSubview:self.containerViewController.view];
+  [self.bottomDrawerViewController addChildViewController:self.containerViewController];
+  [self.bottomDrawerViewController applyThemeWithScheme:self.containerScheme];
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.bottomDrawerViewController.view];
+}
+
+- (void)testPresentedDrawerWithThemingWith201907ColorSchemeDefaults {
+  // Given
+  MDCContainerScheme *tempContainerScheme = [[MDCContainerScheme alloc] init];
+  tempContainerScheme.colorScheme =
+      [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201907];
+  self.presentingViewController.view.frame = CGRectMake(0, 0, 375, 667);
+  self.containerViewController = [[FakeBottomDrawerContainerViewController alloc]
+      initWithOriginalPresentingViewController:self.presentingViewController
+                            trackingScrollView:nil];
+  self.containerViewController.contentViewController =
+      self.bottomDrawerViewController.contentViewController;
+  self.containerViewController.headerViewController =
+      self.bottomDrawerViewController.headerViewController;
+
+  // When
+  self.bottomDrawerViewController.view.bounds = CGRectMake(0, 0, 375, 667);
+  self.bottomDrawerViewController.contentViewController.preferredContentSize =
+      CGSizeMake(375, 1000);
+  self.bottomDrawerViewController.headerViewController.preferredContentSize = CGSizeMake(375, 80);
+  [self.bottomDrawerViewController.view addSubview:self.containerViewController.view];
+  [self.bottomDrawerViewController addChildViewController:self.containerViewController];
+  [self.bottomDrawerViewController applyThemeWithScheme:tempContainerScheme];
 
   // Then
   [self generateSnapshotAndVerifyForView:self.bottomDrawerViewController.view];
@@ -180,3 +245,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

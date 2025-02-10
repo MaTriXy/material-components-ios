@@ -13,9 +13,10 @@
 // limitations under the License.
 
 #import "CollectionViewListCell.h"
-#import <MDFInternationalization/MDFInternationalization.h>
 #import "MaterialInk.h"
 #import "MaterialTypography.h"
+#import "MaterialTypographyScheme+Scheming.h"
+#import <MDFInternationalization/MDFInternationalization.h>
 
 static const CGFloat kImagePadding = 16;
 static const CGFloat kImageHeight = 40;
@@ -67,19 +68,19 @@ static inline UIFont *defaultDetailsFont(void) {
   _contentWrapper = [[UIView alloc] initWithFrame:self.contentView.bounds];
   _contentWrapper.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-                                            self.mdf_effectiveUserInterfaceLayoutDirection);
+                                            self.effectiveUserInterfaceLayoutDirection);
   _contentWrapper.clipsToBounds = YES;
   [self.contentView addSubview:_contentWrapper];
 
   // Text label.
   _titleLabel = [[UILabel alloc] initWithFrame:CGRectZero];
   _titleLabel.autoresizingMask = MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-      self.mdf_effectiveUserInterfaceLayoutDirection);
+      self.effectiveUserInterfaceLayoutDirection);
 
   // Detail text label.
   _detailsTextLabel = [[UILabel alloc] initWithFrame:CGRectZero];
   _detailsTextLabel.autoresizingMask = MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-      self.mdf_effectiveUserInterfaceLayoutDirection);
+      self.effectiveUserInterfaceLayoutDirection);
 
   [self resetCollectionViewListCell];
 
@@ -89,7 +90,7 @@ static inline UIFont *defaultDetailsFont(void) {
   // Image view.
   _imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
   _imageView.autoresizingMask = MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-      self.mdf_effectiveUserInterfaceLayoutDirection);
+      self.effectiveUserInterfaceLayoutDirection);
   [self.contentView addSubview:_imageView];
 
   [self setupConstraints];

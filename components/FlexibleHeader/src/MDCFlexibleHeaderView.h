@@ -15,7 +15,15 @@
 #import <UIKit/UIKit.h>
 
 #import "MaterialElevation.h"
+// TODO(b/151929968): Delete import of delegate headers when client code has been migrated to no
+// longer import delegates as transitive dependencies.
+#import "MDCFlexibleHeaderViewAnimationDelegate.h"
+#import "MDCFlexibleHeaderViewDelegate.h"
 #import "MaterialShadowElevations.h"
+
+API_DEPRECATED_BEGIN("Use a branded UINavigationController instead.", ios(12, API_TO_BE_DEPRECATED))
+
+FOUNDATION_EXPORT NSString *_Nonnull const MDCFlexibleHeaderViewAccessibilityIdentifier;
 
 typedef void (^MDCFlexibleHeaderChangeContentInsetsBlock)(void);
 typedef void (^MDCFlexibleHeaderShadowIntensityChangeBlock)(__kindof CALayer *_Nonnull shadowLayer,
@@ -49,6 +57,9 @@ typedef NS_ENUM(NSInteger, MDCFlexibleHeaderScrollPhase) {
 @protocol MDCFlexibleHeaderViewAnimationDelegate;
 @protocol MDCFlexibleHeaderViewDelegate;
 
+// TODO(b/238930139): Remove usage of this deprecated API.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 /**
  MDCFlexibleHeaderView tracks the content offset of a scroll view and adjusts its size and
  position according to a configurable set of behaviors.
@@ -60,6 +71,7 @@ typedef NS_ENUM(NSInteger, MDCFlexibleHeaderScrollPhase) {
  */
 IB_DESIGNABLE
 @interface MDCFlexibleHeaderView : UIView <MDCElevatable, MDCElevationOverriding>
+#pragma clang diagnostic pop
 
 #pragma mark Custom shadow
 
@@ -247,7 +259,7 @@ IB_DESIGNABLE
 
  This object is intended to be used as a constraint item.
  */
-@property(nonatomic, nonnull, readonly) id topSafeAreaGuide;
+@property(nonatomic, nonnull, readonly) UIView *topSafeAreaGuide;
 
 #pragma mark Behaviors
 
@@ -359,84 +371,8 @@ IB_DESIGNABLE
 
 @end
 
-/**
- The MDCFlexibleHeaderViewDelegate protocol allows a delegate to respond to changes in the header
- view's state.
-
- The delegate is typically the UIViewController that owns this flexible header view.
- */
-@protocol MDCFlexibleHeaderViewDelegate <NSObject>
-@required
-
-/**
- Informs the receiver that the flexible header view's preferred status bar visibility has changed.
- */
-- (void)flexibleHeaderViewNeedsStatusBarAppearanceUpdate:
-    (nonnull MDCFlexibleHeaderView *)headerView;
-
-/**
- Informs the receiver that the flexible header view's frame has changed.
-
- The frame may change in response to scroll events of the tracking scroll view. The receiver
- should use the MDCFlexibleHeaderView scrollPhase APIs to determine which phase the header's frame
- is in.
- */
-- (void)flexibleHeaderViewFrameDidChange:(nonnull MDCFlexibleHeaderView *)headerView;
-
-@end
-
-/**
- An object may conform to this protocol in order to receive animation events caused by a
- MDCFlexibleHeaderView.
- */
-@protocol MDCFlexibleHeaderViewAnimationDelegate <NSObject>
-@optional
-
-/**
- Informs the receiver that the flexible header view's tracking scroll view has changed.
-
- @param animated If YES, then this method is being invoked from within an animation block. Changes
- made to the flexible header as a result of this invocation will be animated alongside the header's
- animation.
- */
-- (void)flexibleHeaderView:(nonnull MDCFlexibleHeaderView *)flexibleHeaderView
-    didChangeTrackingScrollViewAnimated:(BOOL)animated;
-
-/**
- Informs the receiver that the flexible header view's animation changing to a new tracking scroll
- view has completed.
-
- Only invoked if an animation occurred when the tracking scroll view was changed.
- */
-- (void)flexibleHeaderViewChangeTrackingScrollViewAnimationDidComplete:
-    (nonnull MDCFlexibleHeaderView *)flexibleHeaderView;
-
-@end
-
 @interface MDCFlexibleHeaderView (ToBeDeprecated)
 
-// Pre-iOS 8 Interface Orientation APIs
-
-/**
- Informs the receiver that the interface orientation is about to change.
-
- Must be called from UIViewController::willRotateToInterfaceOrientation:duration:.
- */
-- (void)interfaceOrientationWillChange;
-
-/**
- Informs the receiver that the interface orientation is in the process of changing.
-
- Must be called from UIViewController::willAnimateRotationToInterfaceOrientation:duration:.
- */
-- (void)interfaceOrientationIsChanging;
-
-/**
- Informs the receiver that the interface orientation has changed.
-
- Must be called from UIViewController::didRotateFromInterfaceOrientation:.
- */
-- (void)interfaceOrientationDidChange;
 
 /**
  When this is enabled, the flexible header will assume that minimumHeight and maximumHeight both
@@ -486,6 +422,36 @@ IB_DESIGNABLE
 
 @end
 
+@interface MDCFlexibleHeaderView (Deprecated)
+
+// Pre-iOS 8 Interface Orientation APIs
+
+/**
+ Informs the receiver that the interface orientation is about to change.
+
+ Must be called from UIViewController::willRotateToInterfaceOrientation:duration:.
+ */
+- (void)interfaceOrientationWillChange __deprecated_msg(
+    "Use viewWillTransitionToSize:withTransitionCoordinator: instead.");
+
+/**
+ Informs the receiver that the interface orientation is in the process of changing.
+
+ Must be called from UIViewController::willAnimateRotationToInterfaceOrientation:duration:.
+ */
+- (void)interfaceOrientationIsChanging __deprecated_msg(
+    "Use viewWillTransitionToSize:withTransitionCoordinator: instead.");
+
+/**
+ Informs the receiver that the interface orientation has changed.
+
+ Must be called from UIViewController::didRotateFromInterfaceOrientation:.
+ */
+- (void)interfaceOrientationDidChange __deprecated_msg(
+    "Use viewWillTransitionToSize:withTransitionCoordinator: instead.");
+
+@end
+
 // clang-format off
 @interface MDCFlexibleHeaderView ()
 
@@ -497,3 +463,5 @@ __deprecated_msg("Please register views directly to the flexible header.");
 
 @end
 // clang-format on
+
+API_DEPRECATED_END

@@ -14,9 +14,10 @@
 
 #import "CardsCollectionExample.h"
 
+#import "MaterialCards.h"
 #import "MaterialCards+Theming.h"
-#import "MaterialInk.h"
 #import "UICollectionViewController+MDCCardReordering.h"
+#import "MaterialContainerScheme.h"
 
 @interface CardsCollectionExample ()
 
@@ -32,16 +33,13 @@ static NSString *const kReusableIdentifierItem = @"itemCellIdentifier";
   defaultLayout.minimumInteritemSpacing = 0;
   defaultLayout.minimumLineSpacing = 1;
   defaultLayout.scrollDirection = UICollectionViewScrollDirectionVertical;
-  self = [super initWithCollectionViewLayout:defaultLayout];
-  if (self) {
-    self.containerScheme = [[MDCContainerScheme alloc] init];
-  }
-  return self;
+  return [self initWithCollectionViewLayout:defaultLayout];
 }
 
 - (instancetype)initWithCollectionViewLayout:(UICollectionViewLayout *)layout {
   self = [super initWithCollectionViewLayout:layout];
   if (self) {
+    self.containerScheme = [[MDCContainerScheme alloc] init];
     _collectionViewLayout = layout;
   }
   return self;

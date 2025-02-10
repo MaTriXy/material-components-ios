@@ -12,16 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <QuartzCore/QuartzCore.h>
 #import <UIKit/UIKit.h>
 
-#import <MaterialComponents/MaterialActionSheet+Theming.h>
-#import <MaterialComponents/MaterialActionSheet.h>
-#import <MaterialComponents/MaterialAnimationTiming.h>
-#import <MaterialComponents/MaterialContainerScheme.h>
-#import <MaterialComponents/MaterialIcons+ic_check.h>
-#import <MaterialComponents/MaterialIcons+ic_settings.h>
-#import <MaterialComponents/MaterialMath.h>
-#import "MaterialTabs+TabBarView.h"
+#import "MDCActionSheetAction.h"
+#import "MDCActionSheetController.h"
+#import "MDCActionSheetController+MaterialTheming.h"
+#import "MDCButton.h"
+#import "MDCButton+MaterialTheming.h"
+#import "MDCTabBarItem.h"
+#import "MDCTabBarView.h"
+#import "MDCTabBarViewCustomViewable.h"
+#import "MDCTabBarViewDelegate.h"
+#import "MaterialIcons+ic_check.h"  // PrivateSubtargetImport
+#import "MaterialIcons+ic_settings.h"  // PrivateSubtargetImport
+#import "MDCMath.h"
+#import "MDCSemanticColorScheme.h"
+#import "MDCContainerScheme.h"
+#import "MDCTypographyScheming.h"
 
 static NSString *const kExampleTitle = @"TabBarView";
 
@@ -49,7 +57,7 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
   if (self) {
     _aSwitch = [[UISwitch alloc] init];
     _animationTimingFunction =
-        [CAMediaTimingFunction mdc_functionWithType:MDCAnimationTimingFunctionEaseInOut];
+        [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
   }
   return self;
 }
@@ -76,15 +84,17 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
 - (void)switchTapped:(id)sender {
   [self invalidateIntrinsicContentSize];
   [self setNeedsLayout];
-  [UIView mdc_animateWithTimingFunction:self.animationTimingFunction
-                               duration:self.animationDuration
-                                  delay:0
-                                options:0
-                             animations:^{
-                               [self.superview setNeedsLayout];
-                               [self.superview layoutIfNeeded];
-                             }
-                             completion:nil];
+  [CATransaction begin];
+  [CATransaction setAnimationTimingFunction:self.animationTimingFunction];
+  [UIView animateWithDuration:self.animationDuration
+                        delay:0
+                      options:0
+                   animations:^{
+                     [self.superview setNeedsLayout];
+                     [self.superview layoutIfNeeded];
+                   }
+                   completion:nil];
+  [CATransaction commit];
 }
 
 - (CGSize)intrinsicContentSize {
@@ -128,6 +138,14 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
 /** Image for toggle button when contentInset is zero. */
 @property(nonatomic, strong) UIImage *contentInsetToggleDisabledImage;
 
+/** Tapping this button goes to the next tab. */
+@property(nonatomic, strong) MDCButton *forwardButton;
+
+/** Tapping this button goes to the previous tab. */
+@property(nonatomic, strong) MDCButton *backwardButton;
+
+/** Segmented control. */
+@property(nonatomic, strong) UISegmentedControl *segmentedControl;
 @end
 
 @implementation MDCTabBarViewTypicalExampleViewController
@@ -158,15 +176,15 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
   [self.view addSubview:self.tabBar];
 
   NSMutableArray<UIImage *> *itemIcons = [NSMutableArray array];
-  [itemIcons addObject:[[UIImage imageNamed:@"Home"]
+  [itemIcons addObject:[[UIImage imageNamed:@"system_icons/home"]
                            imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
-  [itemIcons addObject:[[UIImage imageNamed:@"Favorite"]
+  [itemIcons addObject:[[UIImage imageNamed:@"system_icons/favorite"]
                            imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
-  [itemIcons addObject:[[UIImage imageNamed:@"Cake"]
+  [itemIcons addObject:[[UIImage imageNamed:@"system_icons/cake"]
                            imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
-  [itemIcons addObject:[[UIImage imageNamed:@"Email"]
+  [itemIcons addObject:[[UIImage imageNamed:@"system_icons/email"]
                            imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
-  [itemIcons addObject:[[UIImage imageNamed:@"Search"]
+  [itemIcons addObject:[[UIImage imageNamed:@"system_icons/search"]
                            imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate]];
   self.tabBarItemIcons = itemIcons;
   self.tabBarItemTitles = @[ @"Home", @"Unselectable", @"Cake", @"Email", @"Search" ];
@@ -199,17 +217,14 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
   self.tabBar.selectedItem = item4;
 
   self.tabBar.translatesAutoresizingMaskIntoConstraints = NO;
-  if (@available(iOS 11.0, *)) {
-    [self.view.layoutMarginsGuide.topAnchor constraintEqualToAnchor:self.tabBar.topAnchor].active =
-        YES;
-  } else {
-    [self.topLayoutGuide.bottomAnchor constraintEqualToAnchor:self.tabBar.topAnchor].active = YES;
-  }
+  [self.view.layoutMarginsGuide.topAnchor constraintEqualToAnchor:self.tabBar.topAnchor].active =
+      YES;
   [self.view.leftAnchor constraintEqualToAnchor:self.tabBar.leftAnchor].active = YES;
   [self.view.rightAnchor constraintEqualToAnchor:self.tabBar.rightAnchor].active = YES;
 
   [self applyThemingToTabBarView];
   [self addSegmentedControl];
+  [self addButtons];
 
   UIBarButtonItem *alignmentButton = [[UIBarButtonItem alloc]
       initWithImage:[MDCIcons.imageFor_ic_settings
@@ -251,42 +266,72 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
       [self.containerScheme.colorScheme.onSurfaceColor colorWithAlphaComponent:(CGFloat)0.12];
 }
 
-- (void)addSegmentedControl {
-  UISegmentedControl *segmentedControl =
-      [[UISegmentedControl alloc] initWithItems:@[ @"Titles", @"Icons", @"Titles and Icons" ]];
-  segmentedControl.selectedSegmentIndex = 2;
-  [segmentedControl addTarget:self
-                       action:@selector(segmentedControlChangedValue:)
-             forControlEvents:UIControlEventValueChanged];
-  [self.view addSubview:segmentedControl];
-  segmentedControl.translatesAutoresizingMaskIntoConstraints = NO;
-  if (@available(iOS 11.0, *)) {
-    [self.view.layoutMarginsGuide.centerXAnchor
-        constraintEqualToAnchor:segmentedControl.centerXAnchor]
-        .active = YES;
-    [self.view.layoutMarginsGuide.centerYAnchor
-        constraintEqualToAnchor:segmentedControl.centerYAnchor]
-        .active = YES;
-    [self.view.layoutMarginsGuide.leadingAnchor
-        constraintLessThanOrEqualToAnchor:segmentedControl.leadingAnchor]
-        .active = YES;
-    [self.view.layoutMarginsGuide.trailingAnchor
-        constraintGreaterThanOrEqualToAnchor:segmentedControl.trailingAnchor]
-        .active = YES;
-  } else {
-    [self.view.centerXAnchor constraintEqualToAnchor:segmentedControl.centerXAnchor].active = YES;
-    NSLayoutConstraint *centerYConstraint =
-        [self.view.centerYAnchor constraintEqualToAnchor:segmentedControl.centerYAnchor];
-    centerYConstraint.priority = UILayoutPriorityDefaultLow;
-    centerYConstraint.active = YES;
-    [self.tabBar.bottomAnchor constraintLessThanOrEqualToAnchor:segmentedControl.topAnchor
-                                                       constant:-16]
-        .active = YES;
-    [self.view.leadingAnchor constraintLessThanOrEqualToAnchor:segmentedControl.leadingAnchor]
-        .active = YES;
-    [self.view.trailingAnchor constraintGreaterThanOrEqualToAnchor:segmentedControl.trailingAnchor]
-        .active = YES;
+- (void)addButtons {
+  self.forwardButton = [[MDCButton alloc] init];
+  [self.forwardButton setTitle:@"Next tab" forState:UIControlStateNormal];
+  [self.forwardButton addTarget:self
+                         action:@selector(forwardButtonTapped:)
+               forControlEvents:UIControlEventTouchUpInside];
+  [self.forwardButton applyTextThemeWithScheme:self.containerScheme];
+  [self.forwardButton sizeToFit];
+  [self.view addSubview:self.forwardButton];
+
+  self.backwardButton = [[MDCButton alloc] init];
+  [self.backwardButton setTitle:@"Previous tab" forState:UIControlStateNormal];
+  [self.backwardButton addTarget:self
+                          action:@selector(backwardButtonTapped:)
+                forControlEvents:UIControlEventTouchUpInside];
+  [self.backwardButton applyTextThemeWithScheme:self.containerScheme];
+  [self.backwardButton sizeToFit];
+  [self.view addSubview:self.backwardButton];
+}
+
+- (void)backwardButtonTapped:(id)sender {
+  NSInteger index = [self.tabBar.items indexOfObject:self.tabBar.selectedItem];
+  if (index == NSNotFound) {
+    return;
   }
+  index--;
+  if (index < 0) {
+    return;
+  }
+  self.tabBar.selectedItem = self.tabBar.items[index];
+}
+
+- (void)forwardButtonTapped:(id)sender {
+  NSInteger index = [self.tabBar.items indexOfObject:self.tabBar.selectedItem];
+  if (index == NSNotFound) {
+    return;
+  }
+  index++;
+  if (index >= (NSInteger)self.tabBar.items.count) {
+    return;
+  }
+  self.tabBar.selectedItem = self.tabBar.items[index];
+}
+
+- (void)addSegmentedControl {
+  self.segmentedControl =
+      [[UISegmentedControl alloc] initWithItems:@[ @"Titles", @"Icons", @"Titles and Icons" ]];
+  self.segmentedControl.selectedSegmentIndex = 2;
+  [self.segmentedControl addTarget:self
+                            action:@selector(segmentedControlChangedValue:)
+                  forControlEvents:UIControlEventValueChanged];
+  [self.view addSubview:self.segmentedControl];
+  self.segmentedControl.tintColor = self.containerScheme.colorScheme.primaryColor;
+  self.segmentedControl.translatesAutoresizingMaskIntoConstraints = NO;
+  [self.view.layoutMarginsGuide.centerXAnchor
+      constraintEqualToAnchor:self.segmentedControl.centerXAnchor]
+      .active = YES;
+  [self.view.layoutMarginsGuide.centerYAnchor
+      constraintEqualToAnchor:self.segmentedControl.centerYAnchor]
+      .active = YES;
+  [self.view.layoutMarginsGuide.leadingAnchor
+      constraintLessThanOrEqualToAnchor:self.segmentedControl.leadingAnchor]
+      .active = YES;
+  [self.view.layoutMarginsGuide.trailingAnchor
+      constraintGreaterThanOrEqualToAnchor:self.segmentedControl.trailingAnchor]
+      .active = YES;
 }
 
 #pragma mark - MDCTabBarViewDelegate
@@ -353,11 +398,29 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
               handler:^(MDCActionSheetAction *_Nonnull action) {
                 self.tabBar.preferredLayoutStyle = MDCTabBarViewLayoutStyleScrollable;
               }];
+  MDCActionSheetAction *scrollableCenteredAction = [MDCActionSheetAction
+      actionWithTitle:@"Scrollable Centered"
+                image:((currentStyle == MDCTabBarViewLayoutStyleScrollableCentered) ? checkIcon
+                                                                                    : nil)
+              handler:^(MDCActionSheetAction *_Nonnull action) {
+                self.tabBar.preferredLayoutStyle = MDCTabBarViewLayoutStyleScrollableCentered;
+              }];
+  MDCActionSheetAction *nonFixedClusteredCenteredAction = [MDCActionSheetAction
+      actionWithTitle:@"Non-Fixed Clustered Centered"
+                image:((currentStyle == MDCTabBarViewLayoutStyleNonFixedClusteredCentered)
+                           ? checkIcon
+                           : nil)
+              handler:^(MDCActionSheetAction *_Nonnull action) {
+                self.tabBar.preferredLayoutStyle =
+                    MDCTabBarViewLayoutStyleNonFixedClusteredCentered;
+              }];
   [actionSheet addAction:fixedJustifiedAction];
   [actionSheet addAction:fixedClusteredLeadingAction];
   [actionSheet addAction:fixedClusteredTrailingAction];
   [actionSheet addAction:fixedClusteredCenteredAction];
   [actionSheet addAction:scrollableAction];
+  [actionSheet addAction:scrollableCenteredAction];
+  [actionSheet addAction:nonFixedClusteredCenteredAction];
   [actionSheet applyThemeWithScheme:self.containerScheme];
   actionSheet.alwaysAlignTitleLeadingEdges = YES;
   [self presentViewController:actionSheet animated:YES completion:nil];
@@ -450,6 +513,12 @@ static NSString *const kPreferredLayoutMenuAccessibilityLabel = @"Change preferr
 - (void)viewDidLayoutSubviews {
   [super viewDidLayoutSubviews];
   [self logItemVisibilityChanges];
+
+  CGFloat centerX = self.segmentedControl.center.x;
+  CGFloat centerY = CGRectGetMaxY(self.segmentedControl.frame) + 50;
+  self.forwardButton.center = CGPointMake(centerX, centerY);
+  centerY = centerY + 50;
+  self.backwardButton.center = CGPointMake(centerX, centerY);
 }
 
 - (void)logItemVisibilityChanges {

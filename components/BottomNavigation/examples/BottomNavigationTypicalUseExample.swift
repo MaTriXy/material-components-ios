@@ -18,7 +18,7 @@ import MaterialComponents.MaterialColorScheme
 
 class BottomNavigationTypicalUseSwiftExample: UIViewController {
 
-  @objc var colorScheme = MDCSemanticColorScheme()
+  @objc var colorScheme = MDCSemanticColorScheme(defaults: .material201804)
 
   // Create a bottom navigation bar to add to a view.
   let bottomNavBar = MDCBottomNavigationBar()
@@ -36,27 +36,27 @@ class BottomNavigationTypicalUseSwiftExample: UIViewController {
     bottomNavBar.alignment = .centered
 
     // Add items to the bottom navigation bar.
-    let tabBarItem1 = UITabBarItem(title: "Home", image: UIImage(named: "Home"), tag: 0)
+    let tabBarItem1 = UITabBarItem(
+      title: "Home", image: UIImage(named: "system_icons/home"), tag: 0)
     let tabBarItem2 =
-      UITabBarItem(title: "Messages", image: UIImage(named: "Email"), tag: 1)
+      UITabBarItem(title: "Messages", image: UIImage(named: "system_icons/email"), tag: 1)
     let tabBarItem3 =
-      UITabBarItem(title: "Favorites", image: UIImage(named: "Favorite"), tag: 2)
-    bottomNavBar.items = [ tabBarItem1, tabBarItem2, tabBarItem3 ]
+      UITabBarItem(title: "Favorites", image: UIImage(named: "system_icons/favorite"), tag: 2)
+    bottomNavBar.items = [tabBarItem1, tabBarItem2, tabBarItem3]
 
     // Select a bottom navigation bar item.
-    bottomNavBar.selectedItem = tabBarItem2;
+    bottomNavBar.selectedItem = tabBarItem2
   }
-  
+
   func layoutBottomNavBar() {
     let size = bottomNavBar.sizeThatFits(view.bounds.size)
-    var bottomNavBarFrame = CGRect(x: 0,
-                                   y: view.bounds.height - size.height,
-                                   width: size.width,
-                                   height: size.height)
-    if #available(iOS 11.0, *) {
-      bottomNavBarFrame.size.height += view.safeAreaInsets.bottom
-      bottomNavBarFrame.origin.y -= view.safeAreaInsets.bottom
-    }
+    var bottomNavBarFrame = CGRect(
+      x: 0,
+      y: view.bounds.height - size.height,
+      width: size.width,
+      height: size.height)
+    bottomNavBarFrame.size.height += view.safeAreaInsets.bottom
+    bottomNavBarFrame.origin.y -= view.safeAreaInsets.bottom
     bottomNavBar.frame = bottomNavBarFrame
   }
 

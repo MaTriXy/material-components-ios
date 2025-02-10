@@ -14,6 +14,7 @@
 
 #import "MDCSelfSizingStereoCellExample.h"
 
+#import "MaterialContainerScheme.h"
 #import <MDFInternationalization/MDFInternationalization.h>
 
 #import "MaterialList+Theming.h"
@@ -82,12 +83,10 @@ static NSString *const kSelfSizingStereoCellExampleDescription =
   CGFloat originY = self.view.bounds.origin.y;
   CGFloat width = self.view.bounds.size.width;
   CGFloat height = self.view.bounds.size.height;
-  if (@available(iOS 11.0, *)) {
-    originX += self.view.safeAreaInsets.left;
-    originY += self.view.safeAreaInsets.top;
-    width -= (self.view.safeAreaInsets.left + self.view.safeAreaInsets.right);
-    height -= (self.view.safeAreaInsets.top + self.view.safeAreaInsets.bottom);
-  }
+  originX += self.view.safeAreaInsets.left;
+  originY += self.view.safeAreaInsets.top;
+  width -= (self.view.safeAreaInsets.left + self.view.safeAreaInsets.right);
+  height -= (self.view.safeAreaInsets.top + self.view.safeAreaInsets.bottom);
   CGRect frame = CGRectMake(originX, originY, width, height);
   self.collectionView.frame = frame;
   self.collectionViewLayout.estimatedItemSize =
@@ -113,10 +112,10 @@ static NSString *const kSelfSizingStereoCellExampleDescription =
   cell.detailLabel.text = self.randomStrings[(indexPath.item + 1) % self.randomStrings.count];
   cell.titleLabel.textAlignment = [self textAlignmentForText:cell.titleLabel.text];
   cell.detailLabel.textAlignment = [self textAlignmentForText:cell.detailLabel.text];
-  cell.leadingImageView.image =
-      [[UIImage imageNamed:@"Cake"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
-  cell.trailingImageView.image =
-      [[UIImage imageNamed:@"Favorite"] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  cell.leadingImageView.image = [[UIImage imageNamed:@"system_icons/cake"]
+      imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  cell.trailingImageView.image = [[UIImage imageNamed:@"system_icons/favorite"]
+      imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
   cell.leadingImageView.tintColor = [UIColor darkGrayColor];
   cell.trailingImageView.tintColor = [UIColor darkGrayColor];
   cell.mdc_adjustsFontForContentSizeCategory = YES;

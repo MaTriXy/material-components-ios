@@ -17,15 +17,12 @@
 #import <MDFInternationalization/MDFInternationalization.h>
 
 #import "MDCTextFieldPositioningDelegate.h"
-#import "MDCTextInput.h"
 #import "MDCTextInputBorderView.h"
-#import "MDCTextInputCharacterCounter.h"
 #import "MDCTextInputUnderlineView.h"
 #import "private/MDCTextField+Testing.h"
 #import "private/MDCTextInputCommonFundament.h"
 
 #import "MaterialMath.h"
-#import "MaterialTypography.h"
 
 NSString *const MDCTextFieldTextDidSetTextNotification = @"MDCTextFieldTextDidSetTextNotification";
 NSString *const MDCTextInputDidToggleEnabledNotification =
@@ -36,6 +33,7 @@ NSString *const MDCTextInputDidToggleEnabledNotification =
 static const CGFloat MDCTextInputClearButtonImageBuiltInPadding = (CGFloat)-2.5;
 static const CGFloat MDCTextInputEditingRectRightViewPaddingCorrection = -2;
 static const CGFloat MDCTextInputTextRectYCorrection = 1;
+static const CGFloat kButtonFontOpacity = (CGFloat)0.54f;
 
 @interface MDCTextField () {
   UIColor *_cursorColor;
@@ -120,7 +118,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   [super setBorderStyle:UITextBorderStyleNone];
 
   // Set the clear button color to black with 54% opacity.
-  self.clearButton.tintColor = [UIColor colorWithWhite:0 alpha:[MDCTypography captionFontOpacity]];
+  self.clearButton.tintColor = [UIColor colorWithWhite:0 alpha:kButtonFontOpacity];
 
   _cursorColor = MDCTextInputCursorColor();
   [self applyCursorColor];
@@ -239,7 +237,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (void)setLeadingView:(UIView *)leadingView {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     self.rightView = leadingView;
   } else {
     self.leftView = leadingView;
@@ -248,7 +246,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (UITextFieldViewMode)leadingViewMode {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     return self.rightViewMode;
   }
   return self.leftViewMode;
@@ -256,7 +254,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (void)setLeadingViewMode:(UITextFieldViewMode)leadingViewMode {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     self.rightViewMode = leadingViewMode;
   } else {
     self.leftViewMode = leadingViewMode;
@@ -369,7 +367,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 // In iOS 8, .leftView and .rightView are not swapped in RTL so we have to do that manually.
 - (UIView *)trailingView {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     return self.leftView;
   }
   return self.rightView;
@@ -377,7 +375,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (void)setTrailingView:(UIView *)trailingView {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     self.leftView = trailingView;
   } else {
     self.rightView = trailingView;
@@ -386,7 +384,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (UITextFieldViewMode)trailingViewMode {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     return self.leftViewMode;
   }
   return self.rightViewMode;
@@ -394,7 +392,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (void)setTrailingViewMode:(UITextFieldViewMode)trailingViewMode {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     self.leftViewMode = trailingViewMode;
   } else {
     self.rightViewMode = trailingViewMode;
@@ -462,7 +460,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 // In iOS 8, .leftView and .rightView are not swapped in RTL so we have to do that manually.
 - (UIView *)leadingView {
   if ([self shouldManuallyEnforceRightToLeftLayoutForOverlayViews] &&
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     return self.rightView;
   }
   return self.leftView;
@@ -509,7 +507,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
   // Standard textRect calculation
   UIEdgeInsets textInsets = self.textInsets;
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     textRect.origin.x += textInsets.right;
   } else {
     textRect.origin.x += textInsets.left;
@@ -534,20 +532,20 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   }
 
   CGFloat leftViewWidth =
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
           ? CGRectGetWidth([self rightViewRectForBounds:bounds])
           : CGRectGetWidth([self leftViewRectForBounds:bounds]);
   leftViewWidth +=
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
           ? trailingViewPadding
           : leadingViewPadding;
 
   CGFloat rightViewWidth =
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
           ? CGRectGetWidth([self leftViewRectForBounds:bounds])
           : CGRectGetWidth([self rightViewRectForBounds:bounds]);
   rightViewWidth +=
-      self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
+      self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft
           ? leadingViewPadding
           : trailingViewPadding;
 
@@ -580,13 +578,13 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   // both. Don't know why. So, we have to leave the text rect as big as the bounds and move it to a
   // Y that works.
   CGFloat actualY =
-      (CGRectGetHeight(bounds) / 2) - MDCRint(MAX(self.font.lineHeight,
-                                                  self.placeholderLabel.font.lineHeight) /
-                                              2);  // Text field or placeholder
+      (CGRectGetHeight(bounds) / 2) - rint(MAX(self.font.lineHeight,
+                                               self.placeholderLabel.font.lineHeight) /
+                                           2);  // Text field or placeholder
   actualY = textInsets.top - actualY + MDCTextInputTextRectYCorrection;
   textRect.origin.y = actualY;
 
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     // Now that the text field is laid out as if it were LTR, we can flip it if necessary.
     textRect = MDFRectFlippedHorizontally(textRect, CGRectGetWidth(bounds));
   }
@@ -599,7 +597,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   CGRect editingRect = [self textRectForBounds:bounds];
 
   // The textRect comes to us flipped for RTL (if RTL) so we flip it back before adjusting.
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     editingRect = MDFRectFlippedHorizontally(editingRect, CGRectGetWidth(bounds));
   }
 
@@ -629,7 +627,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
     }
   }
 
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     editingRect = MDFRectFlippedHorizontally(editingRect, CGRectGetWidth(bounds));
   }
 
@@ -651,13 +649,12 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   CGRect leftViewRect = [super leftViewRectForBounds:bounds];
   leftViewRect.origin.y = [self centerYForOverlayViews:CGRectGetHeight(leftViewRect)];
 
-  if ((self.mdf_effectiveUserInterfaceLayoutDirection ==
-       UIUserInterfaceLayoutDirectionRightToLeft) &&
+  if ((self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) &&
       [self.positioningDelegate respondsToSelector:@selector(trailingViewRectForBounds:
                                                                            defaultRect:)]) {
     leftViewRect = [self.positioningDelegate trailingViewRectForBounds:bounds
                                                            defaultRect:leftViewRect];
-  } else if ((self.mdf_effectiveUserInterfaceLayoutDirection ==
+  } else if ((self.effectiveUserInterfaceLayoutDirection ==
               UIUserInterfaceLayoutDirectionLeftToRight) &&
              [self.positioningDelegate respondsToSelector:@selector(leadingViewRectForBounds:
                                                                                  defaultRect:)]) {
@@ -673,13 +670,12 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   CGRect rightViewRect = [super rightViewRectForBounds:bounds];
   rightViewRect.origin.y = [self centerYForOverlayViews:CGRectGetHeight(rightViewRect)];
 
-  if ((self.mdf_effectiveUserInterfaceLayoutDirection ==
-       UIUserInterfaceLayoutDirectionRightToLeft) &&
+  if ((self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) &&
       [self.positioningDelegate respondsToSelector:@selector(leadingViewRectForBounds:
                                                                           defaultRect:)]) {
     rightViewRect = [self.positioningDelegate leadingViewRectForBounds:bounds
                                                            defaultRect:rightViewRect];
-  } else if ((self.mdf_effectiveUserInterfaceLayoutDirection ==
+  } else if ((self.effectiveUserInterfaceLayoutDirection ==
               UIUserInterfaceLayoutDirectionLeftToRight) &&
              [self.positioningDelegate respondsToSelector:@selector(trailingViewRectForBounds:
                                                                                   defaultRect:)]) {
@@ -707,7 +703,7 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
 
 - (CGFloat)estimatedTextHeight {
   CGFloat scale = UIScreen.mainScreen.scale;
-  CGFloat estimatedTextHeight = MDCCeil(self.font.lineHeight * scale) / scale;
+  CGFloat estimatedTextHeight = ceil(self.font.lineHeight * scale) / scale;
 
   return estimatedTextHeight;
 }
@@ -852,7 +848,11 @@ static const CGFloat MDCTextInputTextRectYCorrection = 1;
   if (self.text.length > 0) {
     return [super accessibilityValue];
   }
-  return nil;
+
+  // Returning nil here causes iOS to default to [super accessibilityValue], which results in both
+  // accessibilityValue and accessibilityLabel being read out by VoiceOver, so we return the empty
+  // string instead.
+  return @"";
 }
 
 #pragma mark - Testing

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 #import "supplemental/CollectionsALaCarteExample.h"
-#import "MaterialTypography.h"
+#import "MaterialCollections.h"
 
 static const NSInteger kSectionCount = 10;
 static const NSInteger kSectionItemCount = 5;
@@ -58,9 +58,7 @@ static NSString *const kReusableIdentifierItem = @"itemCellIdentifier";
                                                  collectionViewLayout:self.collectionViewLayout];
   self.collectionView = _customCollectionView;
 
-  if (@available(iOS 11.0, *)) {
-    _customCollectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
-  }
+  _customCollectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
 
   // Register cell class.
   [self.collectionView registerClass:[MDCCollectionViewTextCell class]
@@ -125,7 +123,7 @@ static NSString *const kReusableIdentifierItem = @"itemCellIdentifier";
 
 + (NSDictionary *)catalogMetadata {
   return @{
-    @"breadcrumbs" : @[ @"Collections", @"Collections À la carte" ],
+    @"breadcrumbs" : @[ @"Collections", @"Collections a-la carte" ],
     @"primaryDemo" : @NO,
     @"presentable" : @NO,
   };

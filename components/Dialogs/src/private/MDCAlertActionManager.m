@@ -13,10 +13,13 @@
 // limitations under the License.
 
 #import "MDCAlertActionManager.h"
+#import "MDCButton.h"
+#import "MDCAlertController.h"
+#import "M3CButton.h"
 
 @interface MDCAlertActionManager ()
 
-@property(nonatomic, nonnull, strong) NSMapTable<MDCAlertAction *, MDCButton *> *actionButtons;
+@property(nonatomic, nonnull, strong) NSMapTable<MDCAlertAction *, UIButton *> *actionButtons;
 
 @end
 
@@ -30,18 +33,21 @@
   self = [super init];
   if (self) {
     _actions = [[NSMutableArray alloc] init];
-    _actionButtons = [NSMapTable mapTableWithKeyOptions:NSMapTableWeakMemory
-                                           valueOptions:NSMapTableStrongMemory];
+    _actionButtons = [NSMapTable
+        mapTableWithKeyOptions:(NSMapTableObjectPointerPersonality | NSMapTableWeakMemory)
+                  valueOptions:NSMapTableStrongMemory];
+    _M3CButtonEnabled = NO;
   }
   return self;
 }
 
-- (NSArray<MDCButton *> *)buttonsInActionOrder {
-  NSMutableArray<MDCButton *> *buttons =
+- (NSArray<UIButton *> *)buttonsInActionOrder {
+  NSMutableArray<UIButton *> *buttons =
       [[NSMutableArray alloc] initWithCapacity:self.actions.count];
+
   if ([self.actionButtons count] > 0) {
     for (MDCAlertAction *action in self.actions) {
-      MDCButton *button = [self.actionButtons objectForKey:action];
+      UIButton *button = [self.actionButtons objectForKey:action];
       if (button) {
         [buttons addObject:button];
       }
@@ -55,16 +61,16 @@
 }
 
 - (BOOL)hasAction:(nonnull MDCAlertAction *)action {
-  return [_actions indexOfObject:action] != NSNotFound;
+  return [_actions indexOfObjectIdenticalTo:action] != NSNotFound;
 }
 
-- (nullable MDCButton *)buttonForAction:(nonnull MDCAlertAction *)action {
+- (nullable UIButton *)buttonForAction:(nonnull MDCAlertAction *)action {
   return [self.actionButtons objectForKey:action];
 }
 
-- (nullable MDCAlertAction *)actionForButton:(nonnull MDCButton *)button {
+- (nullable MDCAlertAction *)actionForButton:(nonnull UIButton *)button {
   for (MDCAlertAction *action in self.actionButtons) {
-    MDCButton *currButton = [self.actionButtons objectForKey:action];
+    UIButton *currButton = [self.actionButtons objectForKey:action];
     if (currButton == button) {
       return action;
     }
@@ -74,10 +80,10 @@
 
 // creating a new buttons and associating it with the given action. the button is not added
 // to view hierarchy.
-- (nullable MDCButton *)createButtonForAction:(nonnull MDCAlertAction *)action
-                                       target:(nullable id)target
-                                     selector:(SEL _Nonnull)selector {
-  MDCButton *button = [self.actionButtons objectForKey:action];
+- (UIButton *)createButtonForAction:(nonnull MDCAlertAction *)action
+                             target:(nullable id)target
+                           selector:(SEL _Nonnull)selector {
+  UIButton *button = [self.actionButtons objectForKey:action];
   if (button == nil) {
     button = [self makeButtonForAction:action target:target selector:selector];
     [self.actionButtons setObject:button forKey:action];
@@ -85,12 +91,24 @@
   return button;
 }
 
-- (MDCButton *)makeButtonForAction:(MDCAlertAction *)action
-                            target:(id)target
-                          selector:(SEL)selector {
-  MDCButton *button = [[MDCButton alloc] initWithFrame:CGRectZero];
+- (UIButton *)makeButtonForAction:(MDCAlertAction *)action
+                           target:(id)target
+                         selector:(SEL)selector {
+  UIButton *button;
+  if (self.isM3CButtonEnabled) {
+    button = [[M3CButton alloc] init];
+  } else {
+    button = [[MDCButton alloc] initWithFrame:CGRectZero];
+  }
   [button setTitle:action.title forState:UIControlStateNormal];
   button.accessibilityIdentifier = action.accessibilityIdentifier;
+#ifdef __IPHONE_13_4
+  if (@available(iOS 13.4, *)) {
+    if ([button respondsToSelector:@selector(setPointerInteractionEnabled:)]) {
+      button.pointerInteractionEnabled = YES;
+    }
+  }
+#endif
   [button addTarget:target action:selector forControlEvents:UIControlEventTouchUpInside];
   return button;
 }

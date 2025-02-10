@@ -14,12 +14,19 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCSlider+Private.h"
-#import "MaterialInk.h"
-#import "MaterialPalettes.h"
-#import "MaterialRipple.h"
-#import "MaterialSlider.h"
-#import "MaterialThumbTrack.h"
+#import "MDCInkTouchController.h"
+#import "MDCInkView.h"
+#import "MDCPalettes.h"
+#import "MDCRippleView.h"
+#import "MDCSlider.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSlider+Private.h"
+#import "MDCThumbTrack.h"
+#import "MDCThumbView.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCThumbTrack (Testing)
 @property(nonatomic, strong, nullable) MDCRippleView *rippleView;
@@ -74,10 +81,12 @@
   // Then
   XCTAssertNil(self.slider.thumbTrack.touchController.defaultInkView.superview);
   XCTAssertEqual(self.slider.thumbTrack.rippleView.superview, self.slider.thumbTrack.thumbView);
-  CGRect thumbViewBounds = CGRectStandardize(self.slider.thumbTrack.thumbView.bounds);
+  CGFloat thumbViewRadius = self.slider.thumbTrack.thumbRadius;
+  CGSize visibleThumbViewSize = CGSizeMake(2 * thumbViewRadius, 2 * thumbViewRadius);
   CGRect rippleBounds = CGRectStandardize(self.slider.thumbTrack.rippleView.bounds);
-  XCTAssertTrue(CGRectEqualToRect(thumbViewBounds, rippleBounds), @"%@ is not equal to %@",
-                NSStringFromCGRect(thumbViewBounds), NSStringFromCGRect(rippleBounds));
+  XCTAssertTrue(CGSizeEqualToSize(visibleThumbViewSize, rippleBounds.size),
+                @"%@ is not equal to %@", NSStringFromCGSize(visibleThumbViewSize),
+                NSStringFromCGSize(rippleBounds.size));
 }
 
 /**
@@ -109,3 +118,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -13,26 +13,54 @@
 // limitations under the License.
 
 #import <UIKit/UIKit.h>
-
-#import "MDCAlertActionManager.h"
 #import "MaterialButtons.h"
+#import "MDCAlertControllerView.h"
+#import "MDCAlertActionManager.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCAlertControllerView ()
 
 @property(nonatomic, nonnull, strong) UILabel *titleLabel;
-@property(nonatomic, nonnull, strong) UILabel *messageLabel;
+@property(nonatomic, nonnull, strong) UITextView *messageTextView;
+
+/** An optional custom UIView that is displaed under the alert message. */
 @property(nonatomic, nullable, strong) UIView *accessoryView;
+
+/**
+ By setting this property to @c YES, the accessoryView will be placed on top of the message.
+
+ Defaults to @c NO.
+ */
+@property(nonatomic, assign) BOOL shouldPlaceAccessoryViewAboveMessage;
+
+/** An optional custom view above the title of the alert. */
+@property(nonatomic, strong, nullable) UIView *titleIconView;
 
 @property(nonatomic, nullable, weak) MDCAlertActionManager *actionManager;
 
-/** The scroll view that holds the @c titleLabel. */
-@property(nonatomic, nonnull, strong) UIScrollView *titleScrollView;
+/** Whether or not title should pin to the top of the content. If the title does not pin to the top
+ * of the content, it will scroll with the message when the message scrolls. */
+@property(nonatomic, assign) BOOL titlePinsToTop;
 
-/** The scroll view that holds the @c messageLabel. */
+/** The view that holds the @c titleLabel. */
+@property(nonatomic, nonnull, strong) UIView *titleView;
+
+/** The scroll view that holds the @c messageTextView, the @c accessoryView, and, when
+ * scrollTitleWithContent is @c YES, the @c titleView . */
 @property(nonatomic, nonnull, strong) UIScrollView *contentScrollView;
 
 /** The scroll view that holds all of the buttons created for each action. */
 @property(nonatomic, nonnull, strong) UIScrollView *actionsScrollView;
+
+/** The backing image view of @c titleIcon. */
+@property(nonatomic, nullable, strong) UIImageView *titleIconImageView;
+
+/** The horizontal alignment of @c titleIcon. */
+@property(nonatomic, assign) NSTextAlignment titleIconAlignment;
+
+/** The horizontal alignment of @c message. */
+@property(nonatomic, assign) NSTextAlignment messageAlignment;
 
 /** The alert actions alignment in horizontal layout. */
 @property(nonatomic, assign) MDCContentHorizontalAlignment actionsHorizontalAlignment;
@@ -44,8 +72,20 @@
 /** Enables ordering actions by emphasis when they are vertically aligned. */
 @property(nonatomic, assign) BOOL orderVerticalActionsByEmphasis;
 
-- (void)addActionButton:(nonnull MDCButton *)button;
+// TODO(b/238930139): Remove usage of this deprecated API.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+- (void)addActionButton:(nonnull UIButton *)button;
 + (void)styleAsTextButton:(nonnull MDCButton *)button;
+#pragma clang diagnostic pop
+
+/**
+ Sets the flag to use `M3CButton` instead of `MDCButton`, this flag would be
+ eventually removed when `MDCButton` is deleted.
+
+ Defaults to NO
+ */
+@property(nonatomic, assign, getter=isM3CButtonEnabled) BOOL M3CButtonEnabled;
 
 - (CGSize)calculatePreferredContentSizeForBounds:(CGSize)boundsSize;
 
@@ -53,74 +93,6 @@
 
 - (void)updateFonts;
 
-/**
- Affects the fallback behavior for when a scaled font is not provided.
-
- If @c YES, the font size will adjust even if a scaled font has not been provided for
- a given @c UIFont property on this component.
-
- If @c NO, the font size will only be adjusted if a scaled font has been provided.
-
- Default value is @c YES.
- */
-@property(nonatomic, assign) BOOL adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable;
-
-/**
- The edge insets around the title icon or title icon view against the dialog edges (top, leading,
- trailing) and the title (bottom). Note that `titleIconInsets.bottom` takes precedence over
- `titleInsets.top`.
-
- Default value is UIEdgeInsets(top: 24, leading: 24, bottom: 12, trailing: 24).
- */
-@property(nonatomic, assign) UIEdgeInsets titleIconInsets;
-
-/**
- The edge insets around the title against the dialog edges or its neighbor elements. If either the
- title icon or title icon view is present, then `titleIconInsets.bottom` takes precedence over
- `titleInsets.top`. If there is no message, `titleInsets.bottom` is ignored.
-
-
- Default value is UIEdgeInsets(top: 24, leading: 24, bottom: 20, trailing: 24).
- */
-@property(nonatomic, assign) UIEdgeInsets titleInsets;
-
-/**
- The edge insets around the content view (which includes the message and/or the accessory view)
- against the dialog edges or its neighbor elements, the title and the actions.
-
- Default value is UIEdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24).
- */
-@property(nonatomic, assign) UIEdgeInsets contentInsets;
-
-/**
- The edge insets around the actions against the dialog edges and its neighbor, which could be any of
- the other elements: the message, accessory view, title, title icon or title icon view.
-
- Default value is UIEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8).
- */
-@property(nonatomic, assign) UIEdgeInsets actionsInsets;
-
-/**
- The horizontal space between the action buttons when the buttons are horizontally aligned, and if
- more than one button is presented.
-
- Default value is 8.
- */
-@property(nonatomic, assign) CGFloat actionsHorizontalMargin;
-
-/**
- The vertical space between the action buttons when the buttons are vertically aligned, and if more
- than one button is presented.
-
- Default value is 12.
- */
-@property(nonatomic, assign) CGFloat actionsVerticalMargin;
-
-/**
- The vertical inset between the accessory view and the message, if both are present.
-
- Default value is 20.
- */
-@property(nonatomic, assign) CGFloat accessoryViewVerticalInset;
-
 @end
+
+NS_ASSUME_NONNULL_END

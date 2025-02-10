@@ -14,6 +14,10 @@
 
 #import "MDCContainerScheme.h"
 
+#import "MDCSemanticColorScheme.h"
+
+#import "MDCTypographyScheme.h"
+
 @implementation MDCContainerScheme
 
 - (instancetype)init {

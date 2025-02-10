@@ -14,23 +14,15 @@
 
 #import <UIKit/UIKit.h>
 
+// TODO(b/151929968): Delete import of delegate headers when client code has been migrated to no
+// longer import delegates as transitive dependencies.
+#import "MDCDialogPresentationControllerDelegate.h"
 #import "MaterialShadowElevations.h"
 
-@class MDCDialogPresentationController;
+NS_ASSUME_NONNULL_BEGIN
 
-/**
- MDCDialogPresentationControllerDelegate provides a method that allows a delegate of an
- MDCDialogPresentationController to respond to its dismissals.
- */
-@protocol MDCDialogPresentationControllerDelegate <NSObject>
-@optional
-/**
- This method allows a delegate conforming to MDCDialogPresentationControllerDelegate to respond to
- MDCDialogPresentationController dismissals.
- */
-- (void)dialogPresentationControllerDidDismiss:
-    (nonnull MDCDialogPresentationController *)dialogPresentationController;
-@end
+@class MDCDialogPresentationController;
+@protocol MDCDialogPresentationControllerDelegate;
 
 /**
  MDCDialogPresentationController will present a modal ViewController as a dialog according to the
@@ -60,7 +52,9 @@
     dialogPresentationControllerDelegate;
 
 /**
- Should a tap on the dimmed background view dismiss the presented controller.
+ Should a tap on the dimmed background view dismiss the presented controller. This property must be
+ enabled in order to make use of the @c MDCDialogPresentationControllerDelegate methods related to
+ dismissal.
 
  Defaults to YES.
  */
@@ -118,6 +112,13 @@
 @property(nonatomic, assign) CGAffineTransform dialogTransform;
 
 /**
+ The spacing between the dialog and the @c safeArea of the presenting view controller.
+
+ Defaults to {24, 20, 24, 20}.
+ */
+@property(nonatomic, assign) UIEdgeInsets dialogEdgeInsets;
+
+/**
  Returns the size of the specified child view controller's content.
 
  The size is initially based on container.preferredSize. Width is will have a minimum of 280 and a
@@ -148,3 +149,5 @@
      UITraitCollection *_Nullable previousTraitCollection);
 
 @end
+
+NS_ASSUME_NONNULL_END

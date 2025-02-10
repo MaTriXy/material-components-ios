@@ -15,8 +15,12 @@
 #import "BottomAppBarTypicalUseSupplemental.h"
 
 #import "MaterialAppBar+ColorThemer.h"
-#import "MaterialAppBar+TypographyThemer.h"
 #import "MaterialAppBar.h"
+#import "MaterialAppBar+TypographyThemer.h"
+#import "MaterialBottomAppBar.h"
+#import "MaterialFlexibleHeader.h"
+#import "MaterialColorScheme.h"
+#import "MaterialTypographyScheme.h"
 
 static NSString *const kCellIdentifier = @"cell";
 
@@ -54,6 +58,10 @@ static NSString *const kCellIdentifier = @"cell";
   tableView.colorScheme = self.colorScheme;
   tableView.typographyScheme = self.typographyScheme;
   self.viewController = tableView;
+}
+
+- (BottomAppBarExampleTableViewController *)exampleTableViewController {
+  return (BottomAppBarExampleTableViewController *)self.viewController;
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -211,6 +219,84 @@ static NSString *const kCellIdentifier = @"cell";
         trackingScrollViewWillEndDraggingWithVelocity:velocity
                                   targetContentOffset:targetContentOffset];
   }
+}
+
+@end
+
+@implementation BottomAppBarTypicalUseExample (SnapshotTestingByConvention)
+
+- (void)testLeadingFab {
+  // Given
+  [self resetTests];
+
+  // When
+  [self.bottomBarView setFloatingButtonPosition:MDCBottomAppBarFloatingButtonPositionLeading
+                                       animated:NO];
+}
+
+- (void)testCenteredFab {
+  // Given
+  [self resetTests];
+
+  // When
+  [self.bottomBarView setFloatingButtonPosition:MDCBottomAppBarFloatingButtonPositionCenter
+                                       animated:NO];
+}
+
+- (void)testTrailingFab {
+  // Given
+  [self resetTests];
+
+  // When
+  [self.bottomBarView setFloatingButtonPosition:MDCBottomAppBarFloatingButtonPositionTrailing
+                                       animated:NO];
+}
+
+- (void)testFabWithPrimaryElevation {
+  // Given
+  [self resetTests];
+
+  // When
+  [self.bottomBarView setFloatingButtonElevation:MDCBottomAppBarFloatingButtonElevationPrimary
+                                        animated:NO];
+}
+
+- (void)testFabWithSecondaryElevation {
+  // Given
+  [self resetTests];
+
+  // When
+  [self.bottomBarView setFloatingButtonElevation:MDCBottomAppBarFloatingButtonElevationSecondary
+                                        animated:NO];
+}
+
+- (void)testFabHidden {
+  // Given
+  [self resetTests];
+
+  // When
+  [self.exampleTableViewController.fabVisibilitySwitch setOn:NO animated:NO];
+  [self.bottomBarView setFloatingButtonHidden:YES animated:NO];
+}
+
+- (void)testDynamic201907ColorSchemeWithCenteredFab {
+  // Given
+  [self resetTests];
+  self.colorScheme =
+      [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201907];
+
+  // When
+  [self.bottomBarView setFloatingButtonPosition:MDCBottomAppBarFloatingButtonPositionCenter
+                                       animated:NO];
+}
+
+- (void)resetTests {
+  [self.bottomBarView setFloatingButtonPosition:MDCBottomAppBarFloatingButtonPositionCenter
+                                       animated:NO];
+  [self.bottomBarView setFloatingButtonElevation:MDCBottomAppBarFloatingButtonElevationPrimary
+                                        animated:NO];
+  [self.exampleTableViewController.fabVisibilitySwitch setOn:YES animated:NO];
+  [self.bottomBarView setFloatingButtonHidden:NO animated:NO];
 }
 
 @end

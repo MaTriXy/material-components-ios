@@ -14,10 +14,10 @@
 
 #import "MDCOverlayWindow.h"
 
+#import <CoreGraphics/CoreGraphics.h>
 #import <objc/runtime.h>
 
-#import "MaterialApplication.h"
-#import "MaterialAvailability.h"
+#import "MDCAvailability.h"
 
 /**
  A container view for overlay views.
@@ -59,14 +59,6 @@
 
 @implementation MDCOverlayWindow
 
-- (instancetype)init {
-  self = [super init];
-  if (self) {
-    [self commonInit];
-  }
-  return self;
-}
-
 - (instancetype)initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
   if (self) {
@@ -106,10 +98,6 @@
 
   // Set a sane hidden state.
   [self updateOverlayHiddenState];
-}
-
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark - Window positioning
@@ -160,7 +148,17 @@
   [self updateOverlayHiddenState];
 }
 
+- (void)activateOverlay:(UIView *)overlay atBottomOfLevel:(UIWindowLevel)level {
+  [self activateOverlay:overlay withLevel:level bottomOfLevel:YES];
+}
+
 - (void)activateOverlay:(UIView *)overlay withLevel:(UIWindowLevel)level {
+  [self activateOverlay:overlay withLevel:level bottomOfLevel:NO];
+}
+
+- (void)activateOverlay:(UIView *)overlay
+              withLevel:(UIWindowLevel)level
+          bottomOfLevel:(BOOL)bottomOfLevel {
   if (!overlay) {
     return;
   }
@@ -175,10 +173,10 @@
   __block NSUInteger insertionIndex = self.overlays.count;
 
   // Because @c self.overlays is already sorted by level, we can pick the first index which has a
-  // level larger than @c level.
+  // level larger than / equal to @c level.
   [self.overlays enumerateObjectsUsingBlock:^(UIView *existing, NSUInteger idx, BOOL *stop) {
     UIWindowLevel existingLevel = [self windowLevelForOverlay:existing];
-    if (level < existingLevel) {
+    if ((bottomOfLevel && level == existingLevel) || (level < existingLevel)) {
       insertionIndex = idx;
       *stop = YES;
     }

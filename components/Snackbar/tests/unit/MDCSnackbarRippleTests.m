@@ -14,9 +14,16 @@
 
 #import <XCTest/XCTest.h>
 
-#import "MaterialSnackbar.h"
+#import "MDCButton.h"
+#import "MDCInkView.h"
+#import "MDCSnackbarManager.h"
+#import "MDCSnackbarMessage.h"
+#import "MDCSnackbarMessageView.h"
 
-#import "../../src/private/MDCSnackbarManagerInternal.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSnackbarManagerInternal.h"
+#pragma clang diagnostic pop
 
 @interface MDCSnackbarManagerInternal (RippleTesting)
 @property(nonatomic) MDCSnackbarMessageView *currentSnackbar;
@@ -67,12 +74,12 @@
 
   // Then
   [self waitForExpectationsWithTimeout:1 handler:nil];
-  NSMutableArray<MDCButton *> *actionButtons =
-      self.manager.internalManager.currentSnackbar.actionButtons;
-  for (MDCButton *button in actionButtons) {
-    XCTAssertFalse(button.enableRippleBehavior);
-    XCTAssertEqual(button.inkStyle, MDCInkStyleBounded);
-  }
+  UIButton *actionButton = self.manager.internalManager.currentSnackbar.actionButton;
+
+  XCTAssertTrue([actionButton isKindOfClass:[MDCButton class]]);
+  MDCButton *button = (MDCButton *)actionButton;
+  XCTAssertFalse(button.enableRippleBehavior);
+  XCTAssertEqual(button.inkStyle, MDCInkStyleBounded);
 }
 
 /**
@@ -89,12 +96,11 @@
 
   // Then
   [self waitForExpectationsWithTimeout:1 handler:nil];
-  NSMutableArray<MDCButton *> *actionButtons =
-      self.manager.internalManager.currentSnackbar.actionButtons;
-  for (MDCButton *button in actionButtons) {
-    XCTAssertTrue(button.enableRippleBehavior);
-    XCTAssertEqual(button.inkStyle, MDCInkStyleBounded);
-  }
+  UIButton *actionButton = self.manager.internalManager.currentSnackbar.actionButton;
+  XCTAssertTrue([actionButton isKindOfClass:[MDCButton class]]);
+  MDCButton *button = (MDCButton *)actionButton;
+  XCTAssertTrue(button.enableRippleBehavior);
+  XCTAssertEqual(button.inkStyle, MDCInkStyleBounded);
 }
 
 @end

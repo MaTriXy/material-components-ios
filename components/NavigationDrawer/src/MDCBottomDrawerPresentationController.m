@@ -14,18 +14,32 @@
 
 #import "MDCBottomDrawerPresentationController.h"
 
-#import "MDCBottomDrawerViewController.h"
-#import "MaterialPalettes.h"
 #import "private/MDCBottomDrawerContainerViewController.h"
+#import "MDCBottomDrawerPresentationControllerDelegate.h"
+#import "MDCBottomDrawerViewController.h"
+#import "MDCBottomDrawerContainerViewControllerDelegate.h"
+#import "MDCPalettes.h"
+#import "MDCShadowElevations.h"
 
 static CGFloat kTopHandleHeight = (CGFloat)2.0;
 static CGFloat kTopHandleWidth = (CGFloat)24.0;
 static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
 
+@protocol MDCBottomDrawerScrimViewDelegate
+
+/** Called when the scrim view is activated via accessibility controls. */
+- (void)didTapScrimViaAccessibilityActivation;
+
+@end
+
 /** View that allows touches that aren't handled from within the view to be propagated up the
  responder chain. This is used to allow forwarding of tap events from the scrim view through to
  the delegate if that has been enabled on the VC. */
 @interface MDCBottomDrawerScrimView : UIView
+
+/** Delegate informed when an accessibility activation occurs on the scrim view. */
+@property(nonatomic, weak) id<MDCBottomDrawerScrimViewDelegate> delegate;
+
 @end
 
 @implementation MDCBottomDrawerScrimView
@@ -37,15 +51,21 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
   return view == self ? nil : view;
 }
 
+- (BOOL)accessibilityActivate {
+  [self.delegate didTapScrimViaAccessibilityActivation];
+  return YES;
+}
+
 @end
 
 @interface MDCBottomDrawerPresentationController () <UIGestureRecognizerDelegate,
-                                                     MDCBottomDrawerContainerViewControllerDelegate>
+                                                     MDCBottomDrawerContainerViewControllerDelegate,
+                                                     MDCBottomDrawerScrimViewDelegate>
 
 /**
  A semi-transparent scrim view that darkens the visible main view when the drawer is displayed.
  */
-@property(nonatomic) UIView *scrimView;
+@property(nonatomic) MDCBottomDrawerScrimView *scrimView;
 
 /**
  The top handle view at the top of the drawer to provide a visual affordance for scrollability.
@@ -61,6 +81,9 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
 
 @implementation MDCBottomDrawerPresentationController {
   UIColor *_scrimColor;
+  BOOL _isScrimAccessibilityElement;
+  NSString *_scrimAccessibilityLabel;
+  BOOL _userDraggingEnabled;
 }
 
 @synthesize delegate;
@@ -72,9 +95,12 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
   if (self) {
     _topHandleHidden = YES;
     _maximumInitialDrawerHeight = 0;
+    _maximumDrawerHeight = 0;
     _drawerShadowColor = [UIColor.blackColor colorWithAlphaComponent:(CGFloat)0.2];
     _elevation = MDCShadowElevationNavDrawer;
     _dismissOnBackgroundTap = YES;
+    _shouldDisplayMobileLandscapeFullscreen = YES;
+    _userDraggingEnabled = YES;
   }
   return self;
 }
@@ -98,16 +124,25 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
     bottomDrawerContainerViewController.maximumInitialDrawerHeight =
         self.maximumInitialDrawerHeight;
   }
+  if (self.maximumDrawerHeight > 0) {
+    bottomDrawerContainerViewController.maximumDrawerHeight = self.maximumDrawerHeight;
+  }
   bottomDrawerContainerViewController.shouldIncludeSafeAreaInContentHeight =
       self.shouldIncludeSafeAreaInContentHeight;
   bottomDrawerContainerViewController.shouldIncludeSafeAreaInInitialDrawerHeight =
       self.shouldIncludeSafeAreaInInitialDrawerHeight;
   bottomDrawerContainerViewController.shouldUseStickyStatusBar = self.shouldUseStickyStatusBar;
+  bottomDrawerContainerViewController.disableFullScreenVoiceOver = self.disableFullScreenVoiceOver;
   bottomDrawerContainerViewController.shouldAdjustOnContentSizeChange =
       self.shouldAdjustOnContentSizeChange;
   bottomDrawerContainerViewController.shouldAlwaysExpandHeader = self.shouldAlwaysExpandHeader;
   bottomDrawerContainerViewController.elevation = self.elevation;
   bottomDrawerContainerViewController.drawerShadowColor = self.drawerShadowColor;
+  bottomDrawerContainerViewController.userDraggingEnabled = self.userDraggingEnabled;
+  bottomDrawerContainerViewController.adjustLayoutForIPadSlideOver =
+      self.adjustLayoutForIPadSlideOver;
+  bottomDrawerContainerViewController.shouldDisplayMobileLandscapeFullscreen =
+      self.shouldDisplayMobileLandscapeFullscreen;
   if ([self.presentedViewController isKindOfClass:[MDCBottomDrawerViewController class]]) {
     // If in fact the presentedViewController is an MDCBottomDrawerViewController,
     // we then know there is a content and an (optional) header view controller.
@@ -128,12 +163,14 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
   self.bottomDrawerContainerViewController.delegate = self;
 
   self.scrimView = [[MDCBottomDrawerScrimView alloc] initWithFrame:self.containerView.bounds];
+  self.scrimView.delegate = self;
   self.scrimView.backgroundColor = self.scrimColor;
   self.scrimView.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   self.scrimView.accessibilityIdentifier = @"Close drawer";
   self.scrimView.accessibilityTraits |= UIAccessibilityTraitButton;
-
+  self.scrimView.isAccessibilityElement = _isScrimAccessibilityElement;
+  self.scrimView.accessibilityLabel = _scrimAccessibilityLabel ?: @"Dismiss";
   [self.containerView addSubview:self.scrimView];
 
   self.topHandle =
@@ -188,6 +225,10 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
     [self.containerView addSubview:self.bottomDrawerContainerViewController.view];
   }
 
+  if (self.adjustLayoutForIPadSlideOver) {
+    [self setupBottomDrawerContainerViewControllerConstraints];
+  }
+
   id<UIViewControllerTransitionCoordinator> transitionCoordinator =
       [[self presentingViewController] transitionCoordinator];
 
@@ -207,11 +248,31 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
                                           targetYOffset:frame.origin.y];
 }
 
+/**
+ Setup constraints so bottomDrawerContainerViewController has the correct size in iPad Slide Over.
+
+ Without these constraints when the app is in iPad Slide Over, the view controller will
+ have the wrong size that is equal to the screen when it should instead be the size of the Slide
+ Over window.
+ */
+- (void)setupBottomDrawerContainerViewControllerConstraints {
+  UIView *bottomDrawerView = self.bottomDrawerContainerViewController.view;
+  UIView *bottomDrawerSuperview = bottomDrawerView.superview;
+
+  bottomDrawerView.translatesAutoresizingMaskIntoConstraints = NO;
+  [NSLayoutConstraint activateConstraints:@[
+    [bottomDrawerView.leftAnchor constraintEqualToAnchor:bottomDrawerSuperview.leftAnchor],
+    [bottomDrawerView.rightAnchor constraintEqualToAnchor:bottomDrawerSuperview.rightAnchor],
+    [bottomDrawerView.topAnchor constraintEqualToAnchor:bottomDrawerSuperview.topAnchor],
+    [bottomDrawerView.bottomAnchor constraintEqualToAnchor:bottomDrawerSuperview.bottomAnchor],
+  ]];
+}
+
 - (void)presentationTransitionDidEnd:(BOOL)completed {
-  if (self.dismissOnBackgroundTap) {
-    // Set up the tap recognizer to dimiss the drawer by.
+  if (!self.shouldForwardBackgroundTouchEvents) {
+    // Set up the tap recognizer.
     UITapGestureRecognizer *tapGestureRecognizer =
-        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hideDrawer)];
+        [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(scrimTapped)];
     [self.containerView addGestureRecognizer:tapGestureRecognizer];
     tapGestureRecognizer.delegate = self;
   }
@@ -277,8 +338,8 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
     preferredSize.width = containerSize.width;
   }
 
-  return CGRectMake(0, MAX(0.0f, containerSize.height - preferredSize.height), preferredSize.height,
-                    preferredSize.width);
+  return CGRectMake(0, MAX(0.0f, containerSize.height - preferredSize.height), preferredSize.width,
+                    preferredSize.height);
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -303,6 +364,24 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
 
 - (UIColor *)scrimColor {
   return _scrimColor ?: [UIColor colorWithWhite:0 alpha:(CGFloat)0.32];
+}
+
+- (void)setIsScrimAccessibilityElement:(BOOL)isScrimAccessibilityElement {
+  _isScrimAccessibilityElement = isScrimAccessibilityElement;
+  self.scrimView.isAccessibilityElement = isScrimAccessibilityElement;
+}
+
+- (BOOL)isScrimAccessibilityElement {
+  return _isScrimAccessibilityElement;
+}
+
+- (void)setScrimAccessibilityLabel:(NSString *)scrimAccessibilityLabel {
+  _scrimAccessibilityLabel = scrimAccessibilityLabel;
+  self.scrimView.accessibilityLabel = scrimAccessibilityLabel;
+}
+
+- (NSString *)scrimAccessibilityLabel {
+  return _scrimAccessibilityLabel;
 }
 
 - (void)setTopHandleHidden:(BOOL)topHandleHidden {
@@ -341,10 +420,32 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
   self.bottomDrawerContainerViewController.trackingScrollView = trackingScrollView;
 }
 
+- (BOOL)userDraggingEnabled {
+  return _userDraggingEnabled;
+}
+
+- (void)setUserDraggingEnabled:(BOOL)userDraggingEnabled {
+  _userDraggingEnabled = userDraggingEnabled;
+  self.bottomDrawerContainerViewController.userDraggingEnabled = userDraggingEnabled;
+}
+
+- (BOOL)swipeToDismissEnabled {
+  return self.bottomDrawerContainerViewController.swipeToDismissEnabled;
+}
+
+- (void)setSwipeToDismissEnabled:(BOOL)swipeToDismissEnabled {
+  self.bottomDrawerContainerViewController.swipeToDismissEnabled = swipeToDismissEnabled;
+}
+
 - (void)setMaximumInitialDrawerHeight:(CGFloat)maximumInitialDrawerHeight {
   _maximumInitialDrawerHeight = maximumInitialDrawerHeight;
   self.bottomDrawerContainerViewController.maximumInitialDrawerHeight =
       self.maximumInitialDrawerHeight;
+}
+
+- (void)setMaximumDrawerHeight:(CGFloat)maximumDrawerHeight {
+  _maximumDrawerHeight = maximumDrawerHeight;
+  self.bottomDrawerContainerViewController.maximumDrawerHeight = self.maximumDrawerHeight;
 }
 
 - (BOOL)contentReachesFullscreen {
@@ -355,6 +456,21 @@ static CGFloat kTopHandleTopMargin = (CGFloat)5.0;
 
 - (void)hideDrawer {
   [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
+}
+
+- (void)scrimTapped {
+  [self.delegate bottomDrawerDidTapScrim:self];
+
+  // Dismiss the drawer on tap if enabled.
+  if (self.dismissOnBackgroundTap) {
+    [self hideDrawer];
+  }
+}
+
+#pragma mark - MDCBottomDrawerScrimViewDelegate
+
+- (void)didTapScrimViaAccessibilityActivation {
+  [self scrimTapped];
 }
 
 #pragma mark UIGestureRecognizerDelegate

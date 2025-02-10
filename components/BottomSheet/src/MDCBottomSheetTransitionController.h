@@ -14,6 +14,8 @@
 
 #import <UIKit/UIKit.h>
 
+@protocol MDCBottomSheetTransitionControllerDelegate;
+
 /**
  MDCBottomSheetTransitionController is be used to setup a custom transition and animationed
  presentation and dismissal for material-styled bottom-sheet presentation.
@@ -62,6 +64,29 @@
  the content height.
  */
 @property(nonatomic, assign) CGFloat preferredSheetHeight;
+
+/**
+Whether or not the height of the bottom sheet should adjust to include extra height for any bottom
+safe area insets. If, for example, this is set to @c YES, and the preferred content size height is
+100 and the screen has a bottom safe area inset of 10, the total height of the displayed bottom
+sheet height would be 110. If set to @c NO, the height would be 100.
+
+Defaults to @c YES.
+*/
+@property(nonatomic, assign) BOOL adjustHeightForSafeAreaInsets;
+
+/**
+ A Boolean value that controls whether the height of the keyboard should affect
+ the bottom sheet's frame when the keyboard shows on the screen.
+
+ The default value is @c NO.
+ */
+@property(nonatomic) BOOL ignoreKeyboardHeight;
+
+/**
+ The object that manages lifecycle events.
+ */
+@property(nonatomic, weak, nullable) id<MDCBottomSheetTransitionControllerDelegate> delegate;
 
 @end
 

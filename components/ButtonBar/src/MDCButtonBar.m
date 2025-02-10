@@ -14,11 +14,11 @@
 
 #import "MDCButtonBar.h"
 
-#import <MDFInternationalization/MDFInternationalization.h>
-
-#import "MaterialApplication.h"
+#import "MaterialAvailability.h"
+#import "MDCButtonBarDelegate.h"
+#import "MDCAppBarButtonBarBuilder.h"
 #import "MaterialButtons.h"
-#import "private/MDCAppBarButtonBarBuilder.h"
+#import "MaterialApplication.h"
 
 static const CGFloat kButtonBarMaxHeight = 56;
 static const CGFloat kButtonBarMinHeight = 24;
@@ -46,6 +46,14 @@ static NSString *const kEnabledSelector = @"enabled";
   _layoutPosition = MDCButtonBarLayoutPositionNone;
 
   _defaultBuilder = [[MDCAppBarButtonBarBuilder alloc] init];
+
+#if MDC_AVAILABLE_SDK_IOS(13_0)
+  if (@available(iOS 13, *)) {
+    // If clients report conflicting gesture recognizers please see proposed solution in the
+    // internal document: go/mdc-ios-bottomnavigation-largecontentvieweritem
+    [self addInteraction:[[UILargeContentViewerInteraction alloc] initWithDelegate:self]];
+  }
+#endif  // MDC_AVAILABLE_SDK_IOS(13_0)
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -85,7 +93,7 @@ static NSString *const kEnabledSelector = @"enabled";
   CGFloat totalWidth = 0;
 
   CGFloat edge;
-  switch (self.mdf_effectiveUserInterfaceLayoutDirection) {
+  switch (self.effectiveUserInterfaceLayoutDirection) {
     case UIUserInterfaceLayoutDirectionLeftToRight:
       edge = 0;
       break;
@@ -116,7 +124,7 @@ static NSString *const kEnabledSelector = @"enabled";
       }
     }
 
-    switch (self.mdf_effectiveUserInterfaceLayoutDirection) {
+    switch (self.effectiveUserInterfaceLayoutDirection) {
       case UIUserInterfaceLayoutDirectionLeftToRight:
         break;
       case UIUserInterfaceLayoutDirectionRightToLeft:
@@ -132,7 +140,7 @@ static NSString *const kEnabledSelector = @"enabled";
         }
       }
     }
-    switch (self.mdf_effectiveUserInterfaceLayoutDirection) {
+    switch (self.effectiveUserInterfaceLayoutDirection) {
       case UIUserInterfaceLayoutDirectionLeftToRight:
         edge += width;
         break;
@@ -312,7 +320,39 @@ static NSString *const kEnabledSelector = @"enabled";
             [self invalidateIntrinsicContentSize];
           }
 
-        } else {
+        }
+#if MDC_AVAILABLE_SDK_IOS(14_0)
+        else if ([keyPath isEqualToString:NSStringFromSelector(@selector(menu))]) {
+          if (@available(iOS 14.0, *)) {
+            if ([buttonView isKindOfClass:[UIButton class]]) {
+              ((UIButton *)buttonView).menu = newValue;
+              if (!self.items[itemIndex].primaryAction) {
+                ((UIButton *)buttonView).showsMenuAsPrimaryAction = YES;
+              }
+            }
+          }
+        } else if ([keyPath isEqualToString:NSStringFromSelector(@selector(primaryAction))]) {
+          if (@available(iOS 14.0, *)) {
+            // As of iOS 14.0 there is no public API to change the primary action of a button.
+            // It's only possible to provide the action upon initialization of the view, so all
+            // views get reloaded.
+            [self reloadButtonViews];
+          }
+        }
+#endif
+#if MDC_AVAILABLE_SDK_IOS(13_0)
+        else if ([keyPath isEqualToString:NSStringFromSelector(@selector(largeContentSizeImage))]) {
+          if (@available(iOS 13.0, *)) {
+            buttonView.largeContentImage = newValue;
+          }
+        } else if ([keyPath isEqualToString:NSStringFromSelector(@selector
+                                                                 (largeContentSizeImageInsets))]) {
+          if (@available(iOS 13.0, *)) {
+            buttonView.largeContentImageInsets = [newValue UIEdgeInsetsValue];
+          }
+        }
+#endif  // MDC_AVAILABLE_SDK_IOS(13_0)
+        else {
           NSLog(@"Unknown key path notification received by %@ for %@.",
                 NSStringFromClass([self class]), keyPath);
         }
@@ -416,8 +456,18 @@ static NSString *const kEnabledSelector = @"enabled";
       NSStringFromSelector(@selector(accessibilityLabel)),
       NSStringFromSelector(@selector(accessibilityValue)), kEnabledSelector,
       NSStringFromSelector(@selector(image)), NSStringFromSelector(@selector(tag)),
-      NSStringFromSelector(@selector(tintColor)), NSStringFromSelector(@selector(title))
+      NSStringFromSelector(@selector(tintColor)), NSStringFromSelector(@selector(title)),
+      NSStringFromSelector(@selector(largeContentSizeImage)),
+      NSStringFromSelector(@selector(largeContentSizeImageInsets))
     ];
+#if MDC_AVAILABLE_SDK_IOS(14_0)
+    if (@available(iOS 14.0, *)) {
+      NSMutableArray<NSString *> *mutableKeyPaths = [keyPaths mutableCopy];
+      [mutableKeyPaths addObject:NSStringFromSelector(@selector(menu))];
+      [mutableKeyPaths addObject:NSStringFromSelector(@selector(primaryAction))];
+      keyPaths = mutableKeyPaths;
+    }
+#endif
 
     // Remove old observers
     for (UIBarButtonItem *item in _items) {
@@ -507,17 +557,6 @@ static NSString *const kEnabledSelector = @"enabled";
   return [_defaultBuilder titleColorForState:state];
 }
 
-// UISemanticContentAttribute was added in iOS SDK 9.0 but is available on devices running earlier
-// version of iOS. We ignore the partial-availability warning that gets thrown on our use of this
-// symbol.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-- (void)mdf_setSemanticContentAttribute:(UISemanticContentAttribute)semanticContentAttribute {
-  [super mdf_setSemanticContentAttribute:semanticContentAttribute];
-  [self reloadButtonViews];
-}
-#pragma clang diagnostic pop
-
 - (void)setButtonTitleBaseline:(CGFloat)buttonTitleBaseline {
   _buttonTitleBaseline = buttonTitleBaseline;
 
@@ -568,5 +607,51 @@ static NSString *const kEnabledSelector = @"enabled";
   [self invalidateIntrinsicContentSize];
   [self setNeedsLayout];
 }
+
+#ifdef __IPHONE_13_4
+- (UIPointerStyle *)pointerInteraction:(UIPointerInteraction *)interaction
+                        styleForRegion:(UIPointerRegion *)region API_AVAILABLE(ios(13.4)) {
+  UIPointerStyle *pointerStyle = nil;
+  if (interaction.view) {
+    UITargetedPreview *targetedPreview = [[UITargetedPreview alloc] initWithView:interaction.view];
+    UIPointerEffect *highlightEffect = [UIPointerHighlightEffect effectWithPreview:targetedPreview];
+    pointerStyle = [UIPointerStyle styleWithEffect:highlightEffect shape:nil];
+  }
+  return pointerStyle;
+}
+#endif
+
+#pragma mark - UILargeContentViewerInteractionDelegate
+
+/**
+ Returns the item view at the given point. Nil if there is no view at the given point.
+
+ point is assumed to be in the coordinate space of the button bar's bounds.
+ */
+- (UIView *)buttonItemForPoint:(CGPoint)point {
+  for (NSUInteger i = 0; i < self.items.count; i++) {
+    UIBarButtonItem *barButtonItem = self.items[i];
+    UIView *buttonView = _buttonViews[i];
+    CGRect rect = [self rectForItem:barButtonItem inCoordinateSpace:self];
+    if (CGRectContainsPoint(rect, point)) {
+      return buttonView;
+    }
+  }
+  return nil;
+}
+
+#if MDC_AVAILABLE_SDK_IOS(13_0)
+- (id<UILargeContentViewerItem>)largeContentViewerInteraction:
+                                    (UILargeContentViewerInteraction *)interaction
+                                                  itemAtPoint:(CGPoint)point
+    NS_AVAILABLE_IOS(13_0) {
+  if (!CGRectContainsPoint(self.bounds, point)) {
+    // The touch has wandered outside of the view. Do not display the content viewer.
+    return nil;
+  }
+
+  return [self buttonItemForPoint:point];
+}
+#endif  // MDC_AVAILABLE_SDK_IOS(13_0)
 
 @end

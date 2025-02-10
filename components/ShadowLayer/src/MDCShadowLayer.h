@@ -15,6 +15,11 @@
 #import <UIKit/UIKit.h>
 #import "MaterialShadowElevations.h"
 
+API_DEPRECATED_BEGIN("🤖👀 Use branded UIKit shadows instead. "
+                     "See go/material-ios-elevation/gm2-migration for more details. "
+                     "This has go/material-ios-migrations#scriptable-potential 🤖👀.",
+                     ios(12, 12))
+
 /**
  Metrics of the Material shadow effect.
 
@@ -96,4 +101,13 @@
  order to implicitly animate 'path' or 'shadowPath' on sublayers.
  */
 @interface MDCShadowLayer (Subclassing) <CALayerDelegate>
+
+/**
+ Override point.
+ Called by the shadow layer before the instance lays out its sublayers.
+ */
+- (void)prepareShadowPath;
+
 @end
+
+API_DEPRECATED_END

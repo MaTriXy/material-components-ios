@@ -14,7 +14,9 @@
 
 #import <XCTest/XCTest.h>
 
-#import "MaterialContainerScheme.h"
+#import "MDCSemanticColorScheme.h"
+#import "MDCContainerScheme.h"
+#import "MDCTypographyScheme.h"
 
 @interface MDCContainerSchemeTests : XCTestCase
 @end

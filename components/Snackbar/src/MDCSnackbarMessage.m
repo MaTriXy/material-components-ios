@@ -13,8 +13,9 @@
 // limitations under the License.
 
 #import "MDCSnackbarMessage.h"
-#import "MDCSnackbarMessageView.h"
 #import "private/MDCSnackbarMessageInternal.h"
+#import "MDCAvailability.h"
+#import "MDCSnackbarMessageView.h"
 
 static const NSTimeInterval kDefaultDuration = 4;
 
@@ -74,13 +75,18 @@ static BOOL _usesLegacySnackbar = NO;
   copy.focusOnShow = self.focusOnShow;
   copy.elementToFocusOnDismiss = self.elementToFocusOnDismiss;
   copy.automaticallyDismisses = self.automaticallyDismisses;
+  copy.presentationHostViewOverride = self.presentationHostViewOverride;
+  copy.shouldDismissOnOverlayTap = self.shouldDismissOnOverlayTap;
+  copy.usesLegacyDismissalBehavior = self.usesLegacyDismissalBehavior;
 
   // Unfortunately there's not really a concept of 'copying' a block (in the same way you would copy
   // a string, for example). A block's pointer is immutable once it is created and copied to the
   // heap, so we're pretty safe just using the same block.
   copy.completionHandler = self.completionHandler;
+  copy.completionHandlerWithError = self.completionHandlerWithError;
   copy.action = self.action;
   copy.snackbarMessageWillPresentBlock = self.snackbarMessageWillPresentBlock;
+  copy.error = self.error;
 
   return copy;
 }
@@ -89,14 +95,49 @@ static BOOL _usesLegacySnackbar = NO;
   return dispatch_get_main_queue();
 }
 
-#pragma mark Text
+- (NSString *)description {
+  NSMutableString *description = [[NSMutableString alloc] init];
+  [description appendFormat:@"<%@: %p> {\n", [self class], self];
+  [description appendFormat:@"  text: \"%@\",\n", self.text];
+  if (self.action) {
+    [description appendFormat:@"  action: \"%@\",\n", self.action.title];
+  }
+  [description appendFormat:@"  viewClass: \"%@\",\n", self.viewClass];
+  [description appendString:@"}"];
+  return [description copy];
+}
+
+#pragma mark - Text
 
 - (void)setText:(NSString *)text {
-  self.attributedText = [[NSAttributedString alloc] initWithString:[text copy]];
+  NSDictionary *attributes = @{};
+
+  // TODO(b/298435271): Remove the #if check below once all users are building with Xcode 15.
+#if MDC_AVAILABLE_SDK_IOS(17_0)
+  if (@available(iOS 17.0, *)) {
+    // Default to low-priority announcements.
+    attributes = @{UIAccessibilitySpeechAttributeAnnouncementPriority : UIAccessibilityPriorityLow};
+  }
+#endif
+  self.attributedText = [[NSAttributedString alloc] initWithString:[text copy]
+                                                        attributes:attributes];
 }
 
 - (NSString *)text {
   return [self.attributedText string];
+}
+
+#pragma mark - Action
+
+- (void)setAction:(MDCSnackbarMessageAction *)action {
+  if (action) {
+    NSAssert(action.title.length > 0, @"Snackbar actions must have a non-empty title.");
+  }
+  if (action.title.length == 0) {
+    _action = nil;
+  } else {
+    _action = action;
+  }
 }
 
 #pragma mark - Duration
@@ -110,11 +151,34 @@ static BOOL _usesLegacySnackbar = NO;
 
 #pragma mark - A11y
 
-- (NSString *)voiceNotificationText {
-  if ([self.accessibilityLabel length]) {
-    return self.accessibilityLabel;
+- (void)setAccessibilityLabel:(NSString *)accessibilityLabel {
+  if (accessibilityLabel == nil) {
+    self.attributedAccessibilityLabel = nil;
   } else {
-    return self.text;
+    NSDictionary *attributes = @{};
+
+    // TODO(b/298435271): Remove the #if check below once all users are building with Xcode 15.
+#if MDC_AVAILABLE_SDK_IOS(17_0)
+    if (@available(iOS 17.0, *)) {
+      // Default to low-priority announcements.
+      attributes =
+          @{UIAccessibilitySpeechAttributeAnnouncementPriority : UIAccessibilityPriorityLow};
+    }
+#endif
+    self.attributedAccessibilityLabel =
+        [[NSAttributedString alloc] initWithString:[accessibilityLabel copy] attributes:attributes];
+  }
+}
+
+- (NSString *)accessibilityLabel {
+  return [self.attributedAccessibilityLabel string];
+}
+
+- (NSAttributedString *)voiceNotificationText {
+  if (self.attributedAccessibilityLabel) {
+    return self.attributedAccessibilityLabel;
+  } else {
+    return self.attributedText;
   }
 }
 
@@ -122,14 +186,22 @@ static BOOL _usesLegacySnackbar = NO;
 
 - (void)executeCompletionHandlerWithUserInteraction:(BOOL)userInteraction
                                          completion:(void (^)(void))completion {
-  if (self.completionHandler) {
+  if (self.completionHandlerWithError || self.completionHandler) {
     dispatch_async(self.targetQueue, ^{
-      self.completionHandler(userInteraction);
+      NSError *error = self.error;
+      self.error = nil;  // Break retain cycle.
+      if (self.completionHandlerWithError) {
+        self.completionHandlerWithError(userInteraction, error);
+      }
+      if (self.completionHandler) {
+        self.completionHandler(userInteraction);
+      }
       if (completion) {
         completion();
       }
     });
   } else {
+    self.error = nil;  // Break retain cycle.
     if (completion) {
       completion();
     }
@@ -176,6 +248,12 @@ static BOOL _usesLegacySnackbar = NO;
   copy.accessibilityHint = self.accessibilityHint;
 
   return copy;
+}
+
+- (void)setTitle:(NSString *)title {
+  if (title.length > 0) {
+    _title = title;
+  }
 }
 
 @end

@@ -14,8 +14,12 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialFlexibleHeader.h"
-#import "MaterialFlexibleHeader+CanAlwaysExpandToMaximumHeight.h"
+#import "MDCFlexibleHeaderView+ShiftBehavior.h"
+#import "MDCFlexibleHeaderView.h"
+#import "MDCFlexibleHeaderViewController.h"
+#import "MDCFlexibleHeaderViewLayoutDelegate.h"
+#import "MDCFlexibleHeaderShiftBehavior.h"
+#import "MDCFlexibleHeaderShiftBehaviorEnabledWithStatusBar.h"
 
 #import "supplemental/FlexibleHeaderConfiguratorControlItem.h"
 
@@ -34,7 +38,6 @@ typedef enum : NSUInteger {
   FlexibleHeaderConfiguratorFieldMinimumHeight,
   FlexibleHeaderConfiguratorFieldMaximumHeight,
   FlexibleHeaderConfiguratorFieldMinMaxHeightIncludeSafeArea,
-  FlexibleHeaderConfiguratorFieldCanAlwaysExpandToMaximumHeight,
 } FlexibleHeaderConfiguratorField;
 
 static const UITableViewStyle kStyle = UITableViewStyleGrouped;
@@ -167,10 +170,6 @@ static const UITableViewStyle kStyle = UITableViewStyleGrouped;
     case FlexibleHeaderConfiguratorFieldMinMaxHeightIncludeSafeArea:
       headerView.minMaxHeightIncludesSafeArea = [value boolValue];
       break;
-
-    case FlexibleHeaderConfiguratorFieldCanAlwaysExpandToMaximumHeight:
-      headerView.canAlwaysExpandToMaximumHeight = [value boolValue];
-      break;
   }
 }
 
@@ -279,9 +278,6 @@ static const CGFloat kHeightScalar = 300;
 
     case FlexibleHeaderConfiguratorFieldMinMaxHeightIncludeSafeArea:
       return @(self.fhvc.headerView.minMaxHeightIncludesSafeArea);
-
-    case FlexibleHeaderConfiguratorFieldCanAlwaysExpandToMaximumHeight:
-      return @(self.fhvc.headerView.canAlwaysExpandToMaximumHeight);
   }
 }
 
@@ -425,8 +421,6 @@ static const CGFloat kHeightScalar = 300;
     sliderItem(@"Maximum", FlexibleHeaderConfiguratorFieldMaximumHeight),
     switchItem(@"Min / max height includes Safe Area",
                FlexibleHeaderConfiguratorFieldMinMaxHeightIncludeSafeArea),
-    switchItem(@"Can always expand to maximum height",
-               FlexibleHeaderConfiguratorFieldCanAlwaysExpandToMaximumHeight)
   ]);
 
   NSMutableArray *fillerItems = [NSMutableArray array];

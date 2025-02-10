@@ -14,11 +14,20 @@
 
 #import "MDCCollectionViewStyler.h"
 
+#import "MDCCollectionViewLayoutAttributes.h"
+#import "MDCCollectionViewStyling.h"
 #import "MDCCollectionViewStylingDelegate.h"
-#import "MaterialCollectionLayoutAttributes.h"
-#import "MaterialPalettes.h"
+#import "MDCPalettes.h"
+#import "UIColor+MaterialDynamic.h"
 
 #include <tgmath.h>
+
+#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
+// For code review, use the review queue listed in go/material-visionos-review.
+#define IS_VISIONOS 1
+#else
+#define IS_VISIONOS 0
+#endif
 
 typedef NS_OPTIONS(NSUInteger, BackgroundCacheKey) {
   BackgroundCacheKeyFlat = 0,
@@ -50,16 +59,14 @@ static const CGFloat kCollectionViewGridDefaultPadding = 4;
 static const CGSize kCellImageSize = {44, 44};
 static const CGFloat kCollectionViewCellDefaultBorderWidth = 1;
 static const CGFloat kCollectionViewCellDefaultBorderRadius = (CGFloat)1.5;
-static inline UIColor *kCollectionViewCellDefaultBorderColor() {
+static inline UIColor *kCollectionViewCellDefaultBorderColor(void) {
   return [UIColor colorWithWhite:0 alpha:(CGFloat)0.05];
 }
 
 /** Cell shadowing */
 static const CGFloat kCollectionViewCellDefaultShadowWidth = 1;
-static inline CGSize kCollectionViewCellDefaultShadowOffset() {
-  return CGSizeMake(0, 1);
-}
-static inline UIColor *kCollectionViewCellDefaultShadowColor() {
+static inline CGSize kCollectionViewCellDefaultShadowOffset(void) { return CGSizeMake(0, 1); }
+static inline UIColor *kCollectionViewCellDefaultShadowColor(void) {
   return [UIColor colorWithWhite:0 alpha:(CGFloat)0.1];
 }
 
@@ -89,6 +96,9 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
 
 /** An set of index paths for items that are inlaid. */
 @property(nonatomic, strong) NSMutableSet *inlaidIndexPathSet;
+
+/** The user interface style for the app. */
+@property(nonatomic) UIUserInterfaceStyle previousUserInterfaceStyle;
 
 @end
 
@@ -130,8 +140,16 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
     // Cell separator defaults.
     _separatorColor = MDCPalette.greyPalette.tint300;
     _separatorInset = UIEdgeInsetsZero;
+
+#if IS_VISIONOS
+    UITraitCollection *current = [UITraitCollection currentTraitCollection];
+    CGFloat scale = current ? [current displayScale] : 1.0;
+    _separatorLineHeight = kCollectionViewCellSeparatorDefaultHeightInPixels / scale;
+#else
     _separatorLineHeight =
         kCollectionViewCellSeparatorDefaultHeightInPixels / [[UIScreen mainScreen] scale];
+#endif
+
     _shouldHideSeparators = NO;
 
     // Grid defaults.
@@ -145,6 +163,8 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
 
     // Caching.
     _cellBackgroundCaches = [NSMutableDictionary dictionary];
+
+    _previousUserInterfaceStyle = self.collectionView.traitCollection.userInterfaceStyle;
   }
   return self;
 }
@@ -296,7 +316,13 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
   if ([self drawShadowForCellWithIsCardStye:isCardStyle
                                isGroupStyle:isGroupedStyle
                               isHighlighted:isHighlighted]) {
+#if IS_VISIONOS
+    UITraitCollection *current = [UITraitCollection currentTraitCollection];
+    CGFloat scale = current ? [current displayScale] : 1.0;
+    CGFloat mainScreenScale = scale;
+#else
     CGFloat mainScreenScale = [[UIScreen mainScreen] scale];
+#endif
     if (mainScreenScale > (CGFloat)2.1) {
       insets = kCollectionViewCellContentInsetsRetina3x;
     } else if (mainScreenScale > (CGFloat)1.1) {
@@ -491,8 +517,10 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
       [attr.representedElementKind isEqualToString:UICollectionElementKindSectionFooter];
   BOOL isDecorationView =
       attr.representedElementCategory == UICollectionElementCategoryDecorationView;
-  BOOL isTop = attr.sectionOrdinalPosition & MDCCollectionViewOrdinalPositionVerticalTop;
-  BOOL isBottom = attr.sectionOrdinalPosition & MDCCollectionViewOrdinalPositionVerticalBottom;
+  BOOL isTop =
+      (attr.sectionOrdinalPosition & MDCCollectionViewOrdinalPositionVerticalTop) ? YES : NO;
+  BOOL isBottom =
+      (attr.sectionOrdinalPosition & MDCCollectionViewOrdinalPositionVerticalBottom) ? YES : NO;
 
   MDCCollectionViewCellStyle cellStyle = [self cellStyleAtSectionIndex:attr.indexPath.section];
   BOOL isCardStyle = cellStyle == MDCCollectionViewCellStyleCard;
@@ -565,7 +593,8 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
     UIColor *customBackgroundColor = [_delegate collectionView:_collectionView
                                 cellBackgroundColorAtIndexPath:attr.indexPath];
     if (customBackgroundColor) {
-      backgroundColor = customBackgroundColor;
+      backgroundColor = [customBackgroundColor
+          mdc_resolvedColorWithTraitCollection:self.collectionView.traitCollection];
     }
   }
 
@@ -573,7 +602,9 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
   if (!cellBackgroundCache) {
     cellBackgroundCache = [self cellBackgroundCache];
     _cellBackgroundCaches[backgroundColor] = cellBackgroundCache;
-  } else if ([cellBackgroundCache pointerAtIndex:backgroundCacheKey]) {
+  } else if ([cellBackgroundCache pointerAtIndex:backgroundCacheKey] &&
+             self.previousUserInterfaceStyle ==
+                 self.collectionView.traitCollection.userInterfaceStyle) {
     return (__bridge UIImage *)[cellBackgroundCache pointerAtIndex:backgroundCacheKey];
   }
 
@@ -661,6 +692,7 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
   UIImage *resizableImage = [self resizableImage:image];
   [cellBackgroundCache replacePointerAtIndex:backgroundCacheKey
                                  withPointer:(__bridge void *)(resizableImage)];
+  self.previousUserInterfaceStyle = self.collectionView.traitCollection.userInterfaceStyle;
   return resizableImage;
 }
 
@@ -669,7 +701,13 @@ NS_INLINE CGRect RectShift(CGRect rect, CGFloat dx, CGFloat dy) {
 // We want to draw the borders and shadows on single retina-pixel boundaries if possible, but
 // we need to avoid doing this on non-retina devices because it'll look blurry.
 - (CGFloat)minPixelOffset {
+#if IS_VISIONOS
+  UITraitCollection *current = [UITraitCollection currentTraitCollection];
+  CGFloat scale = current ? [current displayScale] : 1.0;
+  return 1 / scale;
+#else
   return 1 / [[UIScreen mainScreen] scale];
+#endif
 }
 
 - (UIImage *)resizableImage:(UIImage *)image {

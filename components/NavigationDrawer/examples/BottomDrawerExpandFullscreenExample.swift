@@ -14,11 +14,11 @@
 
 import UIKit
 import MaterialComponents.MaterialBottomAppBar
-import MaterialComponents.MaterialColorScheme
 import MaterialComponents.MaterialNavigationDrawer
+import MaterialComponents.MaterialColorScheme
 
 class BottomDrawerExpandFullscreenExample: UIViewController {
-  @objc var colorScheme = MDCSemanticColorScheme()
+  @objc var colorScheme = MDCSemanticColorScheme(defaults: .material201804)
   let bottomAppBar = MDCBottomAppBarView()
 
   let headerViewController = DrawerHeaderViewController()
@@ -31,13 +31,13 @@ class BottomDrawerExpandFullscreenExample: UIViewController {
 
     bottomAppBar.isFloatingButtonHidden = true
     let barButtonLeadingItem = UIBarButtonItem()
-    let menuImage = UIImage(named:"Menu")?.withRenderingMode(.alwaysTemplate)
+    let menuImage = UIImage(named: "system_icons/menu")?.withRenderingMode(.alwaysTemplate)
     barButtonLeadingItem.image = menuImage
     barButtonLeadingItem.target = self
     barButtonLeadingItem.action = #selector(presentNavigationDrawer)
-    bottomAppBar.leadingBarButtonItems = [ barButtonLeadingItem ]
+    bottomAppBar.leadingBarButtonItems = [barButtonLeadingItem]
 
-    bottomAppBar.barTintColor = colorScheme.surfaceColor;
+    bottomAppBar.barTintColor = colorScheme.surfaceColor
     let barItemTintColor = colorScheme.onSurfaceColor.withAlphaComponent(0.6)
     bottomAppBar.leadingBarItemsTintColor = barItemTintColor
     bottomAppBar.trailingBarItemsTintColor = barItemTintColor
@@ -50,14 +50,13 @@ class BottomDrawerExpandFullscreenExample: UIViewController {
 
   private func layoutBottomAppBar() {
     let size = bottomAppBar.sizeThatFits(view.bounds.size)
-    var bottomBarViewFrame = CGRect(x: 0,
-                                    y: view.bounds.size.height - size.height,
-                                    width: size.width,
-                                    height: size.height)
-    if #available(iOS 11.0, *) {
-      bottomBarViewFrame.size.height += view.safeAreaInsets.bottom
-      bottomBarViewFrame.origin.y -= view.safeAreaInsets.bottom
-    }
+    var bottomBarViewFrame = CGRect(
+      x: 0,
+      y: view.bounds.size.height - size.height,
+      width: size.width,
+      height: size.height)
+    bottomBarViewFrame.size.height += view.safeAreaInsets.bottom
+    bottomBarViewFrame.origin.y -= view.safeAreaInsets.bottom
     bottomAppBar.frame = bottomBarViewFrame
   }
 
@@ -73,8 +72,9 @@ class BottomDrawerExpandFullscreenExample: UIViewController {
     contentViewController.drawerVC = bottomDrawerViewController
     bottomDrawerViewController.headerViewController = headerViewController
     bottomDrawerViewController.trackingScrollView = contentViewController.tableView
-    bottomDrawerViewController.headerViewController?.view.backgroundColor = colorScheme.surfaceColor;
-    bottomDrawerViewController.contentViewController?.view.backgroundColor = colorScheme.surfaceColor;
+    bottomDrawerViewController.headerViewController?.view.backgroundColor = colorScheme.surfaceColor
+    bottomDrawerViewController.contentViewController?.view.backgroundColor =
+      colorScheme.surfaceColor
     bottomDrawerViewController.scrimColor = colorScheme.onSurfaceColor.withAlphaComponent(0.32)
     present(bottomDrawerViewController, animated: true, completion: nil)
   }
@@ -101,12 +101,15 @@ class ExpandFullscreenContentViewController: UITableViewController {
     super.viewDidLayoutSubviews()
     if self.preferredContentSize == .zero {
       self.tableView.layoutIfNeeded()
-      self.preferredContentSize = CGSize(width: view.bounds.width,
-                                         height: tableView.contentSize.height)
+      self.preferredContentSize = CGSize(
+        width: view.bounds.width,
+        height: tableView.contentSize.height)
     }
   }
 
-  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+  override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath)
+    -> UITableViewCell
+  {
     let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
     cell.textLabel?.text = "cell #\(indexPath.item)"
     cell.backgroundColor = colorScheme.surfaceColor
@@ -124,9 +127,11 @@ class ExpandFullscreenContentViewController: UITableViewController {
 
   override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
     tableView.deselectRow(at: indexPath, animated: true)
-    drawerVC.expandToFullscreen(withDuration: 0.2, completion: { _ in
-      print("finished expanding");
-    })
+    drawerVC.expandToFullscreen(
+      withDuration: 0.2,
+      completion: { _ in
+        print("finished expanding")
+      })
   }
 
 }
@@ -139,6 +144,7 @@ extension BottomDrawerExpandFullscreenExample {
       "description": "Navigation Drawer",
       "primaryDemo": true,
       "presentable": true,
+      "skip_snapshots": true,
     ]
   }
 }

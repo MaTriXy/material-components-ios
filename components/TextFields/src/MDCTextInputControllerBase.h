@@ -14,7 +14,11 @@
 
 #import "MDCTextInputControllerFloatingPlaceholder.h"
 
-extern const CGFloat MDCTextInputControllerBaseDefaultBorderRadius;
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
 
 /**
  Base class providing floating placeholder animation and other functionality.
@@ -83,6 +87,13 @@ extern const CGFloat MDCTextInputControllerBaseDefaultBorderRadius;
 @property(nonatomic, nullable, strong) UIColor *borderStrokeColor;
 
 /**
+ The radius of the input field's border.
+
+ Default is 4.
+ */
+@property(nonatomic, assign) CGFloat borderRadius;
+
+/**
  Should the controller's .textInput grow vertically as new lines are added.
 
  If the text input does not conform to MDCMultilineTextInput, this parameter has no effect.
@@ -107,3 +118,5 @@ extern const CGFloat MDCTextInputControllerBaseDefaultBorderRadius;
 @property(nonatomic, assign) NSUInteger minimumLines;
 
 @end
+
+API_DEPRECATED_END

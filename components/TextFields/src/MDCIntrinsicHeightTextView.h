@@ -14,6 +14,12 @@
 
 #import <UIKit/UIKit.h>
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 /**
  This differs from UITextView in only one way: the intrinsicContentSize's height will never be
  UIViewNoIntrinsicMetric (-1). If [super intrinsicContentSize].height == -1, return the
@@ -21,7 +27,8 @@
 
  NOTE: UITextView is a subclass of UIScrollView. That's why it has a contentSize.
  */
-
 @interface MDCIntrinsicHeightTextView : UITextView
 
 @end
+
+API_DEPRECATED_END

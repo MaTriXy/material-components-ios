@@ -15,9 +15,15 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCBottomNavigationLargeItemDialogView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomNavigationLargeItemDialogView.h"
+#import "MDCSnapshotTestCase.h"
+#import "UIImage+MDCSnapshot.h"
+#import "UIView+MDCSnapshot.h"
+#pragma clang diagnostic pop
 
-#import "MaterialSnapshot.h"
+NS_ASSUME_NONNULL_BEGIN
 
 static const CGFloat kImageHeight = 75;
 static const CGFloat kImageWidth = 75;
@@ -111,25 +117,6 @@ static const CGFloat kImageWidth = 75;
 }
 
 #pragma mark - Test methods
-- (void)testWhiteBackgroundColor {
-  // Given
-  UITabBarItem *item = [[self class] tabBarItemWithTitleAndImage];
-  CGSize size = [[self class] mediumDialogSize];
-  UIColor *backgroundColor = UIColor.whiteColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
-
-- (void)testRedBackgroundColor {
-  // Given
-  UITabBarItem *item = [[self class] tabBarItemWithTitleAndImage];
-  CGSize size = [[self class] mediumDialogSize];
-  UIColor *backgroundColor = UIColor.redColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
 
 - (void)testGreenBackgroundColor {
   // Given
@@ -151,46 +138,6 @@ static const CGFloat kImageWidth = 75;
   [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
 }
 
-- (void)testSmallSize {
-  // Given
-  UITabBarItem *item = [[self class] tabBarItemWithTitleAndImage];
-  CGSize size = [[self class] smallDialogSize];
-  UIColor *backgroundColor = UIColor.whiteColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
-
-- (void)testLargeSize {
-  // Given
-  UITabBarItem *item = [[self class] tabBarItemWithTitleAndImage];
-  CGSize size = [[self class] largeDialogSize];
-  UIColor *backgroundColor = UIColor.whiteColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
-
-- (void)testOnlyTitle {
-  // Given
-  UITabBarItem *item = [[self class] tabBarItemWithOnlyTitle];
-  CGSize size = [[self class] mediumDialogSize];
-  UIColor *backgroundColor = UIColor.whiteColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
-
-- (void)testOnlyImage {
-  // Given
-  UITabBarItem *item = [[self class] tabBarItemWithOnlyImage];
-  CGSize size = [[self class] mediumDialogSize];
-  UIColor *backgroundColor = UIColor.whiteColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
-
 - (void)testImageAndLongTitle {
   // Given
   NSString *title = @"This is a really long tab bar item title";
@@ -204,15 +151,6 @@ static const CGFloat kImageWidth = 75;
   [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
 }
 
-- (void)testLongTitleOnly {
-  // Given
-  NSString *title = @"This is a really long tab bar item title";
-  UITabBarItem *item = [[UITabBarItem alloc] initWithTitle:title image:nil tag:0];
-  CGSize size = [[self class] mediumDialogSize];
-  UIColor *backgroundColor = UIColor.whiteColor;
-
-  // When/Then
-  [self verifyDialogWithItem:item size:size backgroundColor:backgroundColor];
-}
-
 @end
+
+NS_ASSUME_NONNULL_END

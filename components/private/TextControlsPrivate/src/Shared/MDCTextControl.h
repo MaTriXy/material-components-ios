@@ -15,21 +15,22 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+#import "MDCTextControlLabelBehavior.h"
+#import "MDCTextControlState.h"
 #import "MDCTextControlAssistiveLabelDrawPriority.h"
 #import "MDCTextControlColorViewModel.h"
+#import "MDCTextControlHorizontalPositioningReference.h"
 #import "MDCTextControlLabelAnimation.h"
-#import "MDCTextControlLabelBehavior.h"
-#import "MDCTextControlLabelPosition.h"
-#import "MDCTextControlState.h"
+#import "MDCTextControlLabelSupport.h"
 #import "MDCTextControlVerticalPositioningReference.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 UIFont *_Nonnull MDCTextControlDefaultUITextFieldFont(void);
-
-CGFloat MDCTextControlPaddingValueWithMinimumPadding(CGFloat minimumPadding,
-                                                     CGFloat maximumPadding,
-                                                     CGFloat density);
-
-CGFloat MDCTextControlNormalizeDensity(CGFloat density);
 
 FOUNDATION_EXTERN const CGFloat kMDCTextControlDefaultAnimationDuration;
 
@@ -58,16 +59,39 @@ FOUNDATION_EXTERN const CGFloat kMDCTextControlDefaultAnimationDuration;
 @property(nonatomic, assign, readonly) MDCTextControlLabelPosition labelPosition;
 
 /**
- The value for the label frame that should be used for style application. While style application
- takes place the value for @c label.frame is in flux, so @c labelFrame gives the style the final
- value for the label's frame.
+ The value for the floating label frame, to be used for style application.
  */
-@property(nonatomic, assign, readonly) CGRect labelFrame;
+@property(nonatomic, assign, readonly) CGRect floatingLabelFrame;
+
+/**
+ The value for the normal label frame, to be used for style application.
+ */
+@property(nonatomic, assign, readonly) CGRect normalLabelFrame;
 
 /**
  Describes the behavior of the label when the view begins editing.
  */
 @property(nonatomic, assign, readonly) MDCTextControlLabelBehavior labelBehavior;
+
+/**
+ This is an RTL-aware version of UITextField's leftView/rightView properties.
+ */
+@property(strong, nonatomic, nullable) UIView *leadingView;
+
+/**
+ This is an RTL-aware version of UITextField's leftView/rightView properties.
+ */
+@property(strong, nonatomic, nullable) UIView *trailingView;
+
+/**
+ This is an RTL-aware version of UITextField's leftViewMode/rightViewMode properties.
+ */
+@property(nonatomic, assign) UITextFieldViewMode leadingViewMode;
+
+/**
+ This is an RTL-aware version of UITextField's leftViewMode/rightViewMode properties.
+ */
+@property(nonatomic, assign) UITextFieldViewMode trailingViewMode;
 
 /**
  The @c label is a label that occupies the text area in a resting state with no text and that either
@@ -187,6 +211,15 @@ FOUNDATION_EXTERN const CGFloat kMDCTextControlDefaultAnimationDuration;
                                      textRowHeight:(CGFloat)textRowHeight
                                   numberOfTextRows:(CGFloat)numberOfTextRows
                                            density:(CGFloat)density
-                          preferredContainerHeight:(CGFloat)preferredContainerHeight;
+                          preferredContainerHeight:(CGFloat)preferredContainerHeight
+                            isMultilineTextControl:(BOOL)isMultilineTextControl;
+
+/**
+ This method returns an object that tells the view where to position its views
+ horizontally.
+ */
+- (nonnull MDCTextControlHorizontalPositioningReference *)horizontalPositioningReference;
 
 @end
+
+API_DEPRECATED_END

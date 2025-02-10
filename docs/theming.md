@@ -255,7 +255,7 @@ In Bazel:
 Replace any Themer import with the component's Theming import:
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 
 ```swift
 // Old
@@ -265,7 +265,7 @@ import MaterialComponents.MaterialTextFields_ColorThemer
 import MaterialComponents.MaterialTextFields_Theming
 ```
 
-##### Objective-C
+#### Objective-C
 
 ```objc
 // Old
@@ -282,11 +282,11 @@ Replace any Themer code with the equivalent use of a component's Theming extensi
 equivalent Theming extension is described in the Themer's header documentation.
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 
 ```swift
 // Old
-let colorScheme = MDCSemanticColorScheme()
+let colorScheme = MDCSemanticColorScheme(defaults: .material201804)
 MDCFilledTextFieldColorThemer.applySemanticColorScheme(colorScheme, to: textField)
 
 // New
@@ -294,11 +294,11 @@ let scheme = MDCContainerScheme()
 textField.applyTheme(withScheme: scheme)
 ```
 
-##### Objective-C
+#### Objective-C
 
 ```objc
 // Old
-MDCSemanticColorScheme *colorScheme = [[MDCSemanticColorScheme alloc] init];
+MDCSemanticColorScheme *colorScheme = [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
 [MDCFilledTextFieldColorThemer applySemanticColorScheme:colorScheme
                             toTextInputControllerFilled:textFields];
 
@@ -313,11 +313,11 @@ scheme's subsystem instances instead. If you are using a shared container scheme
 then you'll likely only need to make these customizations once.
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 
 ```swift
 // Old
-let colorScheme = MDCSemanticColorScheme()
+let colorScheme = MDCSemanticColorScheme(defaults: .material201804)
 colorScheme.primaryColor = .red
 
 // New
@@ -325,11 +325,11 @@ let scheme = MDCContainerScheme()
 scheme.colorScheme.primaryColor = .red
 ```
 
-##### Objective-C
+#### Objective-C
 
 ```objc
 // Old
-MDCSemanticColorScheme *colorScheme = [[MDCSemanticColorScheme alloc] init];
+MDCSemanticColorScheme *colorScheme = [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
 colorScheme.primaryColor = UIColor.redColor;
 
 // New

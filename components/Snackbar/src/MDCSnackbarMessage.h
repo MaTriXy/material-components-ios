@@ -23,6 +23,12 @@
 typedef void (^MDCSnackbarMessageCompletionHandler)(BOOL userInitiated);
 
 /**
+ Called when a message is finished displaying, regardless of whether or not buttons were tapped.
+ */
+typedef void (^MDCSnackbarMessageCompletionHandlerWithError)(BOOL userInitiated,
+                                                             NSError *_Nullable error);
+
+/**
  Called when the button in the Snackbar is tapped.
  */
 typedef void (^MDCSnackbarMessageActionHandler)(void);
@@ -93,8 +99,11 @@ extern NSString *__nonnull const MDCSnackbarMessageBoldAttributeName;
 /**
  Optional button to show along with the rest of the message.
 
- A MDCSnackbarMessageAction is displayed as a button on the Snackbar. If no action is set no button
+ A MDCSnackbarMessageAction is displayed as a button on the Snackbar. If no action is set, no button
  will appear on the Snackbar.
+
+ Attempting to set this property to an action with a nil or empty title will cause this property to
+ be nil.
  */
 @property(nonatomic, strong, nullable) MDCSnackbarMessageAction *action;
 
@@ -124,11 +133,44 @@ extern NSString *__nonnull const MDCSnackbarMessageBoldAttributeName;
 @property(nonatomic, copy, nullable) MDCSnackbarMessageCompletionHandler completionHandler;
 
 /**
+ Called when a message is finished displaying.
+
+ The message completion handler is called regardless of whether or not buttons were tapped and is
+ always called on the main thread.
+ */
+@property(nonatomic, copy, nullable)
+    MDCSnackbarMessageCompletionHandlerWithError completionHandlerWithError;
+
+/**
  The category of messages to which a message belongs.
 
  Default is nil. If set, only the last message of this category will be shown, any currently
  showing or pending messages in this category will be dismissed as if the user had directly tapped
  the Snackbar.
+
+ ### How categorization affects message queuing
+
+ When category is nil, this message will dismiss both any visible message and all queued messages
+ in order to enable this message to appear as quickly as possible. This means that any queued
+ messages that were dismissed will not be shown to the user. This behavior intentionally minimizes
+ excessive snackbar message queuing.
+
+ If you want messages to be queued without dismissing existing messages, then you will need to make
+ consistent use of the `category` property on `MDCSnackbarMessage`.
+
+ #### How message categories affect message queuing
+
+ If a message is currently visible that has no category, and a new message with category A is shown,
+ then the new message will be queued until the visible message is dismissed.
+
+ If a message is currently visible with category A and a new message with category A is shown, then
+ the visible message will be immediately dismissed and the new message will be shown directly after.
+
+ If a message is currently visible with category A and a new message with category B is shown, then
+ the new message will be queued and displayed once the visible message is dismissed.
+
+ Remember: in all cases, if a new message without a category is shown then both any visible message
+ *and* all queued messages will be dismissed.
  */
 @property(nonatomic, copy, nullable) NSString *category;
 
@@ -138,6 +180,11 @@ extern NSString *__nonnull const MDCSnackbarMessageBoldAttributeName;
 @property(nonatomic, copy, nullable) NSString *accessibilityLabel;
 
 /**
+ An attributed label that can be used to set priority for the accessibility announcement.
+ */
+@property(nonatomic, copy, nullable) NSAttributedString *attributedAccessibilityLabel;
+
+/**
  Redeclaration from UIAccessibility to make clear that this class supports accessibility hints.
  */
 @property(nonatomic, copy, nullable) NSString *accessibilityHint;
@@ -145,7 +192,7 @@ extern NSString *__nonnull const MDCSnackbarMessageBoldAttributeName;
 /**
  Text that should be read when the message appears on screen and VoiceOver is enabled.
  */
-@property(nonatomic, readonly, nullable) NSString *voiceNotificationText;
+@property(nonatomic, readonly, nullable) NSAttributedString *voiceNotificationText;
 
 /**
  By setting this property to @c YES, the Ripple component will be used instead of Ink
@@ -191,12 +238,42 @@ extern NSString *__nonnull const MDCSnackbarMessageBoldAttributeName;
  Whether the Snackbar message is transient and automatically dismisses after the provided @c
  duration time or is not transient and will not dismiss automatically.
 
- @note: If VoiceOver is turned on, a snackbar will not automatically dismiss if the snackbar has an
- action, regardless of this property.
+ @note: If the snackbar has an action, it will not dismiss automatically, regardless of the value of
+ this property, unless @c usesLegacyDismissalBehavior is enabled.
 
  Defaults to YES.
  */
 @property(nonatomic) BOOL automaticallyDismisses;
+
+/**
+ Allows the snackbar to auto-dismiss even if it has an action. Default is NO.
+
+ This property has no effect on snackbars without an action. Using the legacy behavior for snackbars
+ with an action is not GAR-compliant (go/GAR-mobile#timeout).
+ */
+@property(nonatomic) BOOL usesLegacyDismissalBehavior;
+
+/**
+ MDCSnackbarManager.defaultManager will display the snackbar message in this view.
+
+ Call this method to choose where in the view hierarchy this specific snackbar message will be
+ presented. This method should be called only in cases where the default behavior is unable to find
+ the correct view to place the snackbar message in. Furthermore, please set this property only if
+ this message is a special case and needs to be presented on a view different than the other
+ messages of this specific snackbar manager. Otherwise, please set the presentation host view by
+ using MDCSnackbarManager's @c setPresentationHostView.
+ */
+@property(nonatomic, weak, nullable) UIView *presentationHostViewOverride;
+
+/**
+ If true, the snackbar is dismissed when the user taps anywhere on the overlay.
+
+ @note: If VoiceOver is turned on, this value will be ignored and the snackbar will behave as if it
+ were set to NO.
+
+ Defaults to NO.
+ */
+@property(nonatomic) BOOL shouldDismissOnOverlayTap;
 
 @end
 
@@ -207,6 +284,8 @@ extern NSString *__nonnull const MDCSnackbarMessageBoldAttributeName;
 
 /**
  The title text on the button.
+
+ If this property is set to nil or an empty string, it will not be changed from its current value.
  */
 @property(nonatomic, copy, nullable) NSString *title;
 

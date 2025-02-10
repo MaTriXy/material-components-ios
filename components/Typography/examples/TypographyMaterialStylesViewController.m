@@ -14,7 +14,8 @@
 
 #import "TypographyMaterialStylesViewController.h"
 
-#import "MaterialTypography.h"
+#import "MDCFontTextStyle.h"
+#import "UIFont+MaterialTypography.h"
 
 @implementation TypographyMaterialStyleViewController {
   NSArray<NSString *> *_strings;
@@ -45,10 +46,7 @@
     @"Button Font", @"Button Font (Dynamic Type-enabled)",
 
     // Display fonts (extra large fonts)
-    @"Display 1 Font", @"Display 1 Font (Dynamic Type-enabled)", @"Display 2 Font",
-    @"Display 2 Font (Dynamic Type-enabled)", @"Display 3 Font",
-    @"Display 3 Font (Dynamic Type-enabled)", @"Display 4 Font",
-    @"Display 4 Font (Dynamic Type-enabled)"
+    @"Display 1 Font", @"Display 1 Font (Dynamic Type-enabled)"
   ];
 
   _styleFonts = @[
@@ -68,12 +66,6 @@
     [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleButton],
     [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay1],
     [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay1],
-    [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay2],
-    [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay2],
-    [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay3],
-    [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay3],
-    [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay4],
-    [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay4]
   ];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -93,17 +85,15 @@
   UIKIT_EXTERN const CGFloat UIFontWeightBlack NS_AVAILABLE_IOS(8_2);
 */
 
-  if (@available(iOS 8.2, *)) {
-    NSLog(@"UIFontWeightUltraLight %f", UIFontWeightUltraLight);
-    NSLog(@"UIFontWeightThin %f", UIFontWeightThin);
-    NSLog(@"UIFontWeightLight %f", UIFontWeightLight);
-    NSLog(@"UIFontWeightRegular %f", UIFontWeightRegular);
-    NSLog(@"UIFontWeightMedium %f", UIFontWeightMedium);
-    NSLog(@"UIFontWeightSemibold %f", UIFontWeightSemibold);
-    NSLog(@"UIFontWeightBold %f", UIFontWeightBold);
-    NSLog(@"UIFontWeightHeavy %f", UIFontWeightHeavy);
-    NSLog(@"UIFontWeightBlack %f", UIFontWeightBlack);
-  }
+  NSLog(@"UIFontWeightUltraLight %f", UIFontWeightUltraLight);
+  NSLog(@"UIFontWeightThin %f", UIFontWeightThin);
+  NSLog(@"UIFontWeightLight %f", UIFontWeightLight);
+  NSLog(@"UIFontWeightRegular %f", UIFontWeightRegular);
+  NSLog(@"UIFontWeightMedium %f", UIFontWeightMedium);
+  NSLog(@"UIFontWeightSemibold %f", UIFontWeightSemibold);
+  NSLog(@"UIFontWeightBold %f", UIFontWeightBold);
+  NSLog(@"UIFontWeightHeavy %f", UIFontWeightHeavy);
+  NSLog(@"UIFontWeightBlack %f", UIFontWeightBlack);
 
   UIFont *defaultFont = [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleBody1];
   NSLog(@"Font Family : %@", defaultFont.familyName);
@@ -131,12 +121,6 @@
     [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleButton],
     [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay1],
     [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay1],
-    [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay2],
-    [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay2],
-    [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay3],
-    [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay3],
-    [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleDisplay4],
-    [UIFont mdc_preferredFontForMaterialTextStyle:MDCFontTextStyleDisplay4]
   ];
 
   [self.tableView reloadData];

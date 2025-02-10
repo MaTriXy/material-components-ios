@@ -18,7 +18,7 @@ import MaterialComponents.MaterialSnackbar
 class SnackbarManagerSwiftTests: XCTestCase {
 
   override func tearDown() {
-    MDCSnackbarManager.dismissAndCallCompletionBlocks(withCategory: nil)
+    MDCSnackbarManager.default.dismissAndCallCompletionBlocks(withCategory: nil)
     super.tearDown()
   }
 
@@ -28,14 +28,14 @@ class SnackbarManagerSwiftTests: XCTestCase {
 
     let suspendedMessage = MDCSnackbarMessage(text: "")
     suspendedMessage.duration = 0.05
-    suspendedMessage.completionHandler = { (userInitiated) -> Void  in
+    suspendedMessage.completionHandler = { (userInitiated) -> Void in
       expectation.fulfill()
     }
 
     // Encourage the runtime to deallocate the token immediately
     autoreleasepool {
-      var token = MDCSnackbarManager.suspendAllMessages()
-      MDCSnackbarManager.show(suspendedMessage)
+      var token = MDCSnackbarManager.default.suspendAllMessages()
+      MDCSnackbarManager.default.show(suspendedMessage)
       token = nil
 
       // When
@@ -49,15 +49,15 @@ class SnackbarManagerSwiftTests: XCTestCase {
 
   func testHasMessagesShowingOrQueued() {
     let message = MDCSnackbarMessage(text: "foo1")
-    message.duration = 10;
-    MDCSnackbarManager.show(message)
+    message.duration = 10
+    MDCSnackbarManager.default.show(message)
 
     let expectation = self.expectation(description: "has_shown_message")
 
     // We need to dispatch_async in order to assure that the assertion happens after showMessage:
     // actually displays the message.
     DispatchQueue.main.async {
-      XCTAssertTrue(MDCSnackbarManager.hasMessagesShowingOrQueued())
+      XCTAssertTrue(MDCSnackbarManager.default.hasMessagesShowingOrQueued())
       expectation.fulfill()
     }
 

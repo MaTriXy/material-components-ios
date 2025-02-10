@@ -14,12 +14,21 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCSlider+Private.h"
-#import "MaterialPalettes.h"
-#import "MaterialSlider.h"
-#import "MaterialThumbTrack.h"
-#import "MaterialTypography.h"
+#import "MDCPalettes.h"
+#import "MDCShadowElevations.h"
+#import "MDCSlider.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSlider+Private.h"
+#pragma clang diagnostic pop
 #import "MockUIImpactFeedbackGenerator.h"
+#import "MDCTypography.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCThumbTrack.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 static const int kNumberOfRepeats = 20;
 static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
@@ -971,14 +980,12 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
 
 #pragma mark - Thumb
 
-- (void)testThumbRadiusDefault {
+- (void)testThumbDefaults {
   // Then
   XCTAssertEqualWithAccuracy(self.slider.thumbRadius, 6, kEpsilonAccuracy);
-}
-
-- (void)testThumbElevationDefault {
-  // Then
+  XCTAssertEqualWithAccuracy(self.slider.thumbBorderWidth, 2, kEpsilonAccuracy);
   XCTAssertEqualWithAccuracy(self.slider.thumbElevation, MDCShadowElevationNone, kEpsilonAccuracy);
+  XCTAssertFalse(self.slider.thumbIsSmallerWhenDisabled);
 }
 
 #pragma mark Numeric value label
@@ -1252,39 +1259,31 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
 }
 
 - (void)testDefaultHapticsEnabledValue {
-  if (@available(iOS 10.0, *)) {
-    // Then
-    XCTAssertTrue(self.slider.hapticsEnabled);
-  } else {
-    XCTAssertFalse(self.slider.hapticsEnabled);
-  }
+  // Then
+  XCTAssertTrue(self.slider.hapticsEnabled);
 }
 
 - (void)testDefaultsSouldEnableHapticsForAllDiscreteValuesValue {
-  if (@available(iOS 10.0, *)) {
-    for (NSUInteger i = 0; i < 5; ++i) {
-      // When
-      self.slider.numberOfDiscreteValues = i;
+  for (NSUInteger i = 0; i < 5; ++i) {
+    // When
+    self.slider.numberOfDiscreteValues = i;
 
-      // Then
-      XCTAssertFalse(self.slider.shouldEnableHapticsForAllDiscreteValues);
-    }
+    // Then
+    XCTAssertFalse(self.slider.shouldEnableHapticsForAllDiscreteValues);
   }
 }
 
 - (void)testSettingShouldEnableHapticsForAllDiscreteValuesValue {
-  if (@available(iOS 10.0, *)) {
-    for (NSUInteger i = 0; i < 5; ++i) {
-      // When
-      self.slider.numberOfDiscreteValues = i;
-      self.slider.shouldEnableHapticsForAllDiscreteValues = YES;
+  for (NSUInteger i = 0; i < 5; ++i) {
+    // When
+    self.slider.numberOfDiscreteValues = i;
+    self.slider.shouldEnableHapticsForAllDiscreteValues = YES;
 
-      // Then
-      if (i == 0 || i == 1) {
-        XCTAssertFalse(self.slider.shouldEnableHapticsForAllDiscreteValues);
-      } else {
-        XCTAssertTrue(self.slider.shouldEnableHapticsForAllDiscreteValues);
-      }
+    // Then
+    if (i == 0 || i == 1) {
+      XCTAssertFalse(self.slider.shouldEnableHapticsForAllDiscreteValues);
+    } else {
+      XCTAssertTrue(self.slider.shouldEnableHapticsForAllDiscreteValues);
     }
   }
 }
@@ -1295,23 +1294,21 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
   self.slider.maximumValue = 5;
   self.slider.hapticsEnabled = YES;
 
-  if (@available(iOS 10.0, *)) {
-    _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
-    self.slider.feedbackGenerator = _mockFeedbackGenerator;
-    for (NSUInteger i = 0; i < 6; ++i) {
-      self.slider.value = i;
+  _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
+  self.slider.feedbackGenerator = _mockFeedbackGenerator;
+  for (NSUInteger i = 0; i < 6; ++i) {
+    self.slider.value = i;
 
-      // When
-      [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
+    // When
+    [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
 
-      // Then
-      if (i == 0 || i == 5) {
-        XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
-      } else {
-        XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
-      }
-      _mockFeedbackGenerator.impactHasOccurred = NO;
+    // Then
+    if (i == 0 || i == 5) {
+      XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
+    } else {
+      XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
     }
+    _mockFeedbackGenerator.impactHasOccurred = NO;
   }
 }
 
@@ -1321,20 +1318,18 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
   self.slider.maximumValue = 5;
   self.slider.hapticsEnabled = NO;
 
-  if (@available(iOS 10.0, *)) {
-    _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
-    self.slider.feedbackGenerator = _mockFeedbackGenerator;
-    for (NSUInteger i = 0; i < 6; ++i) {
-      self.slider.value = i;
+  _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
+  self.slider.feedbackGenerator = _mockFeedbackGenerator;
+  for (NSUInteger i = 0; i < 6; ++i) {
+    self.slider.value = i;
 
-      // When
-      [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
+    // When
+    [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
 
-      // Then
-      XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
+    // Then
+    XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
 
-      _mockFeedbackGenerator.impactHasOccurred = NO;
-    }
+    _mockFeedbackGenerator.impactHasOccurred = NO;
   }
 }
 
@@ -1346,20 +1341,18 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
   self.slider.numberOfDiscreteValues = 2;
   self.slider.shouldEnableHapticsForAllDiscreteValues = YES;
 
-  if (@available(iOS 10.0, *)) {
-    _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
-    self.slider.feedbackGenerator = _mockFeedbackGenerator;
-    for (NSUInteger i = 0; i < 6; ++i) {
-      self.slider.value = i;
+  _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
+  self.slider.feedbackGenerator = _mockFeedbackGenerator;
+  for (NSUInteger i = 0; i < 6; ++i) {
+    self.slider.value = i;
 
-      // When
-      [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
+    // When
+    [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
 
-      // Then
-      XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
+    // Then
+    XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
 
-      _mockFeedbackGenerator.impactHasOccurred = NO;
-    }
+    _mockFeedbackGenerator.impactHasOccurred = NO;
   }
 }
 
@@ -1371,20 +1364,18 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
   self.slider.numberOfDiscreteValues = 6;
   self.slider.shouldEnableHapticsForAllDiscreteValues = YES;
 
-  if (@available(iOS 10.0, *)) {
-    _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
-    self.slider.feedbackGenerator = _mockFeedbackGenerator;
-    for (NSUInteger i = 0; i < 6; ++i) {
-      self.slider.thumbTrack.value = i;
+  _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
+  self.slider.feedbackGenerator = _mockFeedbackGenerator;
+  for (NSUInteger i = 0; i < 6; ++i) {
+    self.slider.thumbTrack.value = i;
 
-      // When
-      [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
+    // When
+    [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
 
-      // Then
-      XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
+    // Then
+    XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
 
-      _mockFeedbackGenerator.impactHasOccurred = NO;
-    }
+    _mockFeedbackGenerator.impactHasOccurred = NO;
   }
 }
 
@@ -1395,23 +1386,21 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
   self.slider.hapticsEnabled = YES;
   self.slider.filledTrackAnchorValue = 4.5;
 
-  if (@available(iOS 10.0, *)) {
-    _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
-    self.slider.feedbackGenerator = _mockFeedbackGenerator;
-    for (NSUInteger i = 1; i < 9; i++) {
-      self.slider.thumbTrack.value = i;
+  _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
+  self.slider.feedbackGenerator = _mockFeedbackGenerator;
+  for (NSUInteger i = 1; i < 9; i++) {
+    self.slider.thumbTrack.value = i;
 
-      // When
-      [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
+    // When
+    [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
 
-      // Then
-      if (i == 5) {
-        XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
-      } else {
-        XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
-      }
-      _mockFeedbackGenerator.impactHasOccurred = NO;
+    // Then
+    if (i == 5) {
+      XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
+    } else {
+      XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
     }
+    _mockFeedbackGenerator.impactHasOccurred = NO;
   }
 }
 
@@ -1422,23 +1411,21 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
   self.slider.hapticsEnabled = YES;
   self.slider.filledTrackAnchorValue = 5;
 
-  if (@available(iOS 10.0, *)) {
-    _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
-    self.slider.feedbackGenerator = _mockFeedbackGenerator;
-    for (NSUInteger i = 1; i < 10; i++) {
-      self.slider.thumbTrack.value = i;
+  _mockFeedbackGenerator = [[MockUIImpactFeedbackGenerator alloc] init];
+  self.slider.feedbackGenerator = _mockFeedbackGenerator;
+  for (NSUInteger i = 1; i < 10; i++) {
+    self.slider.thumbTrack.value = i;
 
-      // When
-      [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
+    // When
+    [self.slider thumbTrackValueChanged:self.slider.thumbTrack];
 
-      // Then
-      if (i == 5) {
-        XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
-      } else {
-        XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
-      }
-      _mockFeedbackGenerator.impactHasOccurred = NO;
+    // Then
+    if (i == 5) {
+      XCTAssertTrue(_mockFeedbackGenerator.impactHasOccurred);
+    } else {
+      XCTAssertFalse(_mockFeedbackGenerator.impactHasOccurred);
     }
+    _mockFeedbackGenerator.impactHasOccurred = NO;
   }
 }
 
@@ -1560,3 +1547,5 @@ static const CGFloat kEpsilonAccuracy = (CGFloat)0.001;
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -17,6 +17,12 @@
 #import "MDCTextInput.h"
 #import "MaterialElevation.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 /** When text is manually set via .text or setText:, this notification fires. */
 extern NSString *_Nonnull const MDCTextFieldTextDidSetTextNotification;
 
@@ -64,3 +70,5 @@ extern NSString *_Nonnull const MDCTextInputDidToggleEnabledNotification;
     (MDCTextField *_Nonnull textField, UITraitCollection *_Nullable previousTraitCollection);
 
 @end
+
+API_DEPRECATED_END

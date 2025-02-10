@@ -14,34 +14,36 @@
 
 #import "MDCTextInputControllerFullWidth.h"
 
+#import "MDCPalettes.h"
 #import "MDCIntrinsicHeightTextView.h"
 #import "MDCMultilineTextField.h"
 #import "MDCTextField.h"
 #import "MDCTextInput.h"
 #import "MDCTextInputCharacterCounter.h"
+#import "MDCTextInputController.h"
 #import "MDCTextInputUnderlineView.h"
 
-#import "MaterialAnimationTiming.h"
-#import "MaterialMath.h"
-#import "MaterialPalettes.h"
-#import "MaterialTypography.h"
+#import "MDCFontTextStyle.h"
+#import "UIFont+MaterialTypography.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 
 static const CGFloat MDCTextInputControllerFullWidthHintTextOpacity = (CGFloat)0.54;
 static const CGFloat MDCTextInputControllerFullWidthHorizontalInnerPadding = 8;
 static const CGFloat MDCTextInputControllerFullWidthHorizontalPadding = 16;
 static const CGFloat MDCTextInputControllerFullWidthVerticalPadding = 20;
 
-static inline UIColor *MDCTextInputControllerFullWidthInlinePlaceholderTextColorDefault() {
+static inline UIColor *MDCTextInputControllerFullWidthInlinePlaceholderTextColorDefault(void) {
   return [UIColor colorWithWhite:0 alpha:MDCTextInputControllerFullWidthHintTextOpacity];
 }
 
-static inline UIColor *MDCTextInputControllerFullWidthErrorColorDefault() {
+static inline UIColor *MDCTextInputControllerFullWidthErrorColorDefault(void) {
   return [MDCPalette redPalette].accent400;
 }
 
 #pragma mark - Class Properties
 
-static BOOL _mdc_adjustsFontForContentSizeCategoryDefault = NO;
 static UIColor *_backgroundColorDefault;
 static UIColor *_errorColorDefault;
 static UIColor *_inlinePlaceholderColorDefault;
@@ -169,9 +171,7 @@ static UIFont *_trailingUnderlineLabelFontDefault;
   }
 
   // This controller will handle Dynamic Type and all fonts for the text input
-  _mdc_adjustsFontForContentSizeCategory =
-      _textInput.mdc_adjustsFontForContentSizeCategory ||
-      [self class].mdc_adjustsFontForContentSizeCategoryDefault;
+  _mdc_adjustsFontForContentSizeCategory = _textInput.mdc_adjustsFontForContentSizeCategory || NO;
   _textInput.mdc_adjustsFontForContentSizeCategory = NO;
   _textInput.positioningDelegate = self;
 
@@ -911,7 +911,7 @@ static UIFont *_trailingUnderlineLabelFontDefault;
 
     CGFloat scale = UIScreen.mainScreen.scale;
     CGFloat characterCountHeightConstant =
-        MDCCeil(((MDCMultilineTextField *)self.textInput).textView.font.lineHeight * scale) / scale;
+        ceil(((MDCMultilineTextField *)self.textInput).textView.font.lineHeight * scale) / scale;
     if (!self.multilineCharacterCountHeight) {
       self.multilineCharacterCountHeight =
           [NSLayoutConstraint constraintWithItem:self.textInput.trailingUnderlineLabel
@@ -976,7 +976,7 @@ static UIFont *_trailingUnderlineLabelFontDefault;
 
  The vertical layout is, simply:
  MDCTextInputControllerFullWidthVerticalPadding                       // Top padding
- MDCRint(MAX(self.textInput.font.lineHeight,                          // Text field or placeholder
+ rint(MAX(self.textInput.font.lineHeight,                          // Text field or placeholder
              self.textInput.placeholderLabel.font.lineHeight))
  MDCTextInputControllerFullWidthVerticalPadding                       // Bottom padding
  */
@@ -996,14 +996,14 @@ static UIFont *_trailingUnderlineLabelFontDefault;
   // The trailing label gets in the way. If it has a frame, it's used. But if not, an
   // estimate is made of the size the text will be.
   if (CGRectGetWidth(self.textInput.trailingUnderlineLabel.frame) > 1) {
-    textInsets.right += MDCCeil(CGRectGetWidth(self.textInput.trailingUnderlineLabel.frame));
+    textInsets.right += ceil(CGRectGetWidth(self.textInput.trailingUnderlineLabel.frame));
   } else if (self.characterCountMax) {
     CGRect charCountRect = [[self characterCountText]
         boundingRectWithSize:self.textInput.bounds.size
                      options:NSStringDrawingUsesLineFragmentOrigin
                   attributes:@{NSFontAttributeName : self.textInput.trailingUnderlineLabel.font}
                      context:nil];
-    textInsets.right += MDCCeil(CGRectGetWidth(charCountRect));
+    textInsets.right += ceil(CGRectGetWidth(charCountRect));
   }
 
   return textInsets;
@@ -1192,17 +1192,10 @@ static UIFont *_trailingUnderlineLabelFontDefault;
   }
 }
 
-+ (BOOL)mdc_adjustsFontForContentSizeCategoryDefault {
-  return _mdc_adjustsFontForContentSizeCategoryDefault;
-}
-
-+ (void)setMdc_adjustsFontForContentSizeCategoryDefault:
-    (BOOL)mdc_adjustsFontForContentSizeCategoryDefault {
-  _mdc_adjustsFontForContentSizeCategoryDefault = mdc_adjustsFontForContentSizeCategoryDefault;
-}
-
 - (void)contentSizeCategoryDidChange:(__unused NSNotification *)notification {
   [self updateLayout];
 }
 
 @end
+
+#pragma clang diagnostic pop

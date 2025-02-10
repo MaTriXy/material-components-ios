@@ -12,4 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MDCBottomNavigationBar.h"
+#import "MDCBottomNavigationBar.h"  // IWYU pragma: keep
+#import "MDCBottomNavigationBarControllerDelegate.h"  // IWYU pragma: keep
+#import "MDCBottomNavigationBarDelegate.h"  // IWYU pragma: keep

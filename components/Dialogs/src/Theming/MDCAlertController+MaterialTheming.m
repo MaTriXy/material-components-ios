@@ -12,11 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <MaterialComponents/MDCAlertController+ButtonForAction.h>
-#import <MaterialComponents/MaterialDialogs+ColorThemer.h>
-#import <MaterialComponents/MaterialDialogs+TypographyThemer.h>
-#import <MaterialComponents/MaterialShadowElevations.h>
-#import "MaterialButtons+Theming.h"
+#import "MDCButton.h"
+#import "MDCButton+MaterialTheming.h"
+#import "MDCAlertController+ButtonForAction.h"  // TODO(b/126884296): One-off transformation needs fixing in copy.bara.sky
+#import "MDCAlertController.h"
+#import "MDCShadowElevations.h"
+#import "MDCSemanticColorScheme.h"
+#import "MDCContainerScheme.h"
+#import "MDCTypographyScheme.h"
+#import "MDCTypographyScheming.h"
 
 static const CGFloat kCornerRadius = 4;
 
@@ -41,6 +45,9 @@ static const CGFloat kCornerRadius = 4;
   // Buttons
   for (MDCAlertAction *action in self.actions) {
     MDCButton *button = [self buttonForAction:action];
+    if (!button) {
+      continue;
+    }
     // todo: b/117265609: Incorporate dynamic type support in semantic themers
     switch (action.emphasis) {
       case MDCActionEmphasisHigh:
@@ -74,6 +81,7 @@ static const CGFloat kCornerRadius = 4;
 
   self.titleColor = [colorScheme.onSurfaceColor colorWithAlphaComponent:(CGFloat)0.87];
   self.messageColor = [colorScheme.onSurfaceColor colorWithAlphaComponent:(CGFloat)0.60];
+  self.attributedLinkColor = colorScheme.primaryColor;
   self.titleIconTintColor = colorScheme.primaryColor;
   self.scrimColor = [colorScheme.onSurfaceColor colorWithAlphaComponent:(CGFloat)0.32];
   self.backgroundColor = colorScheme.surfaceColor;

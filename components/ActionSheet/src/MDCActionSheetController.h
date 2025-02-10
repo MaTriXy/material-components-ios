@@ -12,26 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "MDCMinimumOS.h"  // IWYU pragma: keep
+
 #import <UIKit/UIKit.h>
 
+#import "MDCActionSheetAction.h"
+#import "MDCBottomSheetTransitionControllerDelegate.h"
 #import "MaterialBottomSheet.h"
 #import "MaterialElevation.h"
 
 @class MDCActionSheetAction;
 @class MDCActionSheetController;
+@protocol MDCActionSheetControllerDelegate;
 
-/**
- Defines methods that allows the adopting delegate to respond to messages from an
- @c MDCActionSheetController.
- */
-@protocol MDCActionSheetControllerDelegate <NSObject>
-@optional
-
-/**
- Tells the delegate that the action sheet was dismissed.
- */
-- (void)actionSheetControllerDidDismiss:(nonnull MDCActionSheetController *)actionSheetController;
-@end
+API_DEPRECATED_BEGIN("🕘 Schedule time to migrate. "
+                     "Follow go/material-ios-menus to use UIMenu instead."
+                     "Use UIAlertController in action sheet style for destructive confirmations. "
+                     "This is go/material-ios-migrations#not-scriptable 🕘",
+                     ios(12, 12))
 
 /**
  MDCActionSheetController displays an alert message to the user, similar to
@@ -53,8 +51,10 @@
  in a sheet from the bottom.
 
  */
-__attribute__((objc_subclassing_restricted)) @interface MDCActionSheetController
-    : UIViewController<MDCElevatable, MDCElevationOverriding>
+__attribute__((objc_subclassing_restricted))
+@interface MDCActionSheetController
+    : UIViewController<MDCElevatable, MDCElevationOverriding, UIContentSizeCategoryAdjusting,
+                       MDCBottomSheetTransitionControllerDelegate>
 
 /**
  Designated initializer to create and return a view controller for displaying an alert to the user.
@@ -105,6 +105,13 @@ __attribute__((objc_subclassing_restricted)) @interface MDCActionSheetController
 - (void)addAction:(nonnull MDCActionSheetAction *)action;
 
 /**
+ Returns the view associated with a given @c action.
+
+ @param action The action used to create the view.
+ */
+- (nullable UIView *)viewForAction:(nonnull MDCActionSheetAction *)action;
+
+/**
  The object that acts as the delegate of the @c MDCActionSheetController
 */
 @property(nonatomic, weak, nullable) id<MDCActionSheetControllerDelegate> delegate;
@@ -139,20 +146,6 @@ __attribute__((objc_subclassing_restricted)) @interface MDCActionSheetController
 @property(nonatomic, copy, nullable) void (^traitCollectionDidChangeBlock)
     (MDCActionSheetController *_Nonnull actionSheet,
      UITraitCollection *_Nullable previousTraitCollection);
-
-/**
- Indicates whether the button should automatically update its font when the device’s
- UIContentSizeCategory is changed.
-
- This property is modeled after the adjustsFontForContentSizeCategory property in the
- UIContentSizeCategoryAdjusting protocol added by Apple in iOS 10.0.
-
- If set to YES, this button will base its text font on MDCFontTextStyleButton.
-
- Defaults value is NO.
- */
-@property(nonatomic, setter=mdc_setAdjustsFontForContentSizeCategory:)
-    BOOL mdc_adjustsFontForContentSizeCategory;
 
 /**
   The font applied to the title of the action sheet controller.
@@ -258,82 +251,4 @@ __attribute__((objc_subclassing_restricted)) @interface MDCActionSheetController
 
 @end
 
-/**
- MDCActionSheetActionHandler is a block that will be invoked when the action is
- selected.
- */
-typedef void (^MDCActionSheetHandler)(MDCActionSheetAction *_Nonnull action);
-
-/**
- An instance of MDCActionSheetAction is passed to MDCActionSheetController to
- add an action to the action sheet.
- */
-@interface MDCActionSheetAction : NSObject <NSCopying, UIAccessibilityIdentification>
-
-/**
- Returns an action sheet action with the populated given values.
-
- @param title The title of the list item shown in the list
- @param image The icon of the list item shown in the list
- @param handler A block to execute when the user selects the action.
- @return An initialized MDCActionSheetAction object.
- */
-+ (nonnull instancetype)actionWithTitle:(nonnull NSString *)title
-                                  image:(nullable UIImage *)image
-                                handler:(__nullable MDCActionSheetHandler)handler;
-
-/**
- Action sheet actions must be created with actionWithTitle:image:handler:
- */
-- (nonnull instancetype)init NS_UNAVAILABLE;
-
-/**
- Title of the list item shown on the action sheet.
-
- Action sheet actions must have a title that will be set within actionWithTitle:image:handler:
- method.
- */
-@property(nonatomic, nonnull, readonly) NSString *title;
-
-/**
- Image of the list item shown on the action sheet.
-
- Action sheet actions must have an image that will be set within actionWithTitle:image:handler:
- method.
-*/
-@property(nonatomic, nullable, readonly) UIImage *image;
-
-/**
- The @c accessibilityIdentifier for the view associated with this action.
- */
-@property(nonatomic, nullable, copy) NSString *accessibilityIdentifier;
-
-/**
- The color of the action title.
-
- @note If no @c titleColor is provided then the @c actionTextColor from the controller will be used.
- */
-@property(nonatomic, copy, nullable) UIColor *titleColor;
-
-/**
- The tint color of the action.
-
- @note If no @c tintColor is provided then the @c actionTintColor from the controller will be used.
- */
-@property(nonatomic, copy, nullable) UIColor *tintColor;
-
-/**
- The color of the divider at the top of the action.
-
- @note Defaults to clear.
- */
-@property(nonatomic, copy, nonnull) UIColor *dividerColor;
-
-/**
- Controls whether a divider is shown at the top of the action.
-
- @note Defaults to @c NO.
- */
-@property(nonatomic, assign) BOOL showsDivider;
-
-@end
+API_DEPRECATED_END

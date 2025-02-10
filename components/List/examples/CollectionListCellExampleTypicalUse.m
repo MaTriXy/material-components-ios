@@ -21,8 +21,6 @@ static NSString *const kReusableIdentifierItem = @"itemCellIdentifier";
 static NSString *const kExampleDetailText =
     @"Pellentesque non quam ornare, porta urna sed, malesuada felis. Praesent at gravida felis, "
      "non facilisis enim. Proin dapibus laoreet lorem, in viverra leo dapibus a.";
-static const CGFloat kSmallestCellHeight = 40;
-static const CGFloat kSmallArbitraryCellWidth = 100;
 
 @implementation CollectionListCellExampleTypicalUse {
   NSMutableArray *_content;
@@ -35,11 +33,7 @@ static const CGFloat kSmallArbitraryCellWidth = 100;
   flowLayout.minimumInteritemSpacing = 0;
   flowLayout.minimumLineSpacing = 1;
   flowLayout.scrollDirection = UICollectionViewScrollDirectionVertical;
-  if (@available(iOS 10.0, *)) {
-    flowLayout.estimatedItemSize = UICollectionViewFlowLayoutAutomaticSize;
-  } else {
-    flowLayout.estimatedItemSize = CGSizeMake(kSmallArbitraryCellWidth, kSmallestCellHeight);
-  }
+  flowLayout.estimatedItemSize = UICollectionViewFlowLayoutAutomaticSize;
   return [self initWithCollectionViewLayout:flowLayout];
 }
 
@@ -60,9 +54,7 @@ static const CGFloat kSmallArbitraryCellWidth = 100;
   self.collectionView.alwaysBounceVertical = YES;
   self.automaticallyAdjustsScrollViewInsets = NO;
   self.parentViewController.automaticallyAdjustsScrollViewInsets = NO;
-  if (@available(iOS 11.0, *)) {
-    self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
-  }
+  self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
   // Register cell class.
   [self.collectionView registerClass:[CollectionViewListCell class]
           forCellWithReuseIdentifier:kReusableIdentifierItem];
@@ -129,10 +121,8 @@ static const CGFloat kSmallArbitraryCellWidth = 100;
   [cell applyTypographyScheme:_typographyScheme];
   cell.mdc_adjustsFontForContentSizeCategory = YES;
   CGFloat cellWidth = CGRectGetWidth(collectionView.bounds);
-  if (@available(iOS 11.0, *)) {
-    cellWidth -=
-        (collectionView.adjustedContentInset.left + collectionView.adjustedContentInset.right);
-  }
+  cellWidth -=
+      (collectionView.adjustedContentInset.left + collectionView.adjustedContentInset.right);
   [cell setCellWidth:cellWidth];
   cell.titleLabel.text = _content[indexPath.item][0];
   cell.titleLabel.textAlignment = [_content[indexPath.item][1] integerValue];
@@ -166,7 +156,7 @@ static const CGFloat kSmallArbitraryCellWidth = 100;
 
 + (NSDictionary *)catalogMetadata {
   return @{
-    @"breadcrumbs" : @[ @"Lists", @"List Cell Example" ],
+    @"breadcrumbs" : @[ @"List Items", @"List Cell Example" ],
     @"description" : @"Material Collection Lists are continuous, vertical indexes of text "
                      @"or images.",
     @"primaryDemo" : @NO,

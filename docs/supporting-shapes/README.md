@@ -108,7 +108,7 @@ If the component uses ink ripples, we will need to add shapes support for it. Fo
 - (void)updateInkForShape {
   CGRect boundingBox = CGPathGetBoundingBox(self.layer.shapeLayer.path);
   self.inkView.maxRippleRadius =
-      (CGFloat)(MDCHypot(CGRectGetHeight(boundingBox), CGRectGetWidth(boundingBox)) / 2 + 10.f);
+      (CGFloat)(hypot(CGRectGetHeight(boundingBox), CGRectGetWidth(boundingBox)) / 2 + 10.f);
   self.inkView.layer.masksToBounds = NO;
 }
 ```
@@ -119,9 +119,9 @@ Now that our component can come in all different sizes and shapes, you will need
 
 ### Using Shapes in the already shape-supported components (Buttons / Cards)
 
-If the component already supports shapes, it then already has an accessible id<MDCShapeGenerating> shapeGenerator property.
+If the component already supports shapes, it then already has an accessible `id<MDCShapeGenerating>` shapeGenerator property.
 In that case you only need to set the shapeGenerator to a shape of your choice and the component will be contained in that shape. There are available examples here: 
- * <a href="../../components/Buttons/examples/ButtonsShapesExampleViewController.m">Shaped Buttons</a>
+ * <a href="../../components/Buttons/examples/ButtonsShapesExample.m">Shaped Buttons</a>
  * <a href="../../components/Cards/examples/ShapedCardViewController.swift ">Shaped Cards</a>
 
 ### Examples
@@ -131,7 +131,7 @@ In that case you only need to set the shapeGenerator to a shape of your choice a
 <img src="assets/diamondfab.gif" alt="Diamond FAB.">
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 ```swift
 let floatingButton = MDCFloatingButton()
 floatingButton.setImage(plusImage for:.normal)
@@ -143,7 +143,7 @@ floatingButton.shapeGenerator = floatingShapeGenerator
 self.view.addSubview(floatingButton)
 ```
 
-##### Objective-C
+#### Objective-C
 ```objc
 self.floatingButton = [[MDCFloatingButton alloc] init];
 [self.floatingButton setImage:plusImage forState:UIControlStateNormal];
@@ -162,7 +162,7 @@ self.floatingButton.shapeGenerator = floatingShapeGenerator;
 <img src="assets/cutcornersbutton.gif" alt="Cut Corners Button.">
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 ```swift
 let containedButton = MDCButton()
 containedButton.setTitle("Add To Cart" for:.normal)
@@ -176,7 +176,7 @@ containedButton.sizeToFit()
 self.view.addSubview(containedButton)
 ```
 
-##### Objective-C
+#### Objective-C
 ```objc
 MDCButton *containedButton = [[MDCButton alloc] init];
 [containedButton setTitle:@"Add To Cart" forState:UIControlStateNormal];
@@ -197,7 +197,7 @@ containedButton.shapeGenerator = raisedShapeGenerator;
 <img src="assets/cardcellcutcorner.gif" alt="Card Cell Cut Corner.">
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 ```swift
 func collectionView(_ collectionView: UICollectionView,
                     cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -209,7 +209,7 @@ func collectionView(_ collectionView: UICollectionView,
   return cell
 ```
 
-##### Objective-C
+#### Objective-C
 ```objc
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
@@ -230,7 +230,7 @@ func collectionView(_ collectionView: UICollectionView,
 <img src="assets/cardwithdiffcorners.gif" alt="Card With Different Corners.">
 
 <!--<div class="material-code-render" markdown="1">-->
-##### Swift
+#### Swift
 ```swift
 let card = MDCCard()
 let shapeGenerator = MDCRectangleShapeGenerator()
@@ -244,7 +244,7 @@ shapeGenerator.bottomRightCorner = curvedCorner
 card.shapeGenerator = shapeGenerator
 ```
 
-##### Objective-C
+#### Objective-C
 ```objc
 MDCCard *card = [[MDCCard alloc] init];
 MDCRectangleShapeGenerator *shapeGenerator =

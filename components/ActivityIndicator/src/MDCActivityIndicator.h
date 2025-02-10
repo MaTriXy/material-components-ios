@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "MDCMinimumOS.h"  // IWYU pragma: keep
+
 #import <UIKit/UIKit.h>
 
 @class MDCActivityIndicatorTransition;
@@ -63,7 +65,7 @@ IB_DESIGNABLE
 @property(nonatomic, assign) CGFloat radius UI_APPEARANCE_SELECTOR;
 
 /**
- Spinner stroke width. Defaults to 2dp.
+ Spinner stroke width. Defaults to 2.5.
  */
 @property(nonatomic, assign) CGFloat strokeWidth UI_APPEARANCE_SELECTOR;
 
@@ -147,32 +149,6 @@ IB_DESIGNABLE
      UITraitCollection *_Nullable previousTraitCollection);
 
 @end
-
-/**
- Delegate protocol for the MDCActivityIndicator.
- */
-@protocol MDCActivityIndicatorDelegate <NSObject>
-
-@optional
-/**
- When stop is called, the spinner gracefully animates out using opacity and stroke width.
- This method is called after that fade-out animation completes.
-
- @param activityIndicator Caller
- */
-- (void)activityIndicatorAnimationDidFinish:(nonnull MDCActivityIndicator *)activityIndicator;
-
-/**
- When setIndicatorMode:animated: is called the spinner animates the transition from the current
- mode to the new mode. This method is called after the animation completes or immediately if no
- animation is requested.
-
- @param activityIndicator Caller
- */
-- (void)activityIndicatorModeTransitionDidFinish:(nonnull MDCActivityIndicator *)activityIndicator;
-
-@end
-
 typedef void (^MDCActivityIndicatorAnimation)(CGFloat strokeStart, CGFloat strokeEnd);
 
 /**

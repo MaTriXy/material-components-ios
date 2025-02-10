@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialButtons+Theming.h"
-#import "MaterialButtons.h"
-#import "MaterialFeatureHighlight+ColorThemer.h"
-#import "MaterialFeatureHighlight+FeatureHighlightAccessibilityMutator.h"
-#import "MaterialFeatureHighlight.h"
 #import "supplemental/FeatureHighlightExampleSupplemental.h"
+#import "MaterialButtons.h"
+#import "MaterialButtons+Theming.h"
+#import "MaterialFeatureHighlight+ColorThemer.h"
+#import "MaterialFeatureHighlight.h"
+#import "MaterialColorScheme.h"
+#import "MaterialContainerScheme.h"
+#import "MaterialTypographyScheme.h"
 
 @implementation FeatureHighlightShownViewExample
 
@@ -40,7 +42,7 @@
 
 - (void)didTapButton:(id)sender {
   MDCFloatingButton *fab = [[MDCFloatingButton alloc] init];
-  [fab setImage:[UIImage imageNamed:@"Plus"] forState:UIControlStateNormal];
+  [fab setImage:[UIImage imageNamed:@"system_icons/add"] forState:UIControlStateNormal];
   [fab sizeToFit];
   fab.center = _button.center;
 
@@ -54,7 +56,6 @@
                                                                   [self fabDidTap:fab];
                                                                 }
                                                               }];
-  [MDCFeatureHighlightAccessibilityMutator mutate:vc];
   [MDCFeatureHighlightColorThemer applySemanticColorScheme:self.colorScheme
                           toFeatureHighlightViewController:vc];
   vc.titleFont = self.typographyScheme.headline6;

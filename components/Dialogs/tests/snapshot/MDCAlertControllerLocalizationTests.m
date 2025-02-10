@@ -15,9 +15,15 @@
 #import <CoreGraphics/CoreGraphics.h>
 #import <UIKit/UIKit.h>
 
-#import "MaterialDialogs.h"
-#import "MaterialSnapshot.h"
+#import "MDCButton.h"
+#import "MDCAlertController+ButtonForAction.h"
+#import "MDCAlertController.h"
+#import "MDCAlertController+Testing.h"
+#import "MDCSnapshotTestCase.h"
+#import "UIImage+MDCSnapshot.h"
+#import "UIView+MDCSnapshot.h"
 
+static NSString *const kThaiTextWithDiacritics = @"นี้ Thai text นี้";
 static NSString *const kTitleUrdu = @"عنوان";
 static NSString *const kMessageUrdu =
     @"براہ کرم اپنا نیٹ ورک کنکشن چیک کریں اور دوبارہ کوشش کریں۔براہ کرم اپنا نیٹ ورک کنکشن چیک "
@@ -64,6 +70,12 @@ static NSString *const kActionLowUrdu = @"کم";
   [super tearDown];
 }
 
+- (void)generateSizedSnapshotAndVerifyForAlert:(MDCAlertController *)alert {
+  CGSize preferredContentSize = self.alertController.preferredContentSize;
+  [alert sizeToFitContentInBounds:preferredContentSize];
+  [self generateSnapshotAndVerifyForView:alert.view];
+}
+
 - (void)generateSnapshotAndVerifyForView:(UIView *)view {
   [view layoutIfNeeded];
 
@@ -77,6 +89,35 @@ static NSString *const kActionLowUrdu = @"کم";
 
 #pragma mark - Tests
 
+/** Verifies the top of Thai attributed message with diacritics won't be cut off. */
+- (void)testPreferredContentSizeWithThaiAttributedMessage {
+  // When
+  self.alertController.attributedMessage =
+      [[NSAttributedString alloc] initWithString:kThaiTextWithDiacritics];
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+/** Verifies the top of Thai message with diacritics won't be cut off. */
+- (void)testPreferredContentSizeWithThaiMessage {
+  // When
+  self.alertController.message = kThaiTextWithDiacritics;
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+/** Verifies the top of Thai message and title with diacritics won't be cut off. */
+- (void)testPreferredContentSizeWithThaiMessageAndTitle {
+  // When
+  self.alertController.title = kThaiTextWithDiacritics;
+  self.alertController.message = kThaiTextWithDiacritics;
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
 - (void)testPreferredContentSizeWithNotoNastaliqUrdu {
   // When
   self.alertController.title = kTitleUrdu;
@@ -85,14 +126,11 @@ static NSString *const kActionLowUrdu = @"کم";
   NSString *urduFontName = @"NotoNastaliqUrdu";
   UIFont *dialogBodyFont = [UIFont systemFontOfSize:20.0];
   UIFont *dialogButtonFont = [UIFont systemFontOfSize:26.0];
-  if (@available(iOS 11, *)) {
-    // Noto Nastaliq Urdu was added in iOS 11, and is an extremely tall
-    // font for any given nominal point size.
-    dialogBodyFont = [UIFont fontWithName:urduFontName size:20.0];
-    dialogButtonFont = [UIFont fontWithName:urduFontName size:26.0];
-  }
+  // Noto Nastaliq Urdu was added in iOS 11, and is an extremely tall
+  // font for any given nominal point size.
+  dialogBodyFont = [UIFont fontWithName:urduFontName size:20.0];
+  dialogButtonFont = [UIFont fontWithName:urduFontName size:26.0];
   self.alertController.messageFont = dialogBodyFont;
-  self.alertController.buttonFont = dialogButtonFont;
   MDCAlertAction *actionLow = [MDCAlertAction actionWithTitle:kActionLowUrdu
                                                      emphasis:MDCActionEmphasisLow
                                                       handler:nil];
@@ -101,14 +139,15 @@ static NSString *const kActionLowUrdu = @"کم";
                                                          handler:nil];
   [self.alertController addAction:actionLow];
   [self.alertController addAction:actionMedium];
+  for (MDCAlertAction *action in self.alertController.actions) {
+    [[self.alertController buttonForAction:action] setTitleFont:dialogButtonFont
+                                                       forState:UIControlStateNormal];
+  }
 
   [self changeToRTL:self.alertController];
-  CGSize preferredContentSize = self.alertController.preferredContentSize;
-  self.alertController.view.bounds =
-      CGRectMake(0, 0, preferredContentSize.width, preferredContentSize.height);
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 @end

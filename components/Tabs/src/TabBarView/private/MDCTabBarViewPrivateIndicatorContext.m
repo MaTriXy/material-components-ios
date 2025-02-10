@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MDCTabBarViewIndicatorContext.h"
 
 #import "MDCTabBarViewPrivateIndicatorContext.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @implementation MDCTabBarViewPrivateIndicatorContext
 @synthesize bounds = _bounds;
@@ -67,3 +68,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

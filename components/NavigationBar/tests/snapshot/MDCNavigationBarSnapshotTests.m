@@ -85,9 +85,7 @@ static NSString *const kItemTitleLong3Arabic = @"تحت أي قدما وإقام
                                                          action:NULL];
 
   UIImage *backImage = [MDCIcons imageFor_ic_arrow_back];
-  if (@available(iOS 9.0, *)) {
-    backImage = [backImage imageFlippedForRightToLeftLayoutDirection];
-  }
+  backImage = [backImage imageFlippedForRightToLeftLayoutDirection];
   UIBarButtonItem *backItem = [[UIBarButtonItem alloc] initWithImage:backImage
                                                                style:UIBarButtonItemStylePlain
                                                               target:nil
@@ -271,6 +269,34 @@ static NSString *const kItemTitleLong3Arabic = @"تحت أي قدما وإقام
   self.navBar.trailingBarButtonItems = @[ self.itemWithImage24, self.itemWithImage48 ];
   [self changeViewToRTL:self.navBar];
   [self setStringsToArabicShort];
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.navBar];
+}
+
+- (void)testNavbarWithTitleViewBehaviorCenter {
+  // When
+  self.navBar.titleViewLayoutBehavior = MDCNavigationBarTitleViewLayoutBehaviorCenter;
+  // Using a label as custom view to have a view that has an intrinsic content size.
+  UILabel *customTitleLabel = [[UILabel alloc] init];
+  customTitleLabel.text = kItemTitleShort1Latin;
+  // Tint the background to see the label's full frame on the screenshot.
+  customTitleLabel.backgroundColor = UIColor.cyanColor;
+  self.navBar.titleView = customTitleLabel;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.navBar];
+}
+
+- (void)testNavbarWithTitleViewBehaviorCenterFit {
+  // When
+  self.navBar.titleViewLayoutBehavior = MDCNavigationBarTitleViewLayoutBehaviorCenterFit;
+  // Using a label as custom view to have a view that has an intrinsic content size.
+  UILabel *customTitleLabel = [[UILabel alloc] init];
+  customTitleLabel.text = kItemTitleShort1Latin;
+  // Tint the background to see the label's full frame on the screenshot.
+  customTitleLabel.backgroundColor = UIColor.cyanColor;
+  self.navBar.titleView = customTitleLabel;
 
   // Then
   [self generateSnapshotAndVerifyForView:self.navBar];

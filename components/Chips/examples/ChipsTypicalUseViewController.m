@@ -16,6 +16,8 @@
 #import "MaterialChips.h"
 
 #import "supplemental/ChipsExampleAssets.h"
+#import "MaterialContainerScheme.h"
+#import "MaterialTypographyScheme.h"
 
 @interface ChipModel : NSObject
 @property(nonatomic, strong) NSString *title;
@@ -27,8 +29,10 @@
 @interface ChipsTypicalUseViewController
     : UICollectionViewController <UICollectionViewDelegateFlowLayout>
 @property(nonatomic, strong) NSArray<ChipModel *> *model;
-@property(nonatomic, strong) id<MDCContainerScheming> containerScheme;
+@property(nonatomic, strong) MDCContainerScheme *containerScheme;
 @property(nonatomic) BOOL popRecognizerDelaysTouches;
+@property(nonatomic) CGSize chipSize;
+@property(nonatomic) BOOL chipCenterVisibleArea;
 @end
 
 static ChipModel *MakeModel(NSString *title,
@@ -51,8 +55,6 @@ static ChipModel *MakeModel(NSString *title,
 - (instancetype)init {
   MDCChipCollectionViewFlowLayout *layout = [[MDCChipCollectionViewFlowLayout alloc] init];
   layout.minimumInteritemSpacing = 10;
-  MDCChipCollectionViewCell *cell = [[MDCChipCollectionViewCell alloc] init];
-  layout.estimatedItemSize = [cell intrinsicContentSize];
 
   self = [super initWithCollectionViewLayout:layout];
   if (self) {
@@ -69,18 +71,15 @@ static ChipModel *MakeModel(NSString *title,
   return self;
 }
 
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                  name:UIContentSizeCategoryDidChangeNotification
-                                                object:nil];
-}
-
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  if (@available(iOS 11.0, *)) {
-    self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
-  }
+  MDCTypographyScheme *typographyScheme =
+      [[MDCTypographyScheme alloc] initWithDefaults:MDCTypographySchemeDefaultsMaterial201902];
+  typographyScheme.useCurrentContentSizeCategoryWhenApplied = YES;
+  self.containerScheme.typographyScheme = typographyScheme;
+
+  self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAlways;
 
   self.collectionView.backgroundColor = [UIColor whiteColor];
   self.collectionView.delaysContentTouches = NO;
@@ -153,7 +152,6 @@ static ChipModel *MakeModel(NSString *title,
                   cellForItemAtIndexPath:(NSIndexPath *)indexPath {
   MDCChipCollectionViewCell *cell =
       [collectionView dequeueReusableCellWithReuseIdentifier:@"Cell" forIndexPath:indexPath];
-  cell.chipView.mdc_adjustsFontForContentSizeCategory = YES;
   cell.alwaysAnimateResize = YES;
 
   ChipModel *model = self.model[indexPath.row];
@@ -163,6 +161,8 @@ static ChipModel *MakeModel(NSString *title,
   cell.chipView.imageView.image = model.showProfilePic ? ChipsExampleAssets.faceImage : nil;
   cell.chipView.selectedImageView.image = model.showDoneImage ? ChipsExampleAssets.doneImage : nil;
   cell.chipView.accessoryView = model.showDeleteButton ? ChipsExampleAssets.deleteButton : nil;
+  cell.chipView.centerVisibleArea = self.chipCenterVisibleArea;
+  cell.chipView.hitAreaInsets = UIEdgeInsetsMake(-16, 0, -16, 0);
 
   [cell.chipView applyThemeWithScheme:self.containerScheme];
   return cell;
@@ -172,6 +172,29 @@ static ChipModel *MakeModel(NSString *title,
     didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
   [collectionView performBatchUpdates:nil completion:nil];
   [self updateClearButton];
+}
+
+- (CGSize)collectionView:(UICollectionView *)collectionView
+                    layout:(UICollectionViewLayout *)collectionViewLayout
+    sizeForItemAtIndexPath:(NSIndexPath *)indexPath {
+  MDCChipView *chipView = (MDCChipView *)[collectionView cellForItemAtIndexPath:indexPath];
+  if (!chipView) {
+    ChipModel *model = self.model[indexPath.row];
+    chipView = [[MDCChipView alloc] init];
+    chipView.enableRippleBehavior = YES;
+    chipView.titleLabel.text = model.title;
+    chipView.imageView.image = model.showProfilePic ? ChipsExampleAssets.faceImage : nil;
+    chipView.selectedImageView.image = model.showDoneImage ? ChipsExampleAssets.doneImage : nil;
+    chipView.accessoryView = model.showDeleteButton ? ChipsExampleAssets.deleteButton : nil;
+    chipView.centerVisibleArea = self.chipCenterVisibleArea;
+    [chipView applyThemeWithScheme:self.containerScheme];
+  }
+  CGSize chipViewSize = [chipView intrinsicContentSize];
+  if (!CGSizeEqualToSize(self.chipSize, CGSizeZero)) {
+    chipViewSize.height = MAX(self.chipSize.height, chipViewSize.height);
+    chipViewSize.width = MAX(self.chipSize.width, chipViewSize.width);
+  }
+  return chipViewSize;
 }
 
 @end
@@ -185,6 +208,24 @@ static ChipModel *MakeModel(NSString *title,
     @"primaryDemo" : @YES,
     @"presentable" : @YES,
   };
+}
+
+@end
+
+@implementation ChipsTypicalUseViewController (SnapshotTestingByConvention)
+
+- (void)testDefaults {
+  // When
+  [self.collectionView reloadData];
+}
+
+- (void)testCustomSizeWhenCenterVisibleArea {
+  // Given
+  self.chipSize = CGSizeMake(44, 44);
+  self.chipCenterVisibleArea = YES;
+
+  // When
+  [self.collectionView reloadData];
 }
 
 @end

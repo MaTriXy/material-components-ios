@@ -15,8 +15,17 @@
 #import <UIKit/UIKit.h>
 
 #import "MaterialAvailability.h"
+#import "MDCBadgeAppearance.h"
+// TODO(b/151929968): Delete import of MDCBottomNavigationBarDelegate.h when client code has been
+// migrated to no longer import MDCBottomNavigationBarDelegate as a transitive dependency.
+#import "MDCBottomNavigationBarDelegate.h"
+#import "MDCBottomNavigationBarItem.h"
 #import "MaterialElevation.h"
+#import "MDCMinimumOS.h"  // IWYU pragma: keep
+#import "MaterialShadow.h"
 #import "MaterialShadowElevations.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @protocol MDCBottomNavigationBarDelegate;
 
@@ -31,6 +40,19 @@ typedef NS_ENUM(NSInteger, MDCBottomNavigationBarTitleVisibility) {
 
   // Item titles are never visible.
   MDCBottomNavigationBarTitleVisibilityNever = 2
+};
+
+/** Alignment mode of items in vertical layout mode.  */
+typedef NS_ENUM(NSInteger, MDCNavigationBarItemsVerticalAlignment) {
+
+  // Default behavior is to have the items align to the center.
+  MDCNavigationBarItemsVerticalAlignmentCenter = 0,
+
+  // Items are aligned to the top of the bar.
+  MDCNavigationBarItemsVerticalAlignmentTop = 1,
+
+  // Items are aligned to the bottom of the bar.
+  MDCNavigationBarItemsVerticalAlignmentBottom = 2
 };
 
 /**
@@ -73,22 +95,57 @@ typedef NS_ENUM(NSInteger, MDCBottomNavigationBarAlignment) {
 
 /**
  Configures item space distribution and title orientation in landscape mode.
- Default is MDCBottomNavigationBarDistributionEqual.
+ Default is MDCBottomNavigationBarAlignmentJustified.
  */
 @property(nonatomic, assign) MDCBottomNavigationBarAlignment alignment UI_APPEARANCE_SELECTOR;
+
+/**
+ Configures whether the navigation bar will be in vertical layout.
+
+ @note To configure the items spacing in vertical layout see @c itemsAlignmentInVerticalMode below.
+
+ Defaults to @c NO.
+ */
+@property(nonatomic, assign) BOOL enableVerticalLayout;
+
+/**
+ Configures whether the navigation bar will show titles in vertical layout mode.
+
+ Defaults to @c NO.
+ */
+@property(nonatomic, assign) BOOL displayItemTitlesInVerticalLayout;
 
 /**
  An array of UITabBarItems that is used to populate bottom navigation bar content. It is strongly
  recommended the array contain at least three items and no more than five items -- appearance may
  degrade outside of this range.
  */
+// TODO(b/378528228): Remove this property once all clients have migrated to using `barItems`.
 @property(nonatomic, copy, nonnull) NSArray<UITabBarItem *> *items;
+
+/**
+ An array of MDCBottomNavigationBarItems that is used to populate bottom navigation bar content. It
+ is strongly recommended the array contain at least three items and no more than five items --
+ appearance may degrade outside of this range.
+
+ If a given item has no badge appearance set, then the itemBadgeAppearance is used.
+ Additionally, if a given badge appearance has a `nil` for its textColor and/or font, then the
+ values from the itemBadgeAppearance are used.
+ */
+@property(nonatomic, copy, nonnull) NSArray<MDCBottomNavigationBarItem *> *barItems;
 
 /**
  Selected item in the bottom navigation bar.
  Default is no item selected.
  */
+// TODO(b/378528228): Remove this property once all clients have migrated to using `barItems`.
 @property(nonatomic, weak, nullable) UITabBarItem *selectedItem;
+
+/**
+ Selected MDCBottomNavigationBarItem in the bottom navigation bar.
+ Default is no item selected.
+ */
+@property(nonatomic, weak, nullable) MDCBottomNavigationBarItem *selectedBarItem;
 
 /**
  Display font used for item titles.
@@ -97,20 +154,16 @@ typedef NS_ENUM(NSInteger, MDCBottomNavigationBarAlignment) {
 @property(nonatomic, strong, nonnull) UIFont *itemTitleFont UI_APPEARANCE_SELECTOR;
 
 /**
- Background color for badges. Default is a red color. Only applies if the @c UITabBarItem
- @c badgeColor is `nil`.
- */
-@property(nonatomic, copy, nullable) UIColor *itemBadgeBackgroundColor;
-
-/**
- Text color for badges. Default is white.
- */
-@property(nonatomic, copy, nullable) UIColor *itemBadgeTextColor;
-
-/**
  Color of selected item. Applies color to items' icons and text. If set also sets
  selectedItemTitleColor. Default color is black.
- */
+
+ By default, setting this property will also configure the ripple color of all item views.
+ If @c rippleColor has been set to a non-nil value, however, then this property will no longer
+ affect the color of ripple behavior.
+
+ Use @c rippleColor to configure ripple color instead instead of relying on the side effect behavior
+ of this property. The side effect behavior of this property may be removed in the future.
+*/
 @property(nonatomic, strong, readwrite, nonnull)
     UIColor *selectedItemTintColor UI_APPEARANCE_SELECTOR;
 
@@ -118,6 +171,40 @@ typedef NS_ENUM(NSInteger, MDCBottomNavigationBarAlignment) {
  Color of the selected item's title text. Default color is black.
  */
 @property(nonatomic, strong, readwrite, nonnull) UIColor *selectedItemTitleColor;
+
+/**
+ If @c YES, a pill-shaped "active indicator" is used to show which item is currently selected. The
+ active indicator is centered around the selected icon, and animates in/out when a new item is
+ selected.
+
+ Note that using the active indicator turns off any ink/ripple behavior, as they should not both be
+ used as an indication of selection of a new item.
+
+ Defaults to @c NO.
+ */
+@property(nonatomic, assign) BOOL showsSelectionIndicator;
+
+/**
+ If true, the tab icons will be placed in a square container for layout.
+*/
+@property(nonatomic, assign) BOOL enableSquareImages;
+
+/**
+ Size of the active indicator.
+
+ Only has an impact if @c useActiveIndicator is set to @c YES.
+
+ Defaults to 30, 60.
+ */
+@property(nonatomic, assign) CGSize selectionIndicatorSize;
+
+/**
+  Background color for the active indicator. Only has an impact if @c useActiveIndicator is set to
+  @c YES.
+
+  Defaults to #C3D9F2.
+ */
+@property(nonatomic, strong, nonnull) UIColor *selectionIndicatorColor;
 
 /**
  Color of unselected items. Applies color to items' icons. Text is not displayed in unselected mode.
@@ -165,11 +252,17 @@ typedef NS_ENUM(NSInteger, MDCBottomNavigationBarAlignment) {
 @property(nonatomic, assign) CGFloat itemsContentHorizontalMargin;
 
 /**
- The amount of horizontal padding on the leading/trailing edges of each bar item. Defaults to 12.
+ The amount of horizontal padding on the leading/trailing edges of each bar item. Defaults to 0.
 
  @note: The amount of horizontal space between the bar items will be double this value.
  */
 @property(nonatomic, assign) CGFloat itemsHorizontalPadding;
+
+/**
+ Configures the items alignment in vertical layout mode.
+Default is @c MDCNavigationBarItemsVerticalAlignmentTop.
+ */
+@property(nonatomic, assign) MDCNavigationBarItemsVerticalAlignment itemsAlignmentInVerticalMode;
 
 /**
  NSLayoutAnchor for the bottom of the bar items.
@@ -210,18 +303,6 @@ typedef NS_ENUM(NSInteger, MDCBottomNavigationBarAlignment) {
 @property(nonatomic, assign) NSInteger titlesNumberOfLines;
 
 /**
- By setting this property to @c YES, the Ripple component will be used instead of Ink
- to display visual feedback to the user.
-
- @note This property will eventually be enabled by default, deprecated, and then deleted as part
- of our migration to Ripple. Learn more at
- https://github.com/material-components/material-components-ios/tree/develop/components/Ink#migration-guide-ink-to-ripple
-
- Defaults to NO.
- */
-@property(nonatomic, assign) BOOL enableRippleBehavior;
-
-/**
 A block that is invoked when the @c MDCBottomNavigationBar receives a call to @c
 traitCollectionDidChange:. The block is called after the call to the superclass.
 */
@@ -230,32 +311,79 @@ traitCollectionDidChange:. The block is called after the call to the superclass.
      UITraitCollection *_Nullable previousTraitCollection);
 
 /**
+ Sets the height of the navigation bar.
+
+ Note: If set to a value smaller or equal to zero (<= 0), the bar will default to a height of 56 in
+ the normal case, and to 40 if alignment is set to
+ MDCBottomNavigationBarAlignmentJustifiedAdjacentTitles and horizontalSizeClass is set to
+ UIUserInterfaceSizeClassRegular.
+
+ If value is bigger than 0 ( > 0), then the intrinsic height will match the provided barHeight.
+
+ Defaults to 0.
+ */
+@property(nonatomic, assign) CGFloat barHeight;
+
+/**
+ Sets the height of the navigation bar when titles are not present.
+
+ Defaults to barHeight's value.
+ */
+@property(nonatomic, assign) CGFloat barHeightWithoutTitles;
+
+/**
  Returns the navigation bar subview associated with the specific item.
 
  @param item A UITabBarItem
  */
 - (nullable UIView *)viewForItem:(nonnull UITabBarItem *)item;
 
-@end
+#pragma mark - Configuring the ripple appearance
 
-/** APIs that are deprecated. No new code should rely on these APIs. */
-@interface MDCBottomNavigationBar (Deprecated)
+@property(nonatomic, getter=isRippleEnabled) BOOL rippleEnabled;
 
 /**
- Flag to allow clients to gradually correct the size/position of the Bottom Navigation bar relative
- to the safe area on iOS 11+.
+ The color of the ripple effect shown when the user taps on an item.
 
- NOTE: In an upcoming release, this flag will be removed and the default behavior will be to exclude
- the safe area in size calculations.
+ When this property is nil, the ripple's color will be inferred from @c selectedItemTintColor. If
+ you want a clear ripple, you must set @c rippleColor to UIColor.clearColor.
+*/
+@property(nonatomic, strong, nullable) UIColor *rippleColor API_DEPRECATED(
+    "Follow go/material-ios-touch-response for guidance instead.", ios(12, 12));
 
- Defaults to @c NO.
+#pragma mark - Configuring the default visual appearance for all badges
+
+/**
+ The default appearance to be used for all item badges.
+
+ If a given UITabBarItem has set a non-nil badgeColor, then that value will be used for that item
+ view's badge instead of the backgroundColor associated with this appearance object.
+
+ If a given badge appearance has set a `nil` textColor, then the default `whiteColor` will be used.
+ If a given badge appearance has set a `nil` font, then the default `systemFontOfSize:8` will be
+ used.
+
+ Note that the individual itemBadge* properties will be deprecated and already act as proxies for
+ modifying the itemBadgeAppearance of each badge directly.
  */
-@property(nonatomic, assign) BOOL sizeThatFitsIncludesSafeArea __deprecated_msg(
-    "This was a migration API and is being removed.");
+@property(nonatomic, copy, nonnull) MDCBadgeAppearance *itemBadgeAppearance;
+
+/**
+ X-offset for Badge position.
+
+ Set this property to adjust horizontal spacing between badges and icons, within item views.
+
+ The additive inverse of this value is applied for RTL layouts. Set this value based on LTR.
+
+ Increasing values shift towards the right, and decreasing values shift towards the left.
+
+ Default is 0.
+ */
+@property(nonatomic, assign) CGFloat itemBadgeHorizontalOffset;
 
 @end
 
-#if MDC_AVAILABLE_SDK_IOS(13_0)
+#if MDC_AVAILABLE_SDK_IOS(13_0) && !TARGET_OS_TV
 /**
  This component supports UIKit's Large Content Viewer. It is recommended that images associated with
  each tab bar item be backed with a PDF image with "preserve vector data" enabled within the assets
@@ -271,32 +399,10 @@ traitCollectionDidChange:. The block is called after the call to the superclass.
  For more details on the Large Content Viewer see:
  https://developer.apple.com/videos/play/wwdc2019/261/
  */
+API_UNAVAILABLE(tvos, watchos)
 @interface MDCBottomNavigationBar (UILargeContentViewerInteractionDelegate) <
     UILargeContentViewerInteractionDelegate>
 @end
 #endif  // MDC_AVAILABLE_SDK_IOS(13_0)
 
-#pragma mark - MDCBottomNavigationBarDelegate
-
-/**
- Delegate protocol for MDCBottomNavigationBar. Clients may implement this protocol to receive
- notifications of selection changes by user action in the bottom navigation bar.
- */
-@protocol MDCBottomNavigationBarDelegate <UINavigationBarDelegate>
-
-@optional
-
-/**
- Called before the selected item changes by user action. Return YES to allow the selection. If not
- implemented all items changes are allowed.
- */
-- (BOOL)bottomNavigationBar:(nonnull MDCBottomNavigationBar *)bottomNavigationBar
-           shouldSelectItem:(nonnull UITabBarItem *)item;
-
-/**
- Called when the selected item changes by user action.
- */
-- (void)bottomNavigationBar:(nonnull MDCBottomNavigationBar *)bottomNavigationBar
-              didSelectItem:(nonnull UITabBarItem *)item;
-
-@end
+NS_ASSUME_NONNULL_END

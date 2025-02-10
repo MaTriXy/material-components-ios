@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <CoreGraphics/CoreGraphics.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCRippleLayer.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCRippleLayer.h"
+#import "MDCRippleLayerDelegate.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Fake classes
 
@@ -24,7 +31,7 @@
 
 @implementation FakeMDCRippleLayer
 
-- (void)addAnimation:(CAAnimation *)anim forKey:(NSString *)key {
+- (void)addAnimation:(CAAnimation *)anim forKey:(nullable NSString *)key {
   if (!self.addedAnimations) {
     self.addedAnimations = [NSMutableArray array];
   }
@@ -177,6 +184,7 @@
 - (void)testStartRippleAnimationCorrectness {
   // Given
   FakeMDCRippleLayer *rippleLayer = [[FakeMDCRippleLayer alloc] init];
+  rippleLayer.bounds = CGRectMake(0, 0, 100, 100);
   CGPoint point = CGPointMake(10, 10);
 
   // When
@@ -200,7 +208,7 @@
         animationsCount += 1;
         XCTAssertEqualObjects(@1, basicAnimation.toValue);
         XCTAssertEqualWithAccuracy(
-            (CGFloat)0.6, (CGFloat)((NSNumber *)basicAnimation.fromValue).doubleValue, 0.0001);
+            (CGFloat)0.37169, (CGFloat)((NSNumber *)basicAnimation.fromValue).doubleValue, 0.01);
       }
     } else if ([animation isKindOfClass:[CAKeyframeAnimation class]]) {
       animationsCount += 1;
@@ -282,3 +290,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

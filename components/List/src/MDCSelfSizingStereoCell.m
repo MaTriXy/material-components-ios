@@ -18,8 +18,6 @@
 
 #import <MDFInternationalization/MDFInternationalization.h>
 
-#import "MaterialInk.h"
-#import "MaterialMath.h"
 #import "MaterialTypography.h"
 
 #import "private/MDCSelfSizingStereoCellLayout.h"
@@ -73,12 +71,7 @@ static const CGFloat kDetailColorOpacity = (CGFloat)0.6;
 
 - (void)commonMDCSelfSizingStereoCellInit {
   self.cachedLayouts = [[NSMutableDictionary alloc] init];
-  _adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
   [self createSubviews];
-}
-
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark Setup
@@ -123,7 +116,7 @@ static const CGFloat kDetailColorOpacity = (CGFloat)0.6;
   self.detailLabel.frame = layout.detailLabelFrame;
   self.leadingImageView.frame = layout.leadingImageViewFrame;
   self.trailingImageView.frame = layout.trailingImageViewFrame;
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     self.leadingImageView.frame =
         MDFRectFlippedHorizontally(self.leadingImageView.frame, layout.cellWidth);
     self.trailingImageView.frame =
@@ -174,15 +167,18 @@ static const CGFloat kDetailColorOpacity = (CGFloat)0.6;
 #pragma mark Layout
 
 - (MDCSelfSizingStereoCellLayout *)layoutForCellWidth:(CGFloat)cellWidth {
-  CGFloat flooredCellWidth = MDCFloor(cellWidth);
+  CGFloat flooredCellWidth = floor(cellWidth);
   MDCSelfSizingStereoCellLayout *layout = self.cachedLayouts[@(flooredCellWidth)];
   if (!layout) {
-    layout = [[MDCSelfSizingStereoCellLayout alloc] initWithLeadingImageView:self.leadingImageView
-                                                           trailingImageView:self.trailingImageView
-                                                               textContainer:self.textContainer
-                                                                  titleLabel:self.titleLabel
-                                                                 detailLabel:self.detailLabel
-                                                                   cellWidth:flooredCellWidth];
+    layout = [[MDCSelfSizingStereoCellLayout alloc]
+                 initWithLeadingImageView:self.leadingImageView
+         leadingImageViewVerticalPosition:self.leadingImageViewVerticalPosition
+                        trailingImageView:self.trailingImageView
+        trailingImageViewVerticalPosition:self.trailingImageViewVerticalPosition
+                            textContainer:self.textContainer
+                               titleLabel:self.titleLabel
+                              detailLabel:self.detailLabel
+                                cellWidth:flooredCellWidth];
     self.cachedLayouts[@(flooredCellWidth)] = layout;
   }
   return layout;
@@ -219,13 +215,6 @@ static const CGFloat kDetailColorOpacity = (CGFloat)0.6;
   [self adjustFontsForDynamicType];
 }
 
-- (void)setAdjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable:
-    (BOOL)adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable {
-  _adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable =
-      adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable;
-  [self adjustFontsForDynamicType];
-}
-
 // Handles UIContentSizeCategoryDidChangeNotifications
 - (void)contentSizeCategoryDidChange:(__unused NSNotification *)notification {
   [self adjustFontsForDynamicType];
@@ -237,7 +226,7 @@ static const CGFloat kDetailColorOpacity = (CGFloat)0.6;
   if (self.mdc_adjustsFontForContentSizeCategory) {
     if (titleFont.mdc_scalingCurve) {
       titleFont = [titleFont mdc_scaledFontForTraitEnvironment:self];
-    } else if (self.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable) {
+    } else {
       titleFont =
           [titleFont mdc_fontSizedForMaterialTextStyle:MDCFontTextStyleTitle
                                   scaledForDynamicType:self.mdc_adjustsFontForContentSizeCategory];
@@ -245,7 +234,7 @@ static const CGFloat kDetailColorOpacity = (CGFloat)0.6;
 
     if (detailFont.mdc_scalingCurve) {
       detailFont = [detailFont mdc_scaledFontForTraitEnvironment:self];
-    } else if (self.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable) {
+    } else {
       detailFont =
           [detailFont mdc_fontSizedForMaterialTextStyle:MDCFontTextStyleCaption
                                    scaledForDynamicType:self.mdc_adjustsFontForContentSizeCategory];

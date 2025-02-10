@@ -17,10 +17,25 @@
 #import "MDCTextControl.h"
 #import "MDCTextControlAssistiveLabelView.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 @interface MDCBaseTextAreaLayout : NSObject
+
+@property(nonatomic, assign) BOOL displaysLeadingView;
+@property(nonatomic, assign) BOOL displaysTrailingView;
+
+@property(nonatomic, assign) CGRect leadingViewFrame;
+@property(nonatomic, assign) CGRect trailingViewFrame;
 
 @property(nonatomic, assign, readonly) CGRect labelFrameFloating;
 @property(nonatomic, assign, readonly) CGRect labelFrameNormal;
+
+@property(nonatomic, assign, readonly) BOOL placeholderLabelHidden;
+@property(nonatomic, assign, readonly) CGRect placeholderLabelFrame;
 
 @property(nonatomic, assign, readonly) CGRect textViewFrame;
 
@@ -34,6 +49,8 @@
 @property(nonatomic, strong, nonnull, readonly) NSArray<NSNumber *> *verticalGradientLocations;
 @property(nonatomic, strong, nonnull, readonly) NSArray<NSNumber *> *horizontalGradientLocations;
 
+@property(nonatomic, assign) BOOL labelTruncationIsPresent;
+
 /**
  Initializing an MDCBaseTextAreaLayout object with this initializer is tantamount to calculating a
  layout for a text area. The  long parameter list includes everything that might impact
@@ -43,14 +60,21 @@
  and reliable.
 */
 - (nonnull instancetype)initWithSize:(CGSize)size
-                positioningReference:
-                    (nonnull id<MDCTextControlVerticalPositioningReference>)positioningReference
+        verticalPositioningReference:
+            (nonnull id<MDCTextControlVerticalPositioningReference>)verticalPositioningReference
+      horizontalPositioningReference:
+          (nonnull id<MDCTextControlHorizontalPositioning>)horizontalPositioningReference
                                 text:(nullable NSString *)text
                                 font:(nonnull UIFont *)font
                         floatingFont:(nonnull UIFont *)floatingFont
                                label:(nonnull UILabel *)label
                        labelPosition:(MDCTextControlLabelPosition)labelPosition
                        labelBehavior:(MDCTextControlLabelBehavior)labelBehavior
+                    placeholderLabel:(nonnull UILabel *)placeholderLabel
+                         leadingView:(nullable UIView *)leadingView
+                     leadingViewMode:(UITextFieldViewMode)leadingViewMode
+                        trailingView:(nullable UIView *)trailingView
+                    trailingViewMode:(UITextFieldViewMode)trailingViewMode
                leadingAssistiveLabel:(nonnull UILabel *)leadingAssistiveLabel
               trailingAssistiveLabel:(nonnull UILabel *)trailingAssistiveLabel
           assistiveLabelDrawPriority:
@@ -62,3 +86,5 @@
 - (CGRect)labelFrameWithLabelPosition:(MDCTextControlLabelPosition)labelPosition;
 
 @end
+
+API_DEPRECATED_END

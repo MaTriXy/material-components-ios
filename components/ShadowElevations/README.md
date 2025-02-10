@@ -15,15 +15,14 @@ Higher shadow elevations have greater shadow intensities, akin to raising an obj
 surface resulting in a more prominent, albeit more diffuse, shadow. This component provides commonly
 used Material Design elevations for components.
 
-<div class="article__asset article__asset--screenshot">
-  <img src="docs/assets/shadows.png" alt="Shadows" width="375">
-</div>
+<img src="docs/assets/shadows.png" alt="Shadows" width="375">
 
 ## Design & API Documentation
 
 <ul class="icon-list">
-  <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/guidelines/what-is-material/elevation-shadows.html">Material Design guidelines: Elevation & Shadows</a></li>
-  <li class="icon-list-item icon-list-item--link"><a href="https://material.io/components/ios/catalog/shadows/shadow-elevations/api-docs/Constants.html">API: Constants</a></li>
+  <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/design/environment/elevation.html">Material Design guidelines: Elevation</a></li>
+  <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/design/environment/light-shadows.html#light">Material Design guidelines: Light & Shadows</a></li>
+  <li class="icon-list-item icon-list-item--link"><a href="https://github.com/material-components/material-components-ios/blob/develop/components/ShadowElevations/src/MDCShadowElevations.h">API: Constants</a></li>
 </ul>
 
 - - -

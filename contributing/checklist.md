@@ -167,15 +167,6 @@ Unit tests in MDC are run by the developer, the continuous integration service, 
 1. Ensure unit tests run with no errors.
 1. Enter YES or NO
 
-### Kokoro Support
-
-
-MDC-iOS uses Google's continuous integration service Kokoro for automated tests on each PR. Kokoro builds MDC with Google's open source build system, [Bazel](https://bazel.build/). For more information, see the [Kokoro & Bazel document](bazel_kokoro.md).
-
-1. Add a Bazel `BUILD` file to the root directory of the component.
-1. Add `BUILD` files for any components that are dependencies of the component. (If necessary.)
-1. Test locally with the .kokoro script in the repo's root directory. If necessary, propose adjustments to the script to support custom features of your target (like a private dependency.)
-1. Enter YES or NO
 
 ### Translations (If necessary)
 
@@ -453,9 +444,6 @@ IB_DESIGNABLE
 
 
 Nullability annotations improve Swift usage of a component's APIs. Learn more in Apple's [documentation](https://developer.apple.com/library/prerelease/content/documentation/Swift/Conceptual/BuildingCocoaApps/MixandMatch.html).
-
-Material Components explicitly annotate all public APIs rather than use `NS_ASSUME_NONNULL_BEGIN`. This is an intentional deviation from Apple’s practice of using the `ASSUME` macros. [Further reading](http://nshipster.com/swift-1.2/#nullability-annotations)
-
 
 1. Add nullability annotations to every header of your component.
 1. Enter YES or NO

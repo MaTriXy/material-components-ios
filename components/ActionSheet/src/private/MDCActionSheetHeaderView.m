@@ -35,7 +35,7 @@ static const CGFloat kMinimumHeaderHeight = 8;
 
 @implementation MDCActionSheetHeaderView
 
-@synthesize mdc_adjustsFontForContentSizeCategory = _mdc_adjustsFontForContentSizeCategory;
+@synthesize adjustsFontForContentSizeCategory = _adjustsFontForContentSizeCategory;
 
 - (instancetype)initWithFrame:(CGRect)frame {
   self = [super initWithFrame:frame];
@@ -47,6 +47,7 @@ static const CGFloat kMinimumHeaderHeight = 8;
     _titleLabel.font = [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleSubheadline];
     _titleLabel.numberOfLines = 0;
     _titleLabel.lineBreakMode = NSLineBreakByTruncatingMiddle;
+    _titleLabel.accessibilityTraits |= UIAccessibilityTraitHeader;
 
     [self addSubview:_messageLabel];
     _messageLabel.font = [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleBody1];
@@ -55,10 +56,6 @@ static const CGFloat kMinimumHeaderHeight = 8;
     _messageLabel.textColor = [UIColor.blackColor colorWithAlphaComponent:kMessageLabelAlpha];
   }
   return self;
-}
-
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void)layoutSubviews {
@@ -98,8 +95,8 @@ static const CGFloat kMinimumHeaderHeight = 8;
     contentHeight = kMinimumHeaderHeight;
   }
   CGSize contentSize;
-  contentSize.width = MDCCeil(size.width);
-  contentSize.height = MDCCeil(contentHeight);
+  contentSize.width = ceil(size.width);
+  contentSize.height = ceil(contentHeight);
   return contentSize;
 }
 
@@ -152,43 +149,22 @@ static const CGFloat kMinimumHeaderHeight = 8;
 - (void)updateTitleFont {
   UIFont *titleFont =
       self.titleFont ?: [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleSubheadline];
-  if (self.mdc_adjustsFontForContentSizeCategory) {
-    self.titleLabel.font =
-        [titleFont mdc_fontSizedForMaterialTextStyle:MDCFontTextStyleSubheadline
-                                scaledForDynamicType:self.mdc_adjustsFontForContentSizeCategory];
-  } else {
-    self.titleLabel.font = titleFont;
-  }
+  self.titleLabel.font = titleFont;
   [self setNeedsLayout];
 }
 
 - (void)updateMessageFont {
   UIFont *messageFont =
       self.messageFont ?: [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleBody1];
-  if (self.mdc_adjustsFontForContentSizeCategory) {
-    self.messageLabel.font =
-        [messageFont mdc_fontSizedForMaterialTextStyle:MDCFontTextStyleBody1
-                                  scaledForDynamicType:self.mdc_adjustsFontForContentSizeCategory];
-  } else {
-    self.messageLabel.font = messageFont;
-  }
+  self.messageLabel.font = messageFont;
 
   [self setNeedsLayout];
 }
 
-- (void)mdc_setAdjustsFontForContentSizeCategory:(BOOL)adjusts {
-  _mdc_adjustsFontForContentSizeCategory = adjusts;
-  if (_mdc_adjustsFontForContentSizeCategory) {
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(updateFonts)
-                                                 name:UIContentSizeCategoryDidChangeNotification
-                                               object:nil];
-  } else {
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:UIContentSizeCategoryDidChangeNotification
-                                                  object:nil];
-  }
-  [self updateFonts];
+- (void)setAdjustsFontForContentSizeCategory:(BOOL)adjustsFontForContentSizeCategory {
+  _adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
+  self.titleLabel.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
+  self.messageLabel.adjustsFontForContentSizeCategory = adjustsFontForContentSizeCategory;
 }
 
 - (UIColor *)defaultTitleTextColor {

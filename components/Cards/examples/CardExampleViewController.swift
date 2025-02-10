@@ -13,10 +13,10 @@
 // limitations under the License.
 
 import UIKit
-import MaterialComponents.MaterialButtons_ButtonThemer
+import MaterialComponents.MaterialButtons_ButtonThemer 
+import MaterialComponents.MaterialButtons_Theming 
+import MaterialComponents.MaterialCards_Theming 
 import MaterialComponents.MaterialContainerScheme
-import MaterialComponents.MaterialCards_Theming
-import MaterialComponents.MaterialButtons_Theming
 
 class CardExampleViewController: UIViewController {
   @IBOutlet weak var imageView: UIImageView!
@@ -50,9 +50,7 @@ class CardExampleViewController: UIViewController {
     imageView.isAccessibilityElement = true
     imageView.accessibilityLabel = "Missing Dish"
     imageView.layer.cornerRadius = card.layer.cornerRadius
-    if #available(iOS 11.0, *) {
-      imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-    }
+    imageView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
   }
 }
 

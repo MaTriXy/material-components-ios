@@ -12,8 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialChips+Theming.h"
 #import "MaterialChips.h"
+#import "MaterialChips+Theming.h"
+#import "MaterialShapeLibrary.h"
+#import "MaterialShapes.h"
 #import "MaterialSnapshot.h"
 
 /** A test fake for @c MDCChipView that allows overriding some read-only properties. */
@@ -136,10 +138,8 @@
 
 - (void)testBaselineThemedChipWithImageRTL {
   // Given
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.imageView.image = [self leadingImage];
@@ -160,10 +160,8 @@
 
 - (void)testOutlinedThemedChipWithImageRTL {
   // Given
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.imageView.image = [self leadingImage];
@@ -197,10 +195,8 @@
 - (void)testDefaultChipWithAccessoryViewAndPositiveTopLeftAccessoryPaddingRTL {
   // Given
   self.chip.accessoryView = [self deleteButton];
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.accessoryPadding = UIEdgeInsetsMake(10, 10, 0, 0);
@@ -223,10 +219,8 @@
 - (void)testDefaultChipWithAccessoryViewAndPositiveBottomRightAccessoryPaddingRTL {
   // Given
   self.chip.accessoryView = [self deleteButton];
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.accessoryPadding = UIEdgeInsetsMake(0, 0, 10, 10);
@@ -249,10 +243,8 @@
 - (void)testDefaultChipWithAccessoryViewAndNegativeTopLeftAccessoryPaddingRTL {
   // Given
   self.chip.accessoryView = [self deleteButton];
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.accessoryPadding = UIEdgeInsetsMake(-6, -6, 0, 0);
@@ -275,10 +267,8 @@
 - (void)testDefaultChipWithAccessoryViewAndNegativeBottomRightAccessoryPaddingRTL {
   // Given
   self.chip.accessoryView = [self deleteButton];
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.accessoryPadding = UIEdgeInsetsMake(0, 0, -6, -6);
@@ -298,10 +288,8 @@
 
 - (void)testBaselineThemedChipWithAccessoryViewRTL {
   // Given
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.accessoryView = [self deleteButton];
@@ -322,10 +310,8 @@
 
 - (void)testOutlinedThemedChipWithAccessoryViewRTL {
   // Given
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.accessoryView = [self deleteButton];
@@ -358,10 +344,8 @@
 
 - (void)testBaselineThemedChipWithImageAndAccessoryViewRTL {
   // Given
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.imageView.image = [self leadingImage];
@@ -384,10 +368,8 @@
 
 - (void)testOutlinedThemedChipWithImageAndAccessoryViewRTL {
   // Given
-  if (@available(iOS 10.0, *)) {
-    self.chip.traitCollectionOverride = [UITraitCollection
-        traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
-  }
+  self.chip.traitCollectionOverride = [UITraitCollection
+      traitCollectionWithLayoutDirection:UITraitEnvironmentLayoutDirectionRightToLeft];
 
   // When
   self.chip.imageView.image = [self leadingImage];
@@ -624,6 +606,97 @@
 
   // Then
   [self generateSnapshotAndVerifyForView:self.chip];
+}
+
+#pragma mark - Corner Radius
+
+- (void)testChipWithCustomCornerRadius {
+  // When
+  self.chip.cornerRadius = 5;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.chip];
+}
+
+- (void)testChipWithCustomCornerRadiusAndShapeGenerator {
+  // When
+  self.chip.cornerRadius = 5;
+  MDCRectangleShapeGenerator *rectangleShapeGenerator = [[MDCRectangleShapeGenerator alloc] init];
+  MDCRoundedCornerTreatment *roundedCorners = [[MDCRoundedCornerTreatment alloc] initWithRadius:10];
+  [rectangleShapeGenerator setCorners:roundedCorners];
+  self.chip.shapeGenerator = rectangleShapeGenerator;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.chip];
+}
+
+- (void)testChipWithCustomCornerRadiusAndResetShapeGeneratorToNil {
+  // When
+  self.chip.cornerRadius = 5;
+  MDCRectangleShapeGenerator *rectangleShapeGenerator = [[MDCRectangleShapeGenerator alloc] init];
+  MDCRoundedCornerTreatment *roundedCorners = [[MDCRoundedCornerTreatment alloc] initWithRadius:10];
+  [rectangleShapeGenerator setCorners:roundedCorners];
+  self.chip.shapeGenerator = rectangleShapeGenerator;
+  self.chip.shapeGenerator = nil;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.chip];
+}
+
+- (void)testChipWithCustomFrame {
+  // When
+  self.chip.bounds = CGRectMake(0, 0, 80, 44);
+  [self.chip layoutIfNeeded];
+
+  // Then
+  UIView *snapshotView = [self.chip mdc_addToBackgroundView];
+  [self snapshotVerifyView:snapshotView];
+}
+
+- (void)testChipWithCustomCornerRadiusAndCustomFrame {
+  // When
+  self.chip.cornerRadius = 5;
+  self.chip.bounds = CGRectMake(0, 0, 80, 44);
+  [self.chip layoutIfNeeded];
+
+  // Then
+  UIView *snapshotView = [self.chip mdc_addToBackgroundView];
+  [self snapshotVerifyView:snapshotView];
+}
+
+- (void)testChipWithCustomFrameWhenCenterVisibleArea {
+  // When
+  self.chip.centerVisibleArea = YES;
+  self.chip.bounds = CGRectMake(0, 0, 80, 44);
+  [self.chip layoutIfNeeded];
+
+  // Then
+  UIView *snapshotView = [self.chip mdc_addToBackgroundView];
+  [self snapshotVerifyView:snapshotView];
+}
+
+- (void)testChipWithMinimumSizeWhenCenterVisibleAreaIsYES {
+  // When
+  self.chip.centerVisibleArea = YES;
+  self.chip.minimumSize = CGSizeMake(80, 44);
+  self.chip.bounds = CGRectMake(0, 0, 80, 44);
+  [self.chip layoutIfNeeded];
+
+  // Then
+  UIView *snapshotView = [self.chip mdc_addToBackgroundView];
+  [self snapshotVerifyView:snapshotView];
+}
+
+- (void)testChipWithCustomCornerRadiusAndCustomFrameWhenCenterVisibleArea {
+  // When
+  self.chip.centerVisibleArea = YES;
+  self.chip.cornerRadius = 5;
+  self.chip.bounds = CGRectMake(0, 0, 80, 44);
+  [self.chip layoutIfNeeded];
+
+  // Then
+  UIView *snapshotView = [self.chip mdc_addToBackgroundView];
+  [self snapshotVerifyView:snapshotView];
 }
 
 @end

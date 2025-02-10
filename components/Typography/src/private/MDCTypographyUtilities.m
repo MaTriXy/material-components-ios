@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #import "MDCTypographyUtilities.h"
+#import <UIKit/UIKit.h>
 
 #import "MaterialApplication.h"
 
@@ -21,12 +22,10 @@
  if we are unable to query the device due to being in an extension.
  */
 UIContentSizeCategory GetCurrentSizeCategory(void) {
-  UIContentSizeCategory sizeCategory = UIContentSizeCategoryLarge;
-  if (@available(iOS 10.0, *)) {
-    sizeCategory = UIScreen.mainScreen.traitCollection.preferredContentSizeCategory;
-  } else if ([UIApplication mdc_safeSharedApplication]) {
-    sizeCategory = [UIApplication mdc_safeSharedApplication].preferredContentSizeCategory;
-  }
-
-  return sizeCategory;
+#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
+  // For code review, use the review queue listed in go/material-visionos-review.
+  return UITraitCollection.currentTraitCollection.preferredContentSizeCategory;
+#else
+  return UIScreen.mainScreen.traitCollection.preferredContentSizeCategory;
+#endif
 }

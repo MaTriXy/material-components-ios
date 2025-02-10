@@ -16,8 +16,12 @@
 #import <WebKit/WebKit.h>
 
 #import "MaterialAppBar+ColorThemer.h"
-#import "MaterialAppBar+TypographyThemer.h"
 #import "MaterialAppBar.h"
+#import "MaterialAppBar+TypographyThemer.h"
+#import "MaterialFlexibleHeader.h"
+#import "MaterialNavigationBar.h"
+#import "MaterialColorScheme.h"
+#import "MaterialTypographyScheme.h"
 
 // This demonstrates that a WKWebView with large content as the tracking scroll view is able to
 // scroll as expected, even without the useAdditionalSafeAreaInsetsForWebKitScrollViews flag
@@ -110,6 +114,7 @@
     @"breadcrumbs" : @[ @"App Bar", @"WKWebView large content no bug" ],
     @"primaryDemo" : @NO,
     @"presentable" : @NO,
+    @"skip_snapshots" : @YES,  // The webview content sometimes takes long to load.
   };
 }
 

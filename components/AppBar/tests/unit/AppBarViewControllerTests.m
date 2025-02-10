@@ -15,6 +15,9 @@
 #import <XCTest/XCTest.h>
 
 #import "MDCAppBarViewController.h"
+#import "MaterialFlexibleHeader.h"
+#import "MaterialHeaderStackView.h"
+#import "MaterialNavigationBar.h"
 
 @interface AppBarViewControllerTests : XCTestCase
 
@@ -76,7 +79,7 @@
   XCTestExpectation *expectation =
       [self expectationWithDescription:@"Invoked mdc_elevationDidChangeBlock"];
   appBarController.headerView.mdc_elevationDidChangeBlock =
-      ^(MDCFlexibleHeaderView *headerView, CGFloat elevation) {
+      ^(id<MDCElevatable> _, CGFloat elevation) {
         blockCalled = YES;
         [expectation fulfill];
       };

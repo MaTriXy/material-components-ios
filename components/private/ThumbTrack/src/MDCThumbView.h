@@ -16,6 +16,11 @@
 
 #import "MaterialShadowElevations.h"
 
+API_DEPRECATED_BEGIN("🤖👀 Use go/material-ios-branding UISlider instead. "
+                     "See go/material-ios-slider/gm2-migration for more details. "
+                     "This has go/material-ios-migrations#scriptable-potential 🤖👀.",
+                     ios(12, 12))
+
 @interface MDCThumbView : UIView
 
 /**
@@ -28,8 +33,21 @@
 /** The border width of the thumbview layer. */
 @property(nonatomic, assign) CGFloat borderWidth;
 
+/** The border color of the thumbview layer. */
+@property(nullable, nonatomic) UIColor *borderColor;
+
 /** The corner radius of the thumbview layer. */
 @property(nonatomic, assign) CGFloat cornerRadius;
+
+/**
+ A Boolean value that determines whether the visible area is centered in the bounds of the view.
+
+ If set to YES, the visible area is centered in the bounds of the view, which is often used to
+ configure invisible tappable area. If set to NO, the visible area fills its bounds.
+
+ The default value is @c NO.
+*/
+@property(nonatomic, assign) BOOL centerVisibleArea;
 
 /** Set the @c icon shown on the thumb. */
 - (void)setIcon:(nullable UIImage *)icon;
@@ -38,3 +56,5 @@
 @property(nonnull, nonatomic, strong) UIColor *shadowColor;
 
 @end
+
+API_DEPRECATED_END

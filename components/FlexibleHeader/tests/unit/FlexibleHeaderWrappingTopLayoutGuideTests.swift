@@ -41,34 +41,34 @@ class FlexibleHeaderWrappingTopLayoutGuideTests: XCTestCase {
     // Given
     let contentViewController = UIViewController()
     container.contentViewController = contentViewController
-    let _ = container.view // Force the view to load.
+    let _ = container.view  // Force the view to load.
 
     // Then
     XCTAssertEqual(contentViewController.view.autoresizingMask, [.flexibleWidth, .flexibleHeight])
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
-    XCTAssertEqual(contentViewController.topLayoutGuide.length,
-                   container.headerViewController.headerView.frame.maxY)
-    if #available(iOS 11.0, *) {
-      XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
-                     container.headerViewController.headerView.frame.maxY)
-    }
+    XCTAssertEqual(
+      contentViewController.topLayoutGuide.length,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(
+      contentViewController.additionalSafeAreaInsets.top,
+      container.headerViewController.headerView.frame.maxY)
   }
 
   func testEarlyViewLoadStillAffectsTopLayoutGuide() {
     // Given
     let contentViewController = UIViewController()
-    let _ = container.view // Force the view to load.
+    let _ = container.view  // Force the view to load.
     container.contentViewController = contentViewController
 
     // Then
     XCTAssertEqual(contentViewController.view.autoresizingMask, [.flexibleWidth, .flexibleHeight])
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
-    XCTAssertEqual(contentViewController.topLayoutGuide.length,
-                   container.headerViewController.headerView.frame.maxY)
-    if #available(iOS 11.0, *) {
-      XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
-                     container.headerViewController.headerView.frame.maxY)
-    }
+    XCTAssertEqual(
+      contentViewController.topLayoutGuide.length,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(
+      contentViewController.additionalSafeAreaInsets.top,
+      container.headerViewController.headerView.frame.maxY)
   }
 
   // MARK: Untracked table view
@@ -77,18 +77,18 @@ class FlexibleHeaderWrappingTopLayoutGuideTests: XCTestCase {
     // Given
     let contentViewController = UITableViewController()
     container.contentViewController = contentViewController
-    let _ = container.view // Force the view to load.
+    let _ = container.view  // Force the view to load.
 
     // Then
     XCTAssertEqual(contentViewController.view.autoresizingMask, [.flexibleWidth, .flexibleHeight])
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
-    XCTAssertEqual(contentViewController.topLayoutGuide.length,
-                   container.headerViewController.headerView.frame.maxY)
-    if #available(iOS 11.0, *) {
-      XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
-                     container.headerViewController.headerView.frame.maxY)
-      XCTAssertEqual(contentViewController.tableView.adjustedContentInset.top, 0)
-    }
+    XCTAssertEqual(
+      contentViewController.topLayoutGuide.length,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(
+      contentViewController.additionalSafeAreaInsets.top,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(contentViewController.tableView.adjustedContentInset.top, 0)
   }
 
   // MARK: Tracked table view
@@ -98,17 +98,17 @@ class FlexibleHeaderWrappingTopLayoutGuideTests: XCTestCase {
     let contentViewController = UITableViewController()
     container.headerViewController.headerView.trackingScrollView = contentViewController.tableView
     container.contentViewController = contentViewController
-    let _ = container.view // Force the view to load.
+    let _ = container.view  // Force the view to load.
     container.headerViewController.headerView.trackingScrollDidScroll()
 
     // Then
-    XCTAssertEqual(contentViewController.topLayoutGuide.length,
-                   container.headerViewController.headerView.frame.maxY)
-    if #available(iOS 11.0, *) {
-      XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top, 0)
-      XCTAssertEqual(contentViewController.tableView.adjustedContentInset.top,
-                     container.headerViewController.headerView.maximumHeight)
-    }
+    XCTAssertEqual(
+      contentViewController.topLayoutGuide.length,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top, 0)
+    XCTAssertEqual(
+      contentViewController.tableView.adjustedContentInset.top,
+      container.headerViewController.headerView.maximumHeight)
   }
 
   // MARK: Untracked collection view
@@ -118,18 +118,18 @@ class FlexibleHeaderWrappingTopLayoutGuideTests: XCTestCase {
     let flow = UICollectionViewFlowLayout()
     let contentViewController = UICollectionViewController(collectionViewLayout: flow)
     container.contentViewController = contentViewController
-    let _ = container.view // Force the view to load.
+    let _ = container.view  // Force the view to load.
 
     // Then
     XCTAssertEqual(contentViewController.view.autoresizingMask, [.flexibleWidth, .flexibleHeight])
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
-    XCTAssertEqual(contentViewController.topLayoutGuide.length,
-                   container.headerViewController.headerView.frame.maxY)
-    if #available(iOS 11.0, *) {
-      XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top,
-                     container.headerViewController.headerView.frame.maxY)
-      XCTAssertEqual(contentViewController.collectionView!.adjustedContentInset.top, 0)
-    }
+    XCTAssertEqual(
+      contentViewController.topLayoutGuide.length,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(
+      contentViewController.additionalSafeAreaInsets.top,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(contentViewController.collectionView!.adjustedContentInset.top, 0)
   }
 
   // MARK: Tracked collection view view
@@ -139,22 +139,21 @@ class FlexibleHeaderWrappingTopLayoutGuideTests: XCTestCase {
     let flow = UICollectionViewFlowLayout()
     let contentViewController = UICollectionViewController(collectionViewLayout: flow)
     container.headerViewController.headerView.trackingScrollView =
-        contentViewController.collectionView
+      contentViewController.collectionView
     container.contentViewController = contentViewController
-    let _ = container.view // Force the view to load.
+    let _ = container.view  // Force the view to load.
     container.headerViewController.headerView.trackingScrollDidScroll()
 
     // Then
     XCTAssertEqual(contentViewController.view.autoresizingMask, [.flexibleWidth, .flexibleHeight])
     XCTAssertEqual(contentViewController.view.frame, container.view.bounds)
-    XCTAssertEqual(contentViewController.topLayoutGuide.length,
-                   container.headerViewController.headerView.frame.maxY)
-    if #available(iOS 11.0, *) {
-      XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top, 0)
-      XCTAssertEqual(contentViewController.collectionView!.adjustedContentInset.top,
-                     container.headerViewController.headerView.maximumHeight)
-    }
+    XCTAssertEqual(
+      contentViewController.topLayoutGuide.length,
+      container.headerViewController.headerView.frame.maxY)
+    XCTAssertEqual(contentViewController.additionalSafeAreaInsets.top, 0)
+    XCTAssertEqual(
+      contentViewController.collectionView!.adjustedContentInset.top,
+      container.headerViewController.headerView.maximumHeight)
   }
 
 }
-

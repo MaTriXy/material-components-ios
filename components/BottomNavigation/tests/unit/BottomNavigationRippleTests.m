@@ -14,16 +14,18 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCBottomNavigationItemView.h"
-#import "MaterialBottomNavigation.h"
-#import "MaterialInk.h"
-#import "MaterialRipple.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomNavigationItemView.h"
+#pragma clang diagnostic pop
+#import "MDCBottomNavigationBar.h"
+#import "MDCRippleTouchController.h"
+#import "MDCRippleView.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCBottomNavigationBar (Testing)
 @property(nonatomic, strong) NSMutableArray<MDCBottomNavigationItemView *> *itemViews;
-@property(nonatomic, strong) NSMutableArray *inkControllers;
-- (BOOL)inkTouchController:(MDCInkTouchController *)inkTouchController
-    shouldProcessInkTouchesAtTouchLocation:(CGPoint)location;
 - (BOOL)rippleTouchController:(MDCRippleTouchController *)rippleTouchController
     shouldProcessRippleTouchesAtTouchLocation:(CGPoint)location;
 @end
@@ -57,78 +59,47 @@
 /**
  Test to confirm behavior of initializing a @c MDCBottomNavigationBar without any customization.
  */
-- (void)testEnabledInkAndDisabledRippleColorsAndSuperviewsAndBounds {
+- (void)testEnabledRippleColorsAndSuperviewsAndBounds {
   // Then
-  XCTAssertFalse(self.bottomNavigationBar.enableRippleBehavior);
   for (MDCBottomNavigationItemView *itemView in self.bottomNavigationBar.itemViews) {
     XCTAssertEqualObjects(itemView.rippleTouchController.rippleView.rippleColor,
                           [UIColor.blackColor colorWithAlphaComponent:(CGFloat)0.15]);
-    XCTAssertEqualObjects(itemView.inkView.inkColor,
-                          [UIColor.blackColor colorWithAlphaComponent:(CGFloat)0.15]);
     XCTAssertEqual(itemView.rippleTouchController.rippleView.rippleStyle, MDCRippleStyleUnbounded);
     XCTAssertNotNil(itemView.rippleTouchController.rippleView.superview);
-    XCTAssertNotNil(itemView.inkView.superview);
-    CGRect itemViewBounds = CGRectStandardize(itemView.bounds);
-    CGRect inkBounds = CGRectStandardize(itemView.inkView.bounds);
-    XCTAssertTrue(CGRectEqualToRect(itemViewBounds, inkBounds), @"%@ is not equal to %@",
-                  NSStringFromCGRect(itemViewBounds), NSStringFromCGRect(inkBounds));
-  }
-}
-
-/**
- Test to confirm behavior of initializing a @c MDCBottomNavigationBar with Ripple enabled.
- */
-- (void)testEnabledRippleAndDisabledInkColorsAndSuperviewsAndBoundsWithRippleBehaviorEnabled {
-  // When
-  self.bottomNavigationBar.enableRippleBehavior = YES;
-
-  // Then
-  XCTAssertTrue(self.bottomNavigationBar.enableRippleBehavior);
-  for (MDCBottomNavigationItemView *itemView in self.bottomNavigationBar.itemViews) {
-    XCTAssertEqualObjects(itemView.rippleTouchController.rippleView.rippleColor,
-                          [UIColor.blackColor colorWithAlphaComponent:(CGFloat)0.15]);
-    XCTAssertEqualObjects(itemView.inkView.inkColor,
-                          [UIColor.blackColor colorWithAlphaComponent:(CGFloat)0.15]);
-    XCTAssertEqual(itemView.rippleTouchController.rippleView.rippleStyle, MDCRippleStyleUnbounded);
-    XCTAssertNotNil(itemView.rippleTouchController.rippleView.superview);
-    XCTAssertNotNil(itemView.inkView.superview);
     CGRect itemViewBounds = CGRectStandardize(itemView.bounds);
     CGRect rippleBounds = CGRectStandardize(itemView.rippleTouchController.rippleView.bounds);
+    XCTAssertTrue(self.bottomNavigationBar.isRippleEnabled);
     XCTAssertTrue(CGRectEqualToRect(itemViewBounds, rippleBounds), @"%@ is not equal to %@",
                   NSStringFromCGRect(itemViewBounds), NSStringFromCGRect(rippleBounds));
   }
 }
 
 /**
- Test to confirm toggling @c enableRippleBehavior triggers ripple on touch and not ink.
+ Test to confirm enabling @c enableRippleBehavior triggers ripple on touch.
  */
 - (void)testSetEnableRippleBehaviorToYesThenInvokeItemToCheckRippleIsInvoked {
   // When
-  self.bottomNavigationBar.enableRippleBehavior = YES;
+  self.bottomNavigationBar.rippleEnabled = YES;
 
   // Then
   for (MDCBottomNavigationItemView *itemView in self.bottomNavigationBar.itemViews) {
     XCTAssertTrue([self.bottomNavigationBar rippleTouchController:itemView.rippleTouchController
                         shouldProcessRippleTouchesAtTouchLocation:CGPointZero]);
   }
-  for (MDCInkTouchController *controller in self.bottomNavigationBar.inkControllers) {
-    XCTAssertFalse([self.bottomNavigationBar inkTouchController:controller
-                         shouldProcessInkTouchesAtTouchLocation:CGPointZero]);
-  }
 }
 
 /**
- Test to confirm that default behavior triggers ink on touch and not ripple.
+ Test to confirm disabling @c enableRippleBehavior does not trigger ripple on touch.
  */
-- (void)testTouchingItemToCheckInkIsInvokedAndNotRipple {
+
+- (void)testSetEnableRippleBehaviorToNoThenInvokeItemToCheckRippleIsNotInvoked {
+  // When
+  self.bottomNavigationBar.rippleEnabled = NO;
+
   // Then
   for (MDCBottomNavigationItemView *itemView in self.bottomNavigationBar.itemViews) {
     XCTAssertFalse([self.bottomNavigationBar rippleTouchController:itemView.rippleTouchController
                          shouldProcessRippleTouchesAtTouchLocation:CGPointZero]);
-  }
-  for (MDCInkTouchController *controller in self.bottomNavigationBar.inkControllers) {
-    XCTAssertTrue([self.bottomNavigationBar inkTouchController:controller
-                        shouldProcessInkTouchesAtTouchLocation:CGPointZero]);
   }
 }
 
@@ -138,15 +109,15 @@
  */
 - (void)testSetEnableRippleBehaviorToYesThenSetSelectedItemTintColorToSetRippleColor {
   // When
-  self.bottomNavigationBar.enableRippleBehavior = YES;
+  self.bottomNavigationBar.rippleEnabled = YES;
   [self.bottomNavigationBar setSelectedItemTintColor:UIColor.redColor];
 
   // Then
   for (MDCBottomNavigationItemView *itemView in self.bottomNavigationBar.itemViews) {
     XCTAssertEqualObjects(itemView.rippleTouchController.rippleView.rippleColor,
                           [UIColor.redColor colorWithAlphaComponent:(CGFloat)0.15]);
-    XCTAssertEqualObjects(itemView.inkView.inkColor,
-                          [UIColor.redColor colorWithAlphaComponent:(CGFloat)0.15]);
   }
 }
 @end
+
+NS_ASSUME_NONNULL_END

@@ -12,17 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialCollections.h"
 #import "MaterialColorScheme.h"
 #import "MaterialPalettes.h"
 #import "MaterialSlider+ColorThemer.h"
 #import "MaterialSlider.h"
 #import "MaterialTypographyScheme.h"
-#import "supplemental/SliderCollectionSupplemental.h"
 
 static NSString *const kReusableIdentifierItem = @"sliderItemCellIdentifier";
 static CGFloat const kSliderHorizontalMargin = 16;
 static CGFloat const kSliderVerticalMargin = 12;
+static CGFloat const kSliderMinimumTouchSize = 48;
 
 @interface MDCSliderModel : NSObject
 
@@ -139,6 +138,8 @@ static CGFloat const kSliderVerticalMargin = 12;
 }
 
 - (void)prepareForReuse {
+  [super prepareForReuse];
+
   // Remove target/action pairs
   NSSet *targets = [_slider allTargets];
   for (id target in targets) {
@@ -150,22 +151,22 @@ static CGFloat const kSliderVerticalMargin = 12;
   [super layoutSubviews];
 
   UIEdgeInsets safeArea = UIEdgeInsetsZero;
-  if (@available(iOS 11.0, *)) {
-    // Accommodate insets for iPhone X.
-    safeArea = self.safeAreaInsets;
-    safeArea.top = 0;
-  }
+  // Accommodate insets for iPhone X.
+  safeArea = self.safeAreaInsets;
+  safeArea.top = 0;
   CGRect labelFrame =
       CGRectMake(kSliderHorizontalMargin + 6, kSliderVerticalMargin,
                  self.contentView.frame.size.width - (2 * kSliderHorizontalMargin), 20);
 
   _label.frame = UIEdgeInsetsInsetRect(labelFrame, safeArea);
 
-  CGSize intrinsicSize = [_slider intrinsicContentSize];
+  CGSize sliderSize = [_slider intrinsicContentSize];
+  sliderSize.width = MAX(kSliderMinimumTouchSize, sliderSize.width);
+  sliderSize.height = MAX(kSliderMinimumTouchSize, sliderSize.height);
   CGRect sliderFrame = CGRectMake(
       kSliderHorizontalMargin,
-      self.contentView.frame.size.height - kSliderVerticalMargin - intrinsicSize.height,
-      self.contentView.frame.size.width - (2 * kSliderHorizontalMargin), intrinsicSize.height);
+      self.contentView.frame.size.height - kSliderVerticalMargin - sliderSize.height,
+      self.contentView.frame.size.width - (2 * kSliderHorizontalMargin), sliderSize.height);
   _slider.frame = UIEdgeInsetsInsetRect(sliderFrame, safeArea);
 }
 
@@ -199,13 +200,17 @@ static CGFloat const kSliderVerticalMargin = 12;
 }
 
 - (CGSize)itemSize {
-  return CGSizeMake(self.collectionView.bounds.size.width, 80);
+  return CGSizeMake(self.collectionView.bounds.size.width, 100);
 }
 
 - (CGFloat)minimumInteritemSpacing {
   return 0;
 }
 
+@end
+
+@interface SliderCollectionViewController : UICollectionViewController
+@property(nonatomic, strong) MDCSemanticColorScheme *colorScheme;
 @end
 
 @implementation SliderCollectionViewController {
@@ -313,6 +318,19 @@ static CGFloat const kSliderVerticalMargin = 12;
   [cell applyModel:model withColorScheme:self.colorScheme];
   cell.labelFont = _typographyScheme.subtitle2;
   return cell;
+}
+
+@end
+
+@implementation SliderCollectionViewController (CatalogByConvention)
+
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Slider", @"Slider" ],
+    @"description" : @"Sliders allow users to make selections from a range of values.",
+    @"primaryDemo" : @YES,
+    @"presentable" : @YES,
+  };
 }
 
 @end

@@ -12,19 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "MDCChipView.h"
 #import "private/MDCChipView+Private.h"
 
-#import <MDFInternationalization/MDFInternationalization.h>
-
-#import "MaterialInk.h"
-#import "MaterialMath.h"
-#import "MaterialRipple.h"
-#import "MaterialShadowElevations.h"
-#import "MaterialShadowLayer.h"
-#import "MaterialShapes.h"
-#import "MaterialTypography.h"
+#import "UIView+MaterialElevationResponding.h"
+#import "MDCInkView.h"
+#import "MDCRippleView.h"
+#import "MDCShadow.h"
+#import "MDCShadowsCollection.h"
+#import "MDCShadowElevations.h"
+#import "MDCRoundedCornerTreatment.h"
+#import "MDCRectangleShapeGenerator.h"
+#import "MDCShapeMediator.h"
+#import "MDCShapedShadowLayer.h"
+#import "MDCFontTextStyle.h"
+#import "MDCTypography.h"
+#import "UIFont+MaterialScalable.h"
+#import "UIFont+MaterialTypography.h"
+#import "MDCMath.h"
+#import <MDFInternationalization/MDFInternationalization.h>  // IWYU pragma: keep
+#import <MDFInternationalization/MDFRTL.h>
 
 static const MDCFontTextStyle kTitleTextStyle = MDCFontTextStyleBody2;
+
+// KVO context
+static char *const kKVOContextMDCChipView = "kKVOContextMDCChipView";
 
 static const CGSize kMDCChipMinimumSizeDefault = (CGSize){(CGFloat)0, (CGFloat)32};
 
@@ -58,7 +70,6 @@ static const CGFloat MDCChipSelectedDarkenPercent = (CGFloat)0.16;
 static const CGFloat MDCChipDisabledLightenPercent = (CGFloat)0.38;
 static const CGFloat MDCChipTitleColorWhite = (CGFloat)0.13;
 static const CGFloat MDCChipTitleColorDisabledLightenPercent = (CGFloat)0.38;
-static const CGFloat MDCChipViewRippleDefaultOpacity = (CGFloat)0.12;
 
 static const UIEdgeInsets MDCChipContentPadding = {4, 4, 4, 4};
 static const UIEdgeInsets MDCChipImagePadding = {0, 0, 0, 0};
@@ -71,7 +82,7 @@ static CGRect CGRectVerticallyCentered(CGRect rect,
                                        CGFloat pixelScale) {
   CGFloat viewHeight = CGRectGetHeight(rect) + padding.top + padding.bottom;
   CGFloat yValue = (height - viewHeight) / 2;
-  yValue = MDCRound(yValue * pixelScale) / pixelScale;
+  yValue = round(yValue * pixelScale) / pixelScale;
   return CGRectOffset(rect, 0, yValue);
 }
 
@@ -106,9 +117,17 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 @property(nonatomic, readonly) BOOL showImageView;
 @property(nonatomic, readonly) BOOL showSelectedImageView;
 @property(nonatomic, readonly) BOOL showAccessoryView;
+@property(nonatomic, assign) BOOL shouldFullyRoundCorner;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 @property(nonatomic, strong) MDCInkView *inkView;
-@property(nonatomic, strong) MDCStatefulRippleView *rippleView;
+#pragma clang diagnostic pop
+@property(nonatomic, strong) MDCRippleView *rippleView;
+@property(nonatomic, strong, nonnull) NSMutableDictionary<NSNumber *, UIColor *> *rippleColors;
 @property(nonatomic, readonly) CGFloat pixelScale;
+@property(nonatomic, assign) BOOL enableRippleBehavior;
+@property(nonatomic, assign) UIEdgeInsets currentVisibleAreaInsets;
+@property(nonatomic, assign) CGFloat currentCornerRadius;
 @end
 
 @implementation MDCChipView {
@@ -119,29 +138,43 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   NSMutableDictionary<NSNumber *, NSNumber *> *_elevations;
   NSMutableDictionary<NSNumber *, UIColor *> *_inkColors;
   NSMutableDictionary<NSNumber *, UIColor *> *_shadowColors;
+  NSMutableDictionary<NSNumber *, UIColor *> *_tintColors;
   NSMutableDictionary<NSNumber *, UIColor *> *_titleColors;
 
   UIFont *_titleFont;
 
   BOOL _mdc_adjustsFontForContentSizeCategory;
+  MDCShapeMediator *_shapedLayer;
+  CGFloat _currentElevation;
 }
+
+static BOOL gEnablePerformantShadow = NO;
 
 @synthesize mdc_overrideBaseElevation = _mdc_overrideBaseElevation;
 @synthesize mdc_elevationDidChangeBlock = _mdc_elevationDidChangeBlock;
+@synthesize cornerRadius = _cornerRadius;
+@synthesize shadowsCollection = _shadowsCollection;
 
 @dynamic layer;
 
 + (Class)layerClass {
-  return [MDCShapedShadowLayer class];
+  if (gEnablePerformantShadow) {
+    return [super layerClass];
+  } else {
+    return [MDCShapedShadowLayer class];
+  }
 }
 
 - (void)commonMDCChipViewInit {
   _minimumSize = kMDCChipMinimumSizeDefault;
-  self.rippleAllowsSelection = YES;
   self.isAccessibilityElement = YES;
   self.accessibilityTraits = UIAccessibilityTraitButton;
   _mdc_overrideBaseElevation = -1;
-  _adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
+  _currentElevation = 0;
+  if (gEnablePerformantShadow) {
+    _shapedLayer = [[MDCShapeMediator alloc] initWithViewLayer:self.layer];
+  }
+  [self addObservers];
 }
 
 - (instancetype)initWithFrame:(CGRect)frame {
@@ -151,11 +184,13 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
       UIColor *normal = MDCColorFromRGB(MDCChipBackgroundColor);
       UIColor *disabled = MDCColorLighten(normal, MDCChipDisabledLightenPercent);
       UIColor *selected = MDCColorDarken(normal, MDCChipSelectedDarkenPercent);
+      UIColor *selectedDisabled = MDCColorFromRGB(MDCChipBackgroundColor);
 
       _backgroundColors = [NSMutableDictionary dictionary];
       _backgroundColors[@(UIControlStateNormal)] = normal;
       _backgroundColors[@(UIControlStateDisabled)] = disabled;
       _backgroundColors[@(UIControlStateSelected)] = selected;
+      _backgroundColors[@(UIControlStateSelected & UIControlStateDisabled)] = selectedDisabled;
     }
     _borderColors = [NSMutableDictionary dictionary];
     _borderWidths = [NSMutableDictionary dictionary];
@@ -168,6 +203,8 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 
     _inkColors = [NSMutableDictionary dictionary];
 
+    _tintColors = [NSMutableDictionary dictionary];
+
     UIColor *titleColor = [UIColor colorWithWhite:MDCChipTitleColorWhite alpha:1];
     _titleColors = [NSMutableDictionary dictionary];
     _titleColors[@(UIControlStateNormal)] = titleColor;
@@ -177,12 +214,17 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
     _shadowColors = [NSMutableDictionary dictionary];
     _shadowColors[@(UIControlStateNormal)] = [UIColor blackColor];
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     _inkView = [[MDCInkView alloc] initWithFrame:self.bounds];
+#pragma clang diagnostic pop
     _inkView.usesLegacyInkRipple = NO;
     _inkView.inkColor = [self inkColorForState:UIControlStateNormal];
     [self addSubview:_inkView];
 
-    _rippleView = [[MDCStatefulRippleView alloc] initWithFrame:self.bounds];
+    _rippleView = [[MDCRippleView alloc] initWithFrame:self.bounds];
+    _rippleView.rippleColor = [self rippleColorForState:UIControlStateNormal];
+    _rippleColors = [NSMutableDictionary dictionary];
 
     _imageView = [[UIImageView alloc] init];
     [self addSubview:_imageView];
@@ -206,19 +248,16 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
     _imagePadding = MDCChipImagePadding;
     _titlePadding = MDCChipTitlePadding;
     _accessoryPadding = MDCChipAccessoryPadding;
+    _currentVisibleAreaInsets = UIEdgeInsetsZero;
+    _currentCornerRadius = 0.0f;
+    _centerVisibleArea = NO;
 
-    // UIControl has a drag enter/exit boundary that is outside of the frame of the button itself.
-    // Because this is not exposed externally, we can't use -touchesMoved: to calculate when to
-    // change ink state. So instead we fall back on adding target/actions for these specific events.
-    [self addTarget:self
-                  action:@selector(touchDragEnter:forEvent:)
-        forControlEvents:UIControlEventTouchDragEnter];
-    [self addTarget:self
-                  action:@selector(touchDragExit:forEvent:)
-        forControlEvents:UIControlEventTouchDragExit];
-
-    self.layer.elevation = [self elevationForState:UIControlStateNormal];
+    if (!gEnablePerformantShadow) {
+      self.layer.elevation = [self elevationForState:UIControlStateNormal];
+    }
     self.contentHorizontalAlignment = UIControlContentHorizontalAlignmentFill;
+
+    self.shouldFullyRoundCorner = YES;
 
     [self updateBackgroundColor];
 
@@ -235,11 +274,8 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (void)dealloc {
+  [self removeObservers];
   [self removeTarget:self action:NULL forControlEvents:UIControlEventAllEvents];
-
-  [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                  name:UIContentSizeCategoryDidChangeNotification
-                                                object:nil];
 }
 
 - (void)traitCollectionDidChange:(UITraitCollection *)previousTraitCollection {
@@ -250,23 +286,95 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (void)setShapeGenerator:(id<MDCShapeGenerating>)shapeGenerator {
+  if (!UIEdgeInsetsEqualToEdgeInsets(self.visibleAreaInsets, UIEdgeInsetsZero)) {
+    // When visibleAreaInsets is not UIEdgeInsetsZero, the custom shapeGenerater should not be set
+    // through setter.
+    return;
+  }
+
+  [self configureLayerWithShapeGenerator:shapeGenerator];
+
+  if (!shapeGenerator && !self.shouldFullyRoundCorner) {
+    [self configureLayerWithCornerRadius:self.cornerRadius];
+  }
+  [self setNeedsLayout];
+}
+
+- (void)configureLayerWithShapeGenerator:(id<MDCShapeGenerating>)shapeGenerator {
+  if (gEnablePerformantShadow) {
+    _shapedLayer.shapeGenerator = shapeGenerator;
+  } else {
+    self.layer.shapeGenerator = shapeGenerator;
+  }
+
   if (shapeGenerator) {
     self.layer.cornerRadius = 0;
     self.layer.shadowPath = nil;
-  } else {
-    CGFloat cornerRadius = MIN(CGRectGetHeight(self.frame), CGRectGetWidth(self.frame)) / 2;
-    self.layer.cornerRadius = cornerRadius;
-    self.layer.shadowPath =
-        [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:cornerRadius].CGPath;
   }
-
-  self.layer.shapeGenerator = shapeGenerator;
 
   [self updateBackgroundColor];
 }
 
 - (id)shapeGenerator {
+  if (gEnablePerformantShadow) {
+    return _shapedLayer.shapeGenerator;
+  }
   return self.layer.shapeGenerator;
+}
+
+- (void)configureLayerWithCornerRadius:(CGFloat)cornerRadius {
+  if (!self.shapeGenerator &&
+      UIEdgeInsetsEqualToEdgeInsets(self.visibleAreaInsets, UIEdgeInsetsZero)) {
+    self.layer.cornerRadius = cornerRadius;
+    if (gEnablePerformantShadow) {
+      [self updateShadow];
+    } else {
+      self.layer.shadowPath =
+          [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:cornerRadius].CGPath;
+    }
+  } else if (!UIEdgeInsetsEqualToEdgeInsets(self.visibleAreaInsets, UIEdgeInsetsZero)) {
+    [self configureLayerWithVisibleAreaInsets:self.visibleAreaInsets cornerRadius:cornerRadius];
+  }
+}
+
+- (void)configureLayerWithVisibleAreaInsets:(UIEdgeInsets)visibleAreaInsets
+                               cornerRadius:(CGFloat)cornerRadius {
+  if (UIEdgeInsetsEqualToEdgeInsets(visibleAreaInsets, self.currentVisibleAreaInsets) &&
+      MDCCGFloatEqual(self.currentCornerRadius, cornerRadius)) {
+    return;
+  }
+
+  self.currentVisibleAreaInsets = visibleAreaInsets;
+  self.currentCornerRadius = cornerRadius;
+
+  MDCRectangleShapeGenerator *shapeGenerator = [[MDCRectangleShapeGenerator alloc] init];
+  MDCCornerTreatment *cornerTreatment =
+      [[MDCRoundedCornerTreatment alloc] initWithRadius:cornerRadius];
+  [shapeGenerator setCorners:cornerTreatment];
+  shapeGenerator.topLeftCornerOffset = CGPointMake(visibleAreaInsets.left, visibleAreaInsets.top);
+  shapeGenerator.topRightCornerOffset =
+      CGPointMake(-visibleAreaInsets.right, visibleAreaInsets.top);
+  shapeGenerator.bottomLeftCornerOffset =
+      CGPointMake(visibleAreaInsets.left, -visibleAreaInsets.bottom);
+  shapeGenerator.bottomRightCornerOffset =
+      CGPointMake(-visibleAreaInsets.right, -visibleAreaInsets.bottom);
+
+  [self configureLayerWithShapeGenerator:shapeGenerator];
+}
+
+- (void)setCornerRadius:(CGFloat)cornerRadius {
+  _cornerRadius = cornerRadius;
+  // When cornerRadius is set to a custom value, corner is not forced to be fully rounded.
+  self.shouldFullyRoundCorner = NO;
+
+  [self configureLayerWithCornerRadius:cornerRadius];
+}
+
+- (CGFloat)cornerRadius {
+  if (!self.shouldFullyRoundCorner) {
+    return _cornerRadius;
+  }
+  return self.layer.cornerRadius;
 }
 
 - (void)setEnableRippleBehavior:(BOOL)enableRippleBehavior {
@@ -282,12 +390,10 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   }
 }
 
-- (BOOL)rippleAllowsSelection {
-  return self.rippleView.allowsSelection;
-}
-
-- (void)setRippleAllowsSelection:(BOOL)allowsSelection {
-  self.rippleView.allowsSelection = allowsSelection;
+- (void)setDisableInkAndRippleBehavior:(BOOL)disableInkAndRippleBehavior {
+  _disableInkAndRippleBehavior = disableInkAndRippleBehavior;
+  [self.inkView removeFromSuperview];
+  [self.rippleView removeFromSuperview];
 }
 
 #pragma mark - Dynamic Type Support
@@ -346,11 +452,16 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (UIColor *)backgroundColor {
-  return self.layer.shapedBackgroundColor;
+  return gEnablePerformantShadow ? _shapedLayer.shapedBackgroundColor
+                                 : self.layer.shapedBackgroundColor;
 }
 
 - (void)updateBackgroundColor {
-  self.layer.shapedBackgroundColor = [self backgroundColorForState:self.state];
+  if (gEnablePerformantShadow) {
+    _shapedLayer.shapedBackgroundColor = [self backgroundColorForState:self.state];
+  } else {
+    self.layer.shapedBackgroundColor = [self backgroundColorForState:self.state];
+  }
 }
 
 - (nullable UIColor *)borderColorForState:(UIControlState)state {
@@ -368,7 +479,11 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (void)updateBorderColor {
-  self.layer.shapedBorderColor = [self borderColorForState:self.state];
+  if (gEnablePerformantShadow) {
+    _shapedLayer.shapedBorderColor = [self borderColorForState:self.state];
+  } else {
+    self.layer.shapedBorderColor = [self borderColorForState:self.state];
+  }
 }
 
 - (CGFloat)borderWidthForState:(UIControlState)state {
@@ -389,11 +504,22 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (void)updateBorderWidth {
-  self.layer.shapedBorderWidth = [self borderWidthForState:self.state];
+  if (gEnablePerformantShadow) {
+    _shapedLayer.shapedBorderWidth = [self borderWidthForState:self.state];
+  } else {
+    self.layer.shapedBorderWidth = [self borderWidthForState:self.state];
+  }
 }
 
 - (CGFloat)mdc_currentElevation {
-  return [self elevationForState:self.state];
+  return _currentElevation;
+}
+
+- (MDCShadowsCollection *)shadowsCollection {
+  if (!_shadowsCollection) {
+    _shadowsCollection = MDCShadowsCollectionDefault();
+  }
+  return _shadowsCollection;
 }
 
 - (CGFloat)elevationForState:(UIControlState)state {
@@ -415,9 +541,36 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 
 - (void)updateElevation {
   CGFloat newElevation = [self elevationForState:self.state];
-  if (!MDCCGFloatEqual(self.layer.elevation, newElevation)) {
-    self.layer.elevation = newElevation;
+  if (!MDCCGFloatEqual(self.mdc_currentElevation, newElevation)) {
+    _currentElevation = newElevation;
+    if (gEnablePerformantShadow) {
+      [self updateShadow];
+    } else {
+      self.layer.elevation = newElevation;
+    }
     [self mdc_elevationDidChange];
+  }
+}
+
+- (void)updateShadow {
+  if (_shapedLayer.shapeGenerator == nil) {
+    MDCShadow *shadow = [self.shadowsCollection shadowForElevation:self.mdc_currentElevation];
+    shadow = [[MDCShadowBuilder
+        builderWithColor:[self shadowColorForState:self.state] ?: MDCShadowColor()
+                 opacity:shadow.opacity
+                  radius:shadow.radius
+                  offset:shadow.offset
+                  spread:shadow.spread] build];
+    MDCConfigureShadowForView(self, shadow);
+  } else {
+    MDCShadow *shadow = [self.shadowsCollection shadowForElevation:self.mdc_currentElevation];
+    shadow = [[MDCShadowBuilder
+        builderWithColor:[self shadowColorForState:self.state] ?: MDCShadowColor()
+                 opacity:shadow.opacity
+                  radius:shadow.radius
+                  offset:shadow.offset
+                  spread:shadow.spread] build];
+    MDCConfigureShadowForViewWithPath(self, shadow, self.layer.shadowPath);
   }
 }
 
@@ -432,13 +585,10 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 - (void)setInkColor:(UIColor *)inkColor forState:(UIControlState)state {
   _inkColors[@(state)] = inkColor;
 
-  NSNumber *rippleState = [self rippleStateForControlState:state];
-  if (rippleState) {
-    [self.rippleView setRippleColor:inkColor forState:rippleState.integerValue];
-  }
-
   [self updateInkColor];
-  [self updateRippleColor];
+
+  // Set Ripple color as well when using the Ink API.
+  [self setRippleColor:inkColor forState:state];
 }
 
 - (void)updateInkColor {
@@ -446,32 +596,23 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   self.inkView.inkColor = inkColor ?: self.inkView.defaultInkColor;
 }
 
-- (void)updateRippleColor {
-  UIColor *rippleColor = [self inkColorForState:self.state];
-  // MDCStatefulRippleView sets the ripple color internally when its state changes.
-  // If that specific state isn't supported by the stateful ripple, then we directly set the
-  // ripple view's color to the requested color.
-  if (![self rippleStateForControlState:self.state]) {
-    self.rippleView.rippleColor =
-        rippleColor ?: [UIColor colorWithWhite:1 alpha:MDCChipViewRippleDefaultOpacity];
+- (UIColor *)rippleColorForState:(UIControlState)state {
+  UIColor *rippleColor = self.rippleColors[@(state)];
+  if (!rippleColor && state != UIControlStateNormal) {
+    rippleColor = self.rippleColors[@(UIControlStateNormal)];
   }
+  return rippleColor;
 }
 
-- (NSNumber *)rippleStateForControlState:(UIControlState)state {
-  // We check to see if MDCRippleState conforms to a UIControlState and return it, otherwise
-  // we return nil for non-supported ripple states.
-  switch (state) {
-    case UIControlStateNormal:
-      return [NSNumber numberWithInteger:MDCRippleStateNormal];
-    case UIControlStateHighlighted:
-      return [NSNumber numberWithInteger:MDCRippleStateHighlighted];
-    case UIControlStateSelected:
-      return [NSNumber numberWithInteger:MDCRippleStateSelected];
-    case (UIControlStateHighlighted | UIControlStateSelected):
-      return [NSNumber numberWithInteger:(MDCRippleStateHighlighted | MDCRippleStateSelected)];
-    default:
-      return nil;
-  }
+- (void)setRippleColor:(UIColor *)rippleColor forState:(UIControlState)state {
+  _rippleColors[@(state)] = rippleColor;
+
+  [self updateRippleColor];
+}
+
+- (void)updateRippleColor {
+  UIColor *rippleColor = [self rippleColorForState:self.state];
+  self.rippleView.rippleColor = rippleColor ?: self.inkView.defaultInkColor;
 }
 
 - (nullable UIColor *)shadowColorForState:(UIControlState)state {
@@ -490,6 +631,12 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 
 - (void)updateShadowColor {
   self.layer.shadowColor = [self shadowColorForState:self.state].CGColor;
+}
+
+- (nullable UIColor *)tintColorForState:(UIControlState)state {
+  UIColor *tintColor = _tintColors[@(state)];
+
+  return tintColor;
 }
 
 - (nullable UIFont *)titleFont {
@@ -516,6 +663,11 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   [self updateTitleColor];
 }
 
+- (void)setTintColor:(nullable UIColor *)tintColor forState:(UIControlState)state {
+  _tintColors[@(state)] = tintColor;
+  [self updateTintColor];
+}
+
 - (void)setContentHorizontalAlignment:(UIControlContentHorizontalAlignment)alignment {
   [super setContentHorizontalAlignment:alignment];
   [self setNeedsLayout];
@@ -530,7 +682,7 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   if (self.mdc_adjustsFontForContentSizeCategory) {
     if (titleFont.mdc_scalingCurve) {
       titleFont = [titleFont mdc_scaledFontForTraitEnvironment:self];
-    } else if (self.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable) {
+    } else {
       titleFont =
           [titleFont mdc_fontSizedForMaterialTextStyle:kTitleTextStyle
                                   scaledForDynamicType:_mdc_adjustsFontForContentSizeCategory];
@@ -547,6 +699,16 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
     return [UIFont mdc_standardFontForMaterialTextStyle:kTitleTextStyle];
   }
   return [MDCTypography buttonFont];
+}
+
+- (void)updateTintColor {
+  UIColor *tintColor = [self tintColorForState:self.state];
+
+  if (tintColor != nil) {
+    self.imageView.tintColor = tintColor;
+    self.selectedImageView.tintColor = tintColor;
+    self.accessoryView.tintColor = tintColor;
+  }
 }
 
 - (void)updateTitleColor {
@@ -590,6 +752,61 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   [self updateTitleFont];
   [self updateTitleColor];
   [self updateAccessibility];
+  [self updateTintColor];
+}
+
+#pragma mark - Key-value observing
+
+- (void)addObservers {
+  for (NSString *keyPath in [self titleLabelKVOKeyPaths]) {
+    [self.titleLabel addObserver:self
+                      forKeyPath:keyPath
+                         options:NSKeyValueObservingOptionNew
+                         context:kKVOContextMDCChipView];
+  }
+  [self.imageView addObserver:self
+                   forKeyPath:NSStringFromSelector(@selector(image))
+                      options:NSKeyValueObservingOptionNew
+                      context:kKVOContextMDCChipView];
+}
+
+- (void)removeObservers {
+  for (NSString *keyPath in [self titleLabelKVOKeyPaths]) {
+    [self.titleLabel removeObserver:self forKeyPath:keyPath context:kKVOContextMDCChipView];
+  }
+  [self.imageView removeObserver:self
+                      forKeyPath:NSStringFromSelector(@selector(image))
+                         context:kKVOContextMDCChipView];
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey, id> *)change
+                       context:(void *)context {
+  if (context != kKVOContextMDCChipView) {
+    return;
+  }
+  if (object == self.titleLabel) {
+    NSArray<NSString *> *titleLabelKeyPaths = [self titleLabelKVOKeyPaths];
+    for (NSString *titleLabelKeyPath in titleLabelKeyPaths) {
+      if ([titleLabelKeyPath isEqualToString:keyPath]) {
+        [self invalidateIntrinsicContentSize];
+        [self setNeedsLayout];
+      }
+    }
+  } else if (object == self.imageView) {
+    if ([keyPath isEqualToString:NSStringFromSelector(@selector(image))]) {
+      [self invalidateIntrinsicContentSize];
+      [self setNeedsLayout];
+    }
+  }
+}
+
+- (NSArray<NSString *> *)titleLabelKVOKeyPaths {
+  return @[
+    NSStringFromSelector(@selector(text)),
+    NSStringFromSelector(@selector(font)),
+  ];
 }
 
 #pragma mark - Custom touch handling
@@ -597,6 +814,24 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 - (BOOL)pointInside:(CGPoint)point withEvent:(__unused UIEvent *)event {
   CGRect hitAreaRect = UIEdgeInsetsInsetRect(CGRectStandardize(self.bounds), self.hitAreaInsets);
   return CGRectContainsPoint(hitAreaRect, point);
+}
+
+#pragma mark - Visible area
+
+- (UIEdgeInsets)visibleAreaInsets {
+  UIEdgeInsets visibleAreaInsets = UIEdgeInsetsZero;
+  if (self.centerVisibleArea) {
+    CGSize visibleAreaSize = [self sizeThatFits:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)];
+    CGFloat additionalRequiredHeight =
+        MAX(0, CGRectGetHeight(self.bounds) - visibleAreaSize.height);
+    CGFloat additionalRequiredWidth = MAX(0, CGRectGetWidth(self.bounds) - visibleAreaSize.width);
+    visibleAreaInsets.top = ceil(additionalRequiredHeight * 0.5f);
+    visibleAreaInsets.bottom = additionalRequiredHeight - visibleAreaInsets.top;
+    visibleAreaInsets.left = ceil(additionalRequiredWidth * 0.5f);
+    visibleAreaInsets.right = additionalRequiredWidth - visibleAreaInsets.left;
+  }
+
+  return visibleAreaInsets;
 }
 
 #pragma mark - Control
@@ -608,16 +843,22 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (void)setHighlighted:(BOOL)highlighted {
+  if (!self.isEnabled) {
+    return;
+  }
+
   [super setHighlighted:highlighted];
 
-  self.rippleView.rippleHighlighted = highlighted;
   [self updateState];
 }
 
 - (void)setSelected:(BOOL)selected {
+  if (!self.isEnabled) {
+    return;
+  }
+
   [super setSelected:selected];
 
-  self.rippleView.selected = selected;
   [self updateState];
   [self setNeedsLayout];
 }
@@ -635,19 +876,23 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 
   _selectedImageView.alpha = self.showSelectedImageView ? 1 : 0;
 
-  if (!self.layer.shapeGenerator) {
-    CGFloat cornerRadius = MIN(CGRectGetHeight(self.frame), CGRectGetWidth(self.frame)) / 2;
-    self.layer.cornerRadius = cornerRadius;
-    self.layer.shadowPath =
-        [UIBezierPath bezierPathWithRoundedRect:self.bounds cornerRadius:cornerRadius].CGPath;
+  CGFloat cornerRadius = self.cornerRadius;
+  if (self.shouldFullyRoundCorner) {
+    CGRect visibleFrame = UIEdgeInsetsInsetRect(self.frame, self.visibleAreaInsets);
+    cornerRadius = MIN(CGRectGetHeight(visibleFrame), CGRectGetWidth(visibleFrame)) / 2;
   }
+  [self configureLayerWithCornerRadius:cornerRadius];
 
   // Handle RTL
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     for (UIView *subview in self.subviews) {
       CGRect flippedRect = MDFRectFlippedHorizontally(subview.frame, CGRectGetWidth(self.bounds));
       subview.frame = flippedRect;
     }
+  }
+
+  if (gEnablePerformantShadow && _shapedLayer.shapeGenerator) {
+    [_shapedLayer layoutShapedSublayers];
   }
 
   [self updateBackgroundColor];
@@ -656,7 +901,8 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 }
 
 - (CGRect)contentRect {
-  CGRect contentRect = UIEdgeInsetsInsetRect(self.bounds, self.contentPadding);
+  CGRect contentRect = UIEdgeInsetsInsetRect(self.bounds, self.visibleAreaInsets);
+  contentRect = UIEdgeInsetsInsetRect(contentRect, self.contentPadding);
   UIControlContentHorizontalAlignment alignment = self.contentHorizontalAlignment;
   if (alignment != UIControlContentHorizontalAlignmentCenter) {
     return contentRect;
@@ -849,63 +1095,21 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
 #pragma mark - Ink Touches
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-  if (self.enableRippleBehavior) {
-    // This method needs to be invoked before the super.
-    // Please see the `MDCStatefulRippleView` class header for more details.
-    [self rippleViewTouchesBegan:touches withEvent:event];
-  }
   [super touchesBegan:touches withEvent:event];
 
-  if (!self.enableRippleBehavior) {
-    [self startTouchBeganAnimationAtPoint:[self locationFromTouches:touches]];
-  }
+  [self startTouchBeganAnimationAtPoint:[self locationFromTouches:touches]];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-  if (self.enableRippleBehavior) {
-    // This method needs to be invoked before the super.
-    // Please see the `MDCStatefulRippleView` class header for more details.
-    [self rippleViewTouchesEnded:touches withEvent:event];
-  }
   [super touchesEnded:touches withEvent:event];
 
-  if (!self.enableRippleBehavior) {
-    [self startTouchEndedAnimationAtPoint:[self locationFromTouches:touches]];
-  }
+  [self startTouchEndedAnimationAtPoint:[self locationFromTouches:touches]];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-  if (self.enableRippleBehavior) {
-    // This method needs to be invoked before the super.
-    // Please see the `MDCStatefulRippleView` class header for more details.
-    [self rippleViewTouchesCancelled:touches withEvent:event];
-  }
   [super touchesCancelled:touches withEvent:event];
 
-  if (!self.enableRippleBehavior) {
-    [self startTouchEndedAnimationAtPoint:[self locationFromTouches:touches]];
-  }
-}
-
-- (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-  if (self.enableRippleBehavior) {
-    // This method needs to be invoked before the super.
-    // Please see the `MDCStatefulRippleView` class header for more details.
-    [self rippleViewTouchesMoved:touches withEvent:event];
-  }
-  [super touchesMoved:touches withEvent:event];
-}
-
-- (void)touchDragEnter:(__unused MDCChipView *)button forEvent:(UIEvent *)event {
-  if (!self.enableRippleBehavior) {
-    [self startTouchBeganAnimationAtPoint:[self locationFromTouches:event.allTouches]];
-  }
-}
-
-- (void)touchDragExit:(__unused MDCChipView *)button forEvent:(UIEvent *)event {
-  if (!self.enableRippleBehavior) {
-    [self startTouchEndedAnimationAtPoint:[self locationFromTouches:event.allTouches]];
-  }
+  [self startTouchEndedAnimationAtPoint:[self locationFromTouches:touches]];
 }
 
 - (CGPoint)locationFromTouches:(NSSet *)touches {
@@ -921,19 +1125,34 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   if (!self.enabled) {
     return;
   }
+
+  if (self.disableInkAndRippleBehavior) {
+    return;
+  }
+
   CGSize size = [self sizeThatFits:CGSizeMake(CGFLOAT_MAX, CGFLOAT_MAX)];
   CGFloat widthDiff = 24;  // Difference between unselected and selected frame widths.
-  _inkView.maxRippleRadius =
-      (CGFloat)(MDCHypot(size.height, size.width + widthDiff) / 2 + 10 + widthDiff / 2);
-
-  [_inkView startTouchBeganAnimationAtPoint:point completion:nil];
+  CGFloat maxRadius =
+      (CGFloat)(hypot(size.height, size.width + widthDiff) / 2 + 10 + widthDiff / 2);
+  if (self.enableRippleBehavior) {
+    _rippleView.maximumRadius = maxRadius;
+    [_rippleView beginRippleTouchDownAtPoint:point animated:YES completion:nil];
+  } else {
+    _inkView.maxRippleRadius = maxRadius;
+    [_inkView startTouchBeganAnimationAtPoint:point completion:nil];
+  }
 }
 
 - (void)startTouchEndedAnimationAtPoint:(CGPoint)point {
-  if (!self.enabled) {
+  if (self.disableInkAndRippleBehavior) {
     return;
   }
-  [_inkView startTouchEndedAnimationAtPoint:point completion:nil];
+
+  if (self.enableRippleBehavior) {
+    [_rippleView beginRippleTouchUpAnimated:YES completion:nil];
+  } else {
+    [_inkView startTouchEndedAnimationAtPoint:point completion:nil];
+  }
 }
 
 - (BOOL)willChangeSizeWithSelectedValue:(BOOL)selected {
@@ -946,20 +1165,14 @@ static inline CGSize CGSizeShrinkWithInsets(CGSize size, UIEdgeInsets edgeInsets
   return !hasImage && hasSelectedImage;
 }
 
-- (void)rippleViewTouchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-  [self.rippleView touchesBegan:touches withEvent:event];
+#pragma mark - Performant Shadow Toggle
+
++ (void)setEnablePerformantShadow:(BOOL)enable {
+  gEnablePerformantShadow = enable;
 }
 
-- (void)rippleViewTouchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-  [self.rippleView touchesEnded:touches withEvent:event];
-}
-
-- (void)rippleViewTouchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-  [self.rippleView touchesMoved:touches withEvent:event];
-}
-
-- (void)rippleViewTouchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
-  [self.rippleView touchesCancelled:touches withEvent:event];
++ (BOOL)enablePerformantShadow {
+  return gEnablePerformantShadow;
 }
 
 @end

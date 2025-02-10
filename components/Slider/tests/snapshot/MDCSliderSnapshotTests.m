@@ -12,15 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialSnapshot.h"
+#import "MDCAvailability.h"
+#import "MDCSlider.h"
 
 #import <UIKit/UIKit.h>
 
-#import "../../src/private/MDCSlider+Private.h"
-#import "../../src/private/MDCSlider_Subclassable.h"
-#import "MaterialAvailability.h"
-#import "MaterialSlider.h"
-#import "MaterialThumbTrack.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSlider+Private.h"
+#import "MDCSnapshotTestCase.h"
+#import "UIView+MDCSnapshot.h"
+#import "MDCThumbTrack.h"
+#import "MDCThumbView.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 /** A @c UITouch subclass where the location can be set. */
 @interface MDCSliderSnapshotTestTouchFake : UITouch
@@ -31,7 +37,7 @@
 
 @implementation MDCSliderSnapshotTestTouchFake
 
-- (CGPoint)locationInView:(UIView *)view {
+- (CGPoint)locationInView:(nullable UIView *)view {
   return self.mdc_touchPoint;
 }
 
@@ -83,19 +89,10 @@ static void MoveSliderThumbToRelativePosition(MDCSlider *slider,
  */
 @interface MDCSliderWithCustomTraitCollection : MDCSlider
 @property(nonatomic, strong) UITraitCollection *traitCollectionOverride;
-@property(nonatomic, strong) MDCThumbTrack *thumbTrack;
 
 @end
 
 @implementation MDCSliderWithCustomTraitCollection
-
-- (MDCThumbTrack *)thumbTrack {
-  return _thumbTrack;
-}
-
-- (void)setThumbTrack:(MDCThumbTrack *)thumbTrack {
-  _thumbTrack = thumbTrack;
-}
 
 - (UITraitCollection *)traitCollection {
   return self.traitCollectionOverride ?: [super traitCollection];
@@ -103,7 +100,7 @@ static void MoveSliderThumbToRelativePosition(MDCSlider *slider,
 @end
 
 @interface MDCSliderSnapshotTests : MDCSnapshotTestCase
-@property(nonatomic, strong) MDCSliderWithCustomTraitCollection *slider;
+@property(nonatomic, strong, nullable) MDCSliderWithCustomTraitCollection *slider;
 @end
 
 @implementation MDCSliderSnapshotTests
@@ -247,6 +244,62 @@ static void MoveSliderThumbToRelativePosition(MDCSlider *slider,
   // When
   self.slider.trackTickVisibility = MDCSliderTrackTickVisibilityAlways;
   TouchThumbInSlider(self.slider);
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.slider];
+}
+
+- (void)testDiscreteSliderShrinksFilledSectionWithoutCrossingAnchor {
+  // Given
+  [self makeSliderDiscrete:self.slider];
+  self.slider.trackTickVisibility = MDCSliderTrackTickVisibilityAlways;
+  self.slider.filledTrackAnchorValue = 0;
+  self.slider.value = self.slider.maximumValue - 3;
+
+  // When
+  self.slider.value = self.slider.filledTrackAnchorValue + 3;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.slider];
+}
+
+- (void)testDiscreteSliderGrowsFilledSectionWithoutCrossingAnchor {
+  // Given
+  [self makeSliderDiscrete:self.slider];
+  self.slider.trackTickVisibility = MDCSliderTrackTickVisibilityAlways;
+  self.slider.filledTrackAnchorValue = 0;
+  self.slider.value = self.slider.filledTrackAnchorValue + 3;
+
+  // When
+  self.slider.value = self.slider.maximumValue - 3;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.slider];
+}
+
+- (void)testDiscreteSliderCrossesAnchorAndShrinksFilledSection {
+  // Given
+  [self makeSliderDiscrete:self.slider];
+  self.slider.trackTickVisibility = MDCSliderTrackTickVisibilityAlways;
+  self.slider.filledTrackAnchorValue = 0;
+  self.slider.value = self.slider.maximumValue - 3;
+
+  // When
+  self.slider.value = self.slider.filledTrackAnchorValue - 3;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.slider];
+}
+
+- (void)testDiscreteSliderCrossesAnchorAndGrowsFilledSection {
+  // Given
+  [self makeSliderDiscrete:self.slider];
+  self.slider.trackTickVisibility = MDCSliderTrackTickVisibilityAlways;
+  self.slider.filledTrackAnchorValue = 0;
+  self.slider.value = self.slider.filledTrackAnchorValue - 3;
+
+  // When
+  self.slider.value = self.slider.maximumValue - 3;
 
   // Then
   [self generateSnapshotAndVerifyForView:self.slider];
@@ -526,19 +579,6 @@ static void MoveSliderThumbToRelativePosition(MDCSlider *slider,
   [self generateSnapshotAndVerifyForView:self.slider];
 }
 
-- (void)testExplicitlyNonDiscreteSliderAlignsToThumbPosition {
-  // Given
-  self.slider.numberOfDiscreteValues = 5;
-  self.slider.discrete = NO;
-
-  // When
-  MDCSliderSnapshotTestTouchFake *touch = TouchThumbInSlider(self.slider);
-  MoveSliderThumbToRelativePosition(self.slider, touch, (CGFloat)0.15);
-
-  // Then
-  [self generateSnapshotAndVerifyForView:self.slider];
-}
-
 - (void)testNotHollowThumbAtStart {
   // When
   self.slider.thumbHollowAtStart = NO;
@@ -596,77 +636,73 @@ static void MoveSliderThumbToRelativePosition(MDCSlider *slider,
 }
 
 - (void)testPreferredFontForAXXXLContentSizeCategory {
-  if (@available(iOS 11.0, *)) {
-    // Given
-    [self makeSliderDiscrete:self.slider];
-    self.slider.value =
-        self.slider.minimumValue + (self.slider.maximumValue - self.slider.minimumValue) / 2;
-    self.slider.shouldDisplayDiscreteValueLabel = YES;
-    UIFontMetrics *bodyMetrics = [UIFontMetrics metricsForTextStyle:UIFontTextStyleBody];
-    UIFont *originalFont = [bodyMetrics scaledFontForFont:[UIFont fontWithName:@"Zapfino" size:12]];
-    self.slider.discreteValueLabelFont = originalFont;
-    self.slider.adjustsFontForContentSizeCategory = YES;
-    UITraitCollection *xsTraitCollection = [UITraitCollection
-        traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryExtraSmall];
-    self.slider.traitCollectionOverride = xsTraitCollection;
-    // Cannot set font, nor adjustsFontForContentSizeCategory for the thumbtrack label.
+  // Given
+  [self makeSliderDiscrete:self.slider];
+  self.slider.value =
+      self.slider.minimumValue + (self.slider.maximumValue - self.slider.minimumValue) / 2;
+  self.slider.shouldDisplayDiscreteValueLabel = YES;
+  UIFontMetrics *bodyMetrics = [UIFontMetrics metricsForTextStyle:UIFontTextStyleBody];
+  UIFont *originalFont = [bodyMetrics scaledFontForFont:[UIFont fontWithName:@"Zapfino" size:12]];
+  self.slider.discreteValueLabelFont = originalFont;
+  self.slider.adjustsFontForContentSizeCategory = YES;
+  UITraitCollection *xsTraitCollection = [UITraitCollection
+      traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryExtraSmall];
+  self.slider.traitCollectionOverride = xsTraitCollection;
+  // Cannot set font, nor adjustsFontForContentSizeCategory for the thumbtrack label.
 
-    // When
-    UITraitCollection *aXXXLTraitCollection =
-        [UITraitCollection traitCollectionWithPreferredContentSizeCategory:
-                               UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-    self.slider.traitCollectionOverride = aXXXLTraitCollection;
-    // In Thumbtrack's code, there is a check for verifying that the thumbtrack's width is larger
-    // than 1 point, otherwise it won't go into the main frame adjusting logic. This is to make sure
-    // that the scale transform of the slider's view isn't at its default of 0.001. Therefore this
-    // transform adjustment was made so it can let the logic know we are actually interacting with
-    // the thumb in the test.
-    UIView *valueLabel = [self.slider.thumbTrack valueForKey:@"_valueLabel"];
-    valueLabel.transform = CGAffineTransformIdentity;
-    [self.slider.thumbTrack setValue:@"YES" forKey:@"_isDraggingThumb"];
+  // When
+  UITraitCollection *aXXXLTraitCollection =
+      [UITraitCollection traitCollectionWithPreferredContentSizeCategory:
+                             UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
+  self.slider.traitCollectionOverride = aXXXLTraitCollection;
+  // In Thumbtrack's code, there is a check for verifying that the thumbtrack's width is larger
+  // than 1 point, otherwise it won't go into the main frame adjusting logic. This is to make sure
+  // that the scale transform of the slider's view isn't at its default of 0.001. Therefore this
+  // transform adjustment was made so it can let the logic know we are actually interacting with
+  // the thumb in the test.
+  UIView *valueLabel = [self.slider.thumbTrack valueForKey:@"_valueLabel"];
+  valueLabel.transform = CGAffineTransformIdentity;
+  [self.slider.thumbTrack setValue:@"YES" forKey:@"_isDraggingThumb"];
 
-    // Then
-    UIView *snapshotView =
-        [self.slider mdc_addToBackgroundViewWithInsets:UIEdgeInsetsMake(100, 0, 0, 0)];
-    [self generateSnapshotAndVerifyForView:snapshotView];
-  }
+  // Then
+  UIView *snapshotView =
+      [self.slider mdc_addToBackgroundViewWithInsets:UIEdgeInsetsMake(100, 0, 0, 0)];
+  [self generateSnapshotAndVerifyForView:snapshotView];
 }
 
 - (void)testPreferredFontForXSContentSizeCategory {
-  if (@available(iOS 11.0, *)) {
-    // Given
-    [self makeSliderDiscrete:self.slider];
-    self.slider.value =
-        self.slider.minimumValue + (self.slider.maximumValue - self.slider.minimumValue) / 2;
-    self.slider.shouldDisplayDiscreteValueLabel = YES;
-    UIFontMetrics *bodyMetrics = [UIFontMetrics metricsForTextStyle:UIFontTextStyleBody];
-    UIFont *originalFont = [bodyMetrics scaledFontForFont:[UIFont fontWithName:@"Zapfino" size:12]];
-    self.slider.discreteValueLabelFont = originalFont;
-    self.slider.adjustsFontForContentSizeCategory = YES;
-    UITraitCollection *aXXXLTraitCollection =
-        [UITraitCollection traitCollectionWithPreferredContentSizeCategory:
-                               UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
-    self.slider.traitCollectionOverride = aXXXLTraitCollection;
-    // Cannot set font, nor adjustsFontForContentSizeCategory for the thumbtrack label.
+  // Given
+  [self makeSliderDiscrete:self.slider];
+  self.slider.value =
+      self.slider.minimumValue + (self.slider.maximumValue - self.slider.minimumValue) / 2;
+  self.slider.shouldDisplayDiscreteValueLabel = YES;
+  UIFontMetrics *bodyMetrics = [UIFontMetrics metricsForTextStyle:UIFontTextStyleBody];
+  UIFont *originalFont = [bodyMetrics scaledFontForFont:[UIFont fontWithName:@"Zapfino" size:12]];
+  self.slider.discreteValueLabelFont = originalFont;
+  self.slider.adjustsFontForContentSizeCategory = YES;
+  UITraitCollection *aXXXLTraitCollection =
+      [UITraitCollection traitCollectionWithPreferredContentSizeCategory:
+                             UIContentSizeCategoryAccessibilityExtraExtraExtraLarge];
+  self.slider.traitCollectionOverride = aXXXLTraitCollection;
+  // Cannot set font, nor adjustsFontForContentSizeCategory for the thumbtrack label.
 
-    // When
-    UITraitCollection *xsTraitCollection = [UITraitCollection
-        traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryExtraSmall];
-    self.slider.traitCollectionOverride = xsTraitCollection;
-    // In Thumbtrack's code, there is a check for verifying that the thumbtrack's width is larger
-    // than 1 point, otherwise it won't go into the main frame adjusting logic. This is to make sure
-    // that the scale transform of the slider's view isn't at its default of 0.001. Therefore this
-    // transform adjustment was made so it can let the logic know we are actually interacting with
-    // the thumb in the test.
-    UIView *valueLabel = [self.slider.thumbTrack valueForKey:@"_valueLabel"];
-    valueLabel.transform = CGAffineTransformIdentity;
-    [self.slider.thumbTrack setValue:@"YES" forKey:@"_isDraggingThumb"];
+  // When
+  UITraitCollection *xsTraitCollection = [UITraitCollection
+      traitCollectionWithPreferredContentSizeCategory:UIContentSizeCategoryExtraSmall];
+  self.slider.traitCollectionOverride = xsTraitCollection;
+  // In Thumbtrack's code, there is a check for verifying that the thumbtrack's width is larger
+  // than 1 point, otherwise it won't go into the main frame adjusting logic. This is to make sure
+  // that the scale transform of the slider's view isn't at its default of 0.001. Therefore this
+  // transform adjustment was made so it can let the logic know we are actually interacting with
+  // the thumb in the test.
+  UIView *valueLabel = [self.slider.thumbTrack valueForKey:@"_valueLabel"];
+  valueLabel.transform = CGAffineTransformIdentity;
+  [self.slider.thumbTrack setValue:@"YES" forKey:@"_isDraggingThumb"];
 
-    // Then
-    UIView *snapshotView =
-        [self.slider mdc_addToBackgroundViewWithInsets:UIEdgeInsetsMake(30, 0, 0, 0)];
-    [self generateSnapshotAndVerifyForView:snapshotView];
-  }
+  // Then
+  UIView *snapshotView =
+      [self.slider mdc_addToBackgroundViewWithInsets:UIEdgeInsetsMake(30, 0, 0, 0)];
+  [self generateSnapshotAndVerifyForView:snapshotView];
 }
 
 - (void)testNonDiscreteSliderLargerTrackHeight {
@@ -778,4 +814,32 @@ static void MoveSliderThumbToRelativePosition(MDCSlider *slider,
   [self generateSnapshotAndVerifyForView:snapshotView];
 }
 
+// Test slider layout is RTL when ForceRTL semanticContentAttribute is set
+- (void)testRightToLeftLayout {
+  // When
+  [self makeSliderDiscrete:self.slider];
+  self.slider.value = self.slider.minimumValue;
+  self.slider.semanticContentAttribute = UISemanticContentAttributeForceRightToLeft;
+
+  // Then
+  UIView *snapshotView =
+      [self.slider mdc_addToBackgroundViewWithInsets:UIEdgeInsetsMake(30, 0, 0, 0)];
+  [self generateSnapshotAndVerifyForView:snapshotView];
+}
+
+// Test slider layout is LTR when ForceLTR semanticContentAttribute is set
+- (void)testLeftToRightLayout {
+  // When
+  [self makeSliderDiscrete:self.slider];
+  self.slider.value = self.slider.minimumValue;
+  self.slider.semanticContentAttribute = UISemanticContentAttributeForceLeftToRight;
+
+  // Then
+  UIView *snapshotView =
+      [self.slider mdc_addToBackgroundViewWithInsets:UIEdgeInsetsMake(30, 0, 0, 0)];
+  [self generateSnapshotAndVerifyForView:snapshotView];
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

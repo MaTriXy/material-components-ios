@@ -14,11 +14,12 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialPalettes.h"
-#import "MaterialSnackbar.h"
-#import "supplemental/SnackbarExampleSupplemental.h"
+#import "MDCSnackbarManager.h"
+#import "MDCSnackbarMessage.h"
 
-@interface SnackbarInputAccessoryViewController ()
+NS_ASSUME_NONNULL_BEGIN
+
+@interface SnackbarInputAccessoryViewController : UIViewController
 
 @property(nonatomic, strong) UITextField *textField;
 
@@ -64,7 +65,22 @@
   MDCSnackbarMessageAction *action = [[MDCSnackbarMessageAction alloc] init];
   action.title = @"Tap Me";
   message.action = action;
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
 }
 
 @end
+
+@implementation SnackbarInputAccessoryViewController (CatalogByConvention)
+
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Snackbar", @"Snackbar Input Accessory" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+    @"snapshotDelay" : @1.0,
+  };
+}
+
+@end
+
+NS_ASSUME_NONNULL_END

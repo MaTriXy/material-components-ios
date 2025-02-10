@@ -13,9 +13,8 @@
 // limitations under the License.
 
 import UIKit
-
 import MaterialComponents.MaterialButtons
-import MaterialComponents.MaterialButtons_Theming
+import MaterialComponents.MaterialButtons_Theming 
 import MaterialComponents.MaterialSnackbar
 
 class SnackbarKeyboardExample: UIViewController {
@@ -33,7 +32,7 @@ class SnackbarKeyboardExample: UIViewController {
   lazy var textField: UITextField = {
     let textField = UITextField()
     textField.borderStyle = .roundedRect
-    textField.returnKeyType = .done;
+    textField.returnKeyType = .done
     textField.delegate = self
     return textField
   }()
@@ -56,17 +55,12 @@ class SnackbarKeyboardExample: UIViewController {
     view.addSubview(contentStackView)
 
     contentStackView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-    if #available(iOS 11.0, *) {
-      contentStackView.topAnchor
-        .constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20).isActive = true
-    } else {
-      contentStackView.topAnchor
-        .constraint(equalTo: topLayoutGuide.bottomAnchor, constant: 20).isActive = true
-    }
+    contentStackView.topAnchor
+      .constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20).isActive = true
   }
 
   @objc func showSnackbarButtonTapped() {
-    MDCSnackbarManager.show(MDCSnackbarMessage(text: "Hello!"))
+    MDCSnackbarManager.default.show(MDCSnackbarMessage(text: "Hello!"))
   }
 }
 
@@ -83,6 +77,7 @@ extension SnackbarKeyboardExample {
       "breadcrumbs": ["Snackbar", "Snackbar Keyboard"],
       "primaryDemo": false,
       "presentable": true,
+      "snapshotDelay": 1.0,
     ]
   }
 }

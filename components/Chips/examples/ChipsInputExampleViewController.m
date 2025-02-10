@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialChips+Theming.h"
-#import "MaterialChips.h"
-#import "MaterialContainerScheme.h"
-#import "MaterialTextFields.h"
+#import "MDCChipField.h"
+#import "MDCChipFieldDelegate.h"
+#import "MDCChipView.h"
+#import "MDCChipView+MaterialTheming.h"
+#import "MDCContainerScheme.h"
+#import "MDCTypographyScheme.h"
 
 @interface ChipsInputExampleViewController : UIViewController <MDCChipFieldDelegate>
-@property(nonatomic, strong) id<MDCContainerScheming> containerScheme;
+@property(nonatomic, strong) MDCContainerScheme *containerScheme;
 @property(nonatomic, strong) MDCChipField *chipField;
 @end
 
@@ -35,25 +37,22 @@
 - (void)viewDidLoad {
   [super viewDidLoad];
 
-  if (self.containerScheme.colorScheme) {
-    self.view.backgroundColor = self.containerScheme.colorScheme.backgroundColor;
-  } else {
-    MDCSemanticColorScheme *colorScheme =
-        [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
-    self.view.backgroundColor = colorScheme.backgroundColor;
-  }
+  MDCTypographyScheme *typographyScheme =
+      [[MDCTypographyScheme alloc] initWithDefaults:MDCTypographySchemeDefaultsMaterial201902];
+  typographyScheme.useCurrentContentSizeCategoryWhenApplied = YES;
+  self.containerScheme.typographyScheme = typographyScheme;
+
+  self.view.backgroundColor = UIColor.systemBackgroundColor;
 
   self.chipField = [[MDCChipField alloc] initWithFrame:CGRectZero];
   self.chipField.delegate = self;
-  self.chipField.textField.placeholderLabel.text = @"This is a chip field.";
-  self.chipField.textField.mdc_adjustsFontForContentSizeCategory = YES;
-  if (self.containerScheme.colorScheme) {
-    self.chipField.backgroundColor = self.containerScheme.colorScheme.surfaceColor;
-  } else {
-    MDCSemanticColorScheme *colorScheme =
-        [[MDCSemanticColorScheme alloc] initWithDefaults:MDCColorSchemeDefaultsMaterial201804];
-    self.chipField.backgroundColor = colorScheme.surfaceColor;
-  }
+  self.chipField.textField.accessibilityIdentifier = @"chip_field_text_field";
+  NSDictionary<NSString *, id> *placeholderAttributes =
+      @{NSForegroundColorAttributeName : UIColor.placeholderTextColor};
+  self.chipField.placeholderAttributes = placeholderAttributes;
+  self.chipField.placeholder = @"This is a chip field.";
+  self.chipField.textField.adjustsFontForContentSizeCategory = YES;
+  self.chipField.backgroundColor = UIColor.systemBackgroundColor;
   [self.view addSubview:self.chipField];
 
   // When Dynamic Type changes we need to invalidate the collection view layout in order to let the
@@ -76,9 +75,7 @@
 
 - (void)updateLayout {
   CGRect frame = CGRectInset(self.view.bounds, 10, 10);
-  if (@available(iOS 11.0, *)) {
-    frame = UIEdgeInsetsInsetRect(frame, self.view.safeAreaInsets);
-  }
+  frame = UIEdgeInsetsInsetRect(frame, self.view.safeAreaInsets);
   MDCChipView *chip = self.chipField.chips.lastObject;
   [self recomputeChipFieldChipHeightWithChip:chip];
   frame.size = [self.chipField sizeThatFits:frame.size];
@@ -96,7 +93,6 @@
   } else {
     [chip applyThemeWithScheme:self.containerScheme];
   }
-  chip.mdc_adjustsFontForContentSizeCategory = YES;
   [self recomputeChipFieldChipHeightWithChip:chip];
 
   CGFloat chipVerticalInset = MIN(0, (CGRectGetHeight(chip.bounds) - 48) / 2);

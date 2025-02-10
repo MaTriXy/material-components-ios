@@ -15,8 +15,12 @@
 #import <UIKit/UIKit.h>
 
 #import <MaterialComponents/MaterialBottomNavigation.h>
+#import "MDCMinimumOS.h"  // IWYU pragma: keep
+
+NS_ASSUME_NONNULL_BEGIN
 
 @protocol MDCBottomNavigationBarControllerDelegate;
+@protocol MDCBottomNavigationBarDelegate;
 
 /**
  MDCBottomNavigationBarController is a class that manages the navigation bar that allows movement
@@ -36,7 +40,35 @@
  preserved. Upon decoding, if the view controllers array contains a reference to the previous
  selected view controller, that view controller is set to selected.
  */
+API_AVAILABLE(ios(12.0))
 @interface MDCBottomNavigationBarController : UIViewController <MDCBottomNavigationBarDelegate>
+
+/**
+  States used to configure bottom navigation bar's layout mode.
+  */
+typedef NS_ENUM(NSInteger, MDCBottomNavigationBarLayoutMode) {
+
+  // Default behavior is to have the controller be in automatic layout mode.
+  // Automatic mode uses size classes and view size to determine when to use
+  // vertical layout vs. horizontal layout.
+  // Example: on a plus sized iPhone, rotating to landscape will trigger
+  // vertical layout, rotating to portrait will trigger horizontal layout.
+  MDCBottomNavigationBarLayoutModeAutomatic = 0,
+
+  // The controller will always use vertical layout mode.
+  MDCBottomNavigationBarLayoutModeVertical = 1,
+
+  // The controller will always use horizontal layout mode.
+  MDCBottomNavigationBarLayoutModeHorizontal = 2
+};
+
+/**
+ Configures the layout mode of the bottom navigation bar.
+
+ Default is MDCBottomNavigationBarLayoutModeHorizontal. This will become
+ MDCBottomNavigationBarLayoutModeAutomatic in the near future.
+ */
+@property(nonatomic, assign) MDCBottomNavigationBarLayoutMode layoutMode;
 
 /**
  The bottom navigation bar that hosts the tab bar items.
@@ -45,6 +77,34 @@
  and set the delegate property of this controller.
  */
 @property(nonatomic, strong, readonly, nonnull) MDCBottomNavigationBar *navigationBar;
+
+/**
+ Configures whether the navigation bar should show labels in vertical layout.
+
+ Default @c NO.
+ */
+@property(nonatomic, assign) BOOL displayItemTitlesInVerticalLayout;
+
+/**
+ Configures whether the navigation bar should play haptics on selection change.
+
+ Default @c NO.
+ */
+@property(nonatomic, assign) BOOL enableHaptics;
+
+/**
+ Insets applied to the content.
+
+ Defaults to @c UIEdgeInsetsZero.
+ */
+@property(nonatomic, assign) UIEdgeInsets contentInsets;
+
+/**
+ Corner radius applied to the content view.
+
+ Defaults to 0.
+ */
+@property(nonatomic, assign) CGFloat contentCornerRadius;
 
 /**
  An array of view controllers to display when their corresponding tab bar item is selected in the
@@ -76,6 +136,24 @@
  */
 @property(nonatomic, getter=isLongPressPopUpViewEnabled) BOOL longPressPopUpViewEnabled;
 
+/**
+ A Boolean value that determines whether @c navigationBar is hidden.
+ */
+@property(nonatomic, getter=isNavigationBarHidden) BOOL navigationBarHidden;
+
+/**
+ A UIColor value that sets the background color for both @c navigationBar and @c view.
+ */
+@property(nonatomic, strong, nullable) UIColor *backgroundColor;
+
+/**
+ Shows or hides @c navigationBar with optional animation.
+
+ @param hidden Whether @c navigationBar should be hidden.
+ @param animated Whether the transition should be animated.
+ */
+- (void)setNavigationBarHidden:(BOOL)hidden animated:(BOOL)animated;
+
 - (void)viewDidLoad NS_REQUIRES_SUPER;
 
 #pragma mark - MDCBottomNavigationBarDelegate
@@ -85,29 +163,4 @@
 
 @end
 
-/**
- The protocol for clients of the MDCBottomNavigationBarController to conform to for updates on the
- bottom navigation bar, manage selection, and other possible actions.
- */
-@protocol MDCBottomNavigationBarControllerDelegate <NSObject>
-@optional
-/**
- Called when the user makes a selection in the bottom navigation bar.
- @warning This method is not called when the selection is set programmatically.
- */
-- (void)bottomNavigationBarController:
-            (nonnull MDCBottomNavigationBarController *)bottomNavigationBarController
-              didSelectViewController:(nonnull UIViewController *)viewController;
-
-/**
- Delegates may implement this method if they wish to determine if the bottom navigation controller
- should select an item.  If true is returned, the selection will continue as normal. If false,
- selection will not proceed.
- @warning This method is called in response to user action, not programmatically setting the
- selection.
- */
-- (BOOL)bottomNavigationBarController:
-            (nonnull MDCBottomNavigationBarController *)bottomNavigationBarController
-           shouldSelectViewController:(nonnull UIViewController *)viewController;
-
-@end
+NS_ASSUME_NONNULL_END

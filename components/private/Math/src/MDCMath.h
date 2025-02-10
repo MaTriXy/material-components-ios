@@ -17,53 +17,7 @@
 #import <UIKit/UIKit.h>
 #import <math.h>
 
-static inline CGFloat MDCSin(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return sin(value);
-#else
-  return sinf(value);
-#endif
-}
-
-static inline CGFloat MDCCos(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return cos(value);
-#else
-  return cosf(value);
-#endif
-}
-
-static inline CGFloat MDCAtan2(CGFloat y, CGFloat x) {
-#if CGFLOAT_IS_DOUBLE
-  return atan2(y, x);
-#else
-  return atan2f(y, x);
-#endif
-}
-
-static inline CGFloat MDCCeil(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return ceil(value);
-#else
-  return ceilf(value);
-#endif
-}
-
-static inline CGFloat MDCFabs(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return fabs(value);
-#else
-  return fabsf(value);
-#endif
-}
-
-static inline CGFloat MDCDegreesToRadians(CGFloat degrees) {
-#if CGFLOAT_IS_DOUBLE
-  return degrees * (CGFloat)M_PI / 180.0;
-#else
-  return degrees * (CGFloat)M_PI / 180;
-#endif
-}
+NS_ASSUME_NONNULL_BEGIN
 
 static inline BOOL MDCCGFloatEqual(CGFloat a, CGFloat b) {
   const CGFloat constantK = 3;
@@ -74,62 +28,39 @@ static inline BOOL MDCCGFloatEqual(CGFloat a, CGFloat b) {
   const CGFloat epsilon = FLT_EPSILON;
   const CGFloat min = FLT_MIN;
 #endif
-  return (MDCFabs(a - b) < constantK * epsilon * MDCFabs(a + b) || MDCFabs(a - b) < min);
+  return (fabs(a - b) < constantK * epsilon * fabs(a + b) || fabs(a - b) < min);
 }
 
-static inline CGFloat MDCFloor(CGFloat value) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
+/**
+ Checks whether the provided floating point number is approximately zero based on a small epsilon.
+
+ Note that ULP-based comparisons are not used because ULP-space is significantly distorted around
+ zero.
+
+ Reference:
+ https://randomascii.wordpress.com/2012/02/25/comparing-floating-point-numbers-2012-edition/
+ */
+static inline BOOL MDCFloatIsApproximatelyZero(CGFloat value) {
 #if CGFLOAT_IS_DOUBLE
-  return floor(value);
+  return (fabs(value) < DBL_EPSILON);
 #else
-  return floorf(value);
+  return (fabsf(value) < FLT_EPSILON);
 #endif
 }
+#pragma clang diagnostic pop
 
-static inline CGFloat MDCHypot(CGFloat x, CGFloat y) {
-#if CGFLOAT_IS_DOUBLE
-  return hypot(x, y);
-#else
-  return hypotf(x, y);
-#endif
-}
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 // Checks whether the provided floating point number is exactly zero.
 static inline BOOL MDCCGFloatIsExactlyZero(CGFloat value) {
   return (value == 0);
 }
+#pragma clang diagnostic pop
 
-static inline CGFloat MDCPow(CGFloat value, CGFloat power) {
-#if CGFLOAT_IS_DOUBLE
-  return pow(value, power);
-#else
-  return powf(value, power);
-#endif
-}
-
-static inline CGFloat MDCRint(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return rint(value);
-#else
-  return rintf(value);
-#endif
-}
-
-static inline CGFloat MDCRound(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return round(value);
-#else
-  return roundf(value);
-#endif
-}
-
-static inline CGFloat MDCSqrt(CGFloat value) {
-#if CGFLOAT_IS_DOUBLE
-  return sqrt(value);
-#else
-  return sqrtf(value);
-#endif
-}
-
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 /**
  Round the given value to ceiling with provided scale factor.
  If @c scale is zero, then the rounded value will be zero.
@@ -143,9 +74,12 @@ static inline CGFloat MDCCeilScaled(CGFloat value, CGFloat scale) {
     return 0;
   }
 
-  return MDCCeil(value * scale) / scale;
+  return ceil(value * scale) / scale;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 /**
  Round the given value to floor with provided scale factor.
  If @c scale is zero, then the rounded value will be zero.
@@ -159,9 +93,12 @@ static inline CGFloat MDCFloorScaled(CGFloat value, CGFloat scale) {
     return 0;
   }
 
-  return MDCFloor(value * scale) / scale;
+  return floor(value * scale) / scale;
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 /**
  Expand `rect' to the smallest standardized rect containing it with pixel-aligned origin and size.
  If @c scale is zero, then a scale of 1 will be used instead.
@@ -186,23 +123,26 @@ static inline CGRect MDCRectAlignToScale(CGRect rect, CGFloat scale) {
   }
 
   CGPoint originalMinimumPoint = CGPointMake(CGRectGetMinX(rect), CGRectGetMinY(rect));
-  CGPoint newOrigin = CGPointMake(MDCFloor(originalMinimumPoint.x * scale) / scale,
-                                  MDCFloor(originalMinimumPoint.y * scale) / scale);
+  CGPoint newOrigin = CGPointMake(floor(originalMinimumPoint.x * scale) / scale,
+                                  floor(originalMinimumPoint.y * scale) / scale);
   CGSize adjustWidthHeight =
       CGSizeMake(originalMinimumPoint.x - newOrigin.x, originalMinimumPoint.y - newOrigin.y);
   return CGRectMake(newOrigin.x, newOrigin.y,
-                    MDCCeil((CGRectGetWidth(rect) + adjustWidthHeight.width) * scale) / scale,
-                    MDCCeil((CGRectGetHeight(rect) + adjustWidthHeight.height) * scale) / scale);
+                    ceil((CGRectGetWidth(rect) + adjustWidthHeight.width) * scale) / scale,
+                    ceil((CGRectGetHeight(rect) + adjustWidthHeight.height) * scale) / scale);
 }
+#pragma clang diagnostic pop
 
 static inline CGPoint MDCPointRoundWithScale(CGPoint point, CGFloat scale) {
   if (MDCCGFloatEqual(scale, 0)) {
     return CGPointZero;
   }
 
-  return CGPointMake(MDCRound(point.x * scale) / scale, MDCRound(point.y * scale) / scale);
+  return CGPointMake(round(point.x * scale) / scale, round(point.y * scale) / scale);
 }
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 /**
  Expand `size' to the closest larger pixel-aligned value.
  If @c scale is zero, then a CGSizeZero will be returned.
@@ -217,9 +157,12 @@ static inline CGSize MDCSizeCeilWithScale(CGSize size, CGFloat scale) {
     return CGSizeZero;
   }
 
-  return CGSizeMake(MDCCeil(size.width * scale) / scale, MDCCeil(size.height * scale) / scale);
+  return CGSizeMake(ceil(size.width * scale) / scale, ceil(size.height * scale) / scale);
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 /**
  Align the centerPoint of a view so that its origin is pixel-aligned to the nearest pixel.
  Returns @c CGRectZero if @c scale is zero or @c bounds is @c CGRectNull.
@@ -243,7 +186,10 @@ static inline CGPoint MDCRoundCenterWithBoundsAndScale(CGPoint center,
   origin = MDCPointRoundWithScale(origin, scale);
   return CGPointMake(origin.x + halfWidth, origin.y + halfHeight);
 }
+#pragma clang diagnostic pop
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-function"
 /// Compare two edge insets using MDCCGFloatEqual.
 /// @param insets1 An edge inset to compare with insets2
 /// @param insets2 An edge inset to compare with insets1
@@ -254,3 +200,6 @@ static inline BOOL MDCEdgeInsetsEqualToEdgeInsets(UIEdgeInsets insets1, UIEdgeIn
   BOOL rightEqual = MDCCGFloatEqual(insets1.right, insets2.right);
   return topEqual && leftEqual && bottomEqual && rightEqual;
 }
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_END

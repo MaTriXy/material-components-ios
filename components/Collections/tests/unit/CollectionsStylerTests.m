@@ -14,34 +14,39 @@
 
 #import <XCTest/XCTest.h>
 
+#import "MDCCollectionViewLayoutAttributes.h"
+#import "MDCCollectionViewStylingDelegate.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
 #import "MDCCollectionViewStyler.h"
-#import "MaterialCollectionLayoutAttributes.h"
-#import "MaterialCollections.h"
+#pragma clang diagnostic pop
 
-static MDCCollectionViewLayoutAttributes* cell00() {
+NS_ASSUME_NONNULL_BEGIN
+
+static MDCCollectionViewLayoutAttributes* cell00(void) {
   return [MDCCollectionViewLayoutAttributes
       layoutAttributesForCellWithIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
 }
-static MDCCollectionViewLayoutAttributes* cell01() {
+static MDCCollectionViewLayoutAttributes* cell01(void) {
   return [MDCCollectionViewLayoutAttributes
       layoutAttributesForCellWithIndexPath:[NSIndexPath indexPathForItem:1 inSection:0]];
 }
-static MDCCollectionViewLayoutAttributes* header0() {
+static MDCCollectionViewLayoutAttributes* header0(void) {
   return [MDCCollectionViewLayoutAttributes
       layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionHeader
                                    withIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
 }
-static MDCCollectionViewLayoutAttributes* header1() {
+static MDCCollectionViewLayoutAttributes* header1(void) {
   return [MDCCollectionViewLayoutAttributes
       layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionHeader
                                    withIndexPath:[NSIndexPath indexPathForItem:1 inSection:1]];
 }
-static MDCCollectionViewLayoutAttributes* footer0() {
+static MDCCollectionViewLayoutAttributes* footer0(void) {
   return [MDCCollectionViewLayoutAttributes
       layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionFooter
                                    withIndexPath:[NSIndexPath indexPathForItem:0 inSection:0]];
 }
-static MDCCollectionViewLayoutAttributes* footer1() {
+static MDCCollectionViewLayoutAttributes* footer1(void) {
   return [MDCCollectionViewLayoutAttributes
       layoutAttributesForSupplementaryViewOfKind:UICollectionElementKindSectionFooter
                                    withIndexPath:[NSIndexPath indexPathForItem:1 inSection:1]];
@@ -138,3 +143,5 @@ static MDCCollectionViewLayoutAttributes* footer1() {
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

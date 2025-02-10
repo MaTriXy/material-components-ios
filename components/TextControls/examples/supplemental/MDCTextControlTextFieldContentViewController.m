@@ -14,18 +14,21 @@
 
 #import "MDCTextControlTextFieldContentViewController.h"
 
-#import "MaterialButtons.h"
-
-#import "MDCBaseTextField.h"
-#import "MaterialButtons+Theming.h"
+#import "MDCTextControlContentViewController.h"
+#import "MaterialTextControls+BaseTextFields.h"
 #import "MaterialColorScheme.h"
 
+#import "MaterialTextControls+Enums.h"
+#import "MaterialTextControls+FilledTextFields.h"
 #import "MDCFilledTextField+MaterialTheming.h"
-#import "MDCFilledTextField.h"
+#import "MaterialTextControls+OutlinedTextFields.h"
 #import "MDCOutlinedTextField+MaterialTheming.h"
-#import "MDCOutlinedTextField.h"
+#import "MaterialTextControls+UnderlinedTextFields.h"
+#import "MaterialContainerScheme.h"
 
 @interface MDCTextControlTextFieldContentViewController ()
+@property(nonatomic, assign) BOOL shouldAddDebugLeadingView;
+@property(nonatomic, assign) BOOL shouldAddDebugBorder;
 @end
 
 @implementation MDCTextControlTextFieldContentViewController
@@ -39,7 +42,28 @@
   textField.label.text = @"Phone number";
   textField.clearButtonMode = UITextFieldViewModeWhileEditing;
   textField.leadingAssistiveLabel.text = @"This is a string.";
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextField:textField];
+  }
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextField:textField];
+  }
   [textField applyThemeWithScheme:self.containerScheme];
+  return textField;
+}
+
+- (MDCUnderlinedTextField *)createMaterialUnderlinedTextField {
+  MDCUnderlinedTextField *textField = [[MDCUnderlinedTextField alloc] init];
+  textField.placeholder = @"555-555-5555";
+  textField.label.text = @"Phone number";
+  textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+  textField.leadingAssistiveLabel.text = @"This is a string.";
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextField:textField];
+  }
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextField:textField];
+  }
   return textField;
 }
 
@@ -48,6 +72,12 @@
   textField.placeholder = @"555-555-5555";
   textField.label.text = @"Phone number";
   textField.clearButtonMode = UITextFieldViewModeWhileEditing;
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextField:textField];
+  }
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextField:textField];
+  }
   [textField applyThemeWithScheme:self.containerScheme];
   return textField;
 }
@@ -58,7 +88,28 @@
   textField.label.text = @"This is a floating label";
   textField.clearButtonMode = UITextFieldViewModeWhileEditing;
   textField.borderStyle = UITextBorderStyleRoundedRect;
+  if (self.shouldAddDebugLeadingView) {
+    [self addLeadingViewToTextField:textField];
+  }
+  if (self.shouldAddDebugBorder) {
+    [self addBorderToTextField:textField];
+  }
   return textField;
+}
+
+- (void)addBorderToTextField:(MDCBaseTextField *)textField {
+  textField.layer.borderColor = UIColor.redColor.CGColor;
+  textField.layer.borderWidth = 1;
+}
+
+- (void)addLeadingViewToTextField:(MDCBaseTextField *)textField {
+  UIImageView *imageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, 24, 24)];
+  imageView.tintColor = self.containerScheme.colorScheme.primaryColor;
+  UIImage *image = [[UIImage imageNamed:@"system_icons/cake"]
+      imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  imageView.image = image;
+  textField.leadingView = imageView;
+  textField.leadingViewMode = UITextFieldViewModeAlways;
 }
 
 #pragma mark Overrides
@@ -66,14 +117,39 @@
 - (void)initializeScrollViewSubviewsArray {
   [super initializeScrollViewSubviewsArray];
 
+  self.shouldAddDebugBorder = NO;
+  self.shouldAddDebugLeadingView = NO;
+
+  MDCFilledTextField *filledTextFieldWithoutFloatingLabel = [self createMaterialFilledTextField];
+  filledTextFieldWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+  MDCOutlinedTextField *outlinedTextFieldWithoutFloatingLabel =
+      [self createMaterialOutlinedTextField];
+  outlinedTextFieldWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+  MDCUnderlinedTextField *underlinedTextFieldWithoutFloatingLabel =
+      [self createMaterialUnderlinedTextField];
+  underlinedTextFieldWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+  MDCBaseTextField *baseTextFieldWithoutFloatingLabel = [self createDefaultBaseTextField];
+  baseTextFieldWithoutFloatingLabel.labelBehavior = MDCTextControlLabelBehaviorDisappears;
+
   NSArray *textFieldRelatedScrollViewSubviews = @[
     [self createLabelWithText:@"MDCFilledTextField:"],
     [self createMaterialFilledTextField],
+    [self createLabelWithText:@"MDCFilledTextField without floating label:"],
+    filledTextFieldWithoutFloatingLabel,
     [self createLabelWithText:@"MDCOutlinedTextField:"],
     [self createMaterialOutlinedTextField],
+    [self createLabelWithText:@"MDCOutlinedTextField without floating label:"],
+    outlinedTextFieldWithoutFloatingLabel,
+    [self createLabelWithText:@"MDCUnderlinedTextField:"],
+    [self createMaterialUnderlinedTextField],
+    [self createLabelWithText:@"MDCUnderlinedTextField without floating label:"],
+    underlinedTextFieldWithoutFloatingLabel,
     [self createLabelWithText:@"MDCBaseTextField:"],
     [self createDefaultBaseTextField],
+    [self createLabelWithText:@"MDCBaseTextField without floating label:"],
+    baseTextFieldWithoutFloatingLabel,
   ];
+
   NSMutableArray *mutableScrollViewSubviews = [self.scrollViewSubviews mutableCopy];
   self.scrollViewSubviews =
       [mutableScrollViewSubviews arrayByAddingObjectsFromArray:textFieldRelatedScrollViewSubviews];
@@ -94,20 +170,18 @@
 - (void)enforcePreferredFonts {
   [super enforcePreferredFonts];
 
-  if (@available(iOS 10.0, *)) {
-    [self.allTextFields
-        enumerateObjectsUsingBlock:^(MDCBaseTextField *textField, NSUInteger idx, BOOL *stop) {
-          textField.adjustsFontForContentSizeCategory = YES;
-          textField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody
-                               compatibleWithTraitCollection:textField.traitCollection];
-          textField.leadingAssistiveLabel.font =
-              [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
-                  compatibleWithTraitCollection:textField.traitCollection];
-          textField.trailingAssistiveLabel.font =
-              [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
-                  compatibleWithTraitCollection:textField.traitCollection];
-        }];
-  }
+  [self.allTextFields
+      enumerateObjectsUsingBlock:^(MDCBaseTextField *textField, NSUInteger idx, BOOL *stop) {
+        textField.adjustsFontForContentSizeCategory = YES;
+        textField.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody
+                             compatibleWithTraitCollection:textField.traitCollection];
+        textField.leadingAssistiveLabel.font =
+            [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
+                compatibleWithTraitCollection:textField.traitCollection];
+        textField.trailingAssistiveLabel.font =
+            [UIFont preferredFontForTextStyle:UIFontTextStyleCaption2
+                compatibleWithTraitCollection:textField.traitCollection];
+      }];
 }
 
 - (void)handleResignFirstResponderTapped {

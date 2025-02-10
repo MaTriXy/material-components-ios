@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <CoreGraphics/CoreGraphics.h>
 #import <XCTest/XCTest.h>
 
-#import "MaterialProgressView.h"
+#import "MDCProgressView.h"
+
+@interface MDCProgressView (ProgressViewTests)
+
+- (NSString *)defaultAccessibilityLabel;
+
+@end
 
 @interface ProgressViewTests : XCTestCase
-
 @end
 
 @implementation ProgressViewTests {
@@ -40,6 +46,25 @@
   XCTAssertEqual(_progressView.cornerRadius, 0);
 }
 
+- (void)testDefaultMode {
+  XCTAssertEqual(_progressView.mode, MDCProgressViewModeDeterminate);
+}
+
+- (void)testSetMode {
+  _progressView.mode = MDCProgressViewModeIndeterminate;
+  XCTAssertEqual(_progressView.mode, MDCProgressViewModeIndeterminate);
+}
+
+- (void)testDefaultProgressTintColors {
+  XCTAssertEqual(_progressView.progressTintColors, nil);
+}
+
+- (void)testSetProgressTintColors {
+  NSArray<UIColor *> *colors = @[ UIColor.blueColor, UIColor.greenColor ];
+  _progressView.progressTintColors = colors;
+  XCTAssertEqualObjects(_progressView.progressTintColors, colors);
+}
+
 - (void)testInitialProgress {
   XCTAssertEqual(_progressView.progress, 0);
 }
@@ -54,6 +79,14 @@
   XCTAssertEqual(_progressView.progress, (float)0.777);
 
   [NSRunLoop.mainRunLoop runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+}
+
+- (void)testIndeterminateProgressView {
+  _progressView.mode = MDCProgressViewModeIndeterminate;
+  [_progressView startAnimating];
+  XCTAssertTrue(_progressView.isAnimating);
+  [_progressView stopAnimating];
+  XCTAssertFalse(_progressView.isAnimating);
 }
 
 - (void)testProgressClampedAt0 {
@@ -90,13 +123,37 @@
   XCTAssertEqual(passedTraitCollection, fakeTraitCollection);
 }
 
-- (void)testAccessibilityLabelMatchesUIProgressView {
+- (void)testAccessibilityLabelHasCorrectValueSet {
   // Given
   UIProgressView *uiProgressView = [[UIProgressView alloc] init];
   MDCProgressView *mdcProgressView = [[MDCProgressView alloc] init];
+  NSString *expectedAccessibilityLabel =
+      uiProgressView.accessibilityLabel ?: [mdcProgressView defaultAccessibilityLabel];
 
   // Then
-  XCTAssertEqual(uiProgressView.accessibilityLabel, mdcProgressView.accessibilityLabel);
+  XCTAssertEqual(mdcProgressView.accessibilityLabel, expectedAccessibilityLabel);
+}
+
+- (void)testProgressTintColorIsNullable {
+  // Given
+  MDCProgressView *mdcProgressView = [[MDCProgressView alloc] init];
+
+  // When
+  mdcProgressView.progressTintColor = nil;
+
+  // Then
+  XCTAssertNil(mdcProgressView.progressTintColor);
+}
+
+- (void)testTrackTintColorIsNullable {
+  // Given
+  MDCProgressView *mdcProgressView = [[MDCProgressView alloc] init];
+
+  // When
+  mdcProgressView.trackTintColor = nil;
+
+  // Then
+  XCTAssertNil(mdcProgressView.trackTintColor);
 }
 
 @end

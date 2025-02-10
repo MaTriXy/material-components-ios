@@ -15,16 +15,24 @@
 #import "MDCCollectionViewTextCell.h"
 
 #import <MDFInternationalization/MDFInternationalization.h>
-#import "MaterialMath.h"
 #import "MaterialTypography.h"
 
 #include <tgmath.h>
+
+#if defined(TARGET_OS_VISION) && TARGET_OS_VISION
+// For code review, use the review queue listed in go/material-visionos-review.
+#define IS_VISIONOS 1
+#else
+#define IS_VISIONOS 0
+#endif
 
 // Default cell heights.
 const CGFloat MDCCellDefaultOneLineHeight = 48;
 const CGFloat MDCCellDefaultOneLineWithAvatarHeight = 56;
 const CGFloat MDCCellDefaultTwoLineHeight = 72;
 const CGFloat MDCCellDefaultThreeLineHeight = 88;
+static const CGFloat MDCCellDefaultTextOpacity = 0.87f;
+static const CGFloat MDCCellDefaultDetailTextOpacity = 0.54f;
 
 // Default cell fonts.
 static inline UIFont *CellDefaultTextFont(void) {
@@ -36,12 +44,10 @@ static inline UIFont *CellDefaultDetailTextFont(void) {
 }
 
 // Default cell font opacity.
-static inline CGFloat CellDefaultTextOpacity(void) {
-  return [MDCTypography subheadFontOpacity];
-}
+static inline CGFloat CellDefaultTextOpacity(void) { return MDCCellDefaultTextOpacity; }
 
 static inline CGFloat CellDefaultDetailTextFontOpacity(void) {
-  return [MDCTypography captionFontOpacity];
+  return MDCCellDefaultDetailTextOpacity;
 }
 
 // Image size.
@@ -62,15 +68,25 @@ static const CGFloat kCellTextWithImagePaddingLeading =
 // Returns the closest pixel-aligned value higher than |value|, taking the scale factor into
 // account. At a scale of 1, equivalent to Ceil().
 static inline CGFloat AlignValueToUpperPixel(CGFloat value) {
+#if !IS_VISIONOS
   CGFloat scale = [[UIScreen mainScreen] scale];
-  return (CGFloat)MDCCeil(value * scale) / scale;
+#else
+  UITraitCollection *current = [UITraitCollection currentTraitCollection];
+  CGFloat scale = current ? [current displayScale] : 1.0;
+#endif
+  return (CGFloat)ceil(value * scale) / scale;
 }
 
 // Returns the closest pixel-aligned value lower than |value|, taking the scale factor into
 // account. At a scale of 1, equivalent to Floor().
 static inline CGFloat AlignValueToLowerPixel(CGFloat value) {
+#if !IS_VISIONOS
   CGFloat scale = [[UIScreen mainScreen] scale];
-  return (CGFloat)MDCFloor(value * scale) / scale;
+#else
+  UITraitCollection *current = [UITraitCollection currentTraitCollection];
+  CGFloat scale = current ? [current displayScale] : 1.0;
+#endif
+  return (CGFloat)floor(value * scale) / scale;
 }
 
 // Returns the rect resulting from applying AlignSizeToUpperPixel to the rect size.
@@ -123,19 +139,19 @@ static inline CGRect AlignRectToUpperPixel(CGRect rect) {
   _contentWrapper = [[UIView alloc] initWithFrame:self.contentView.bounds];
   _contentWrapper.autoresizingMask =
       UIViewAutoresizingFlexibleWidth | MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-                                            self.mdf_effectiveUserInterfaceLayoutDirection);
+                                            self.effectiveUserInterfaceLayoutDirection);
   _contentWrapper.clipsToBounds = YES;
   [self.contentView addSubview:_contentWrapper];
 
   // Text label.
   _textLabel = [[UILabel alloc] initWithFrame:CGRectZero];
   _textLabel.autoresizingMask = MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-      self.mdf_effectiveUserInterfaceLayoutDirection);
+      self.effectiveUserInterfaceLayoutDirection);
 
   // Detail text label.
   _detailTextLabel = [[UILabel alloc] initWithFrame:CGRectZero];
   _detailTextLabel.autoresizingMask = MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-      self.mdf_effectiveUserInterfaceLayoutDirection);
+      self.effectiveUserInterfaceLayoutDirection);
 
   [self resetMDCCollectionViewTextCellLabelProperties];
 
@@ -145,7 +161,7 @@ static inline CGRect AlignRectToUpperPixel(CGRect rect) {
   // Image view.
   _imageView = [[UIImageView alloc] initWithFrame:CGRectZero];
   _imageView.autoresizingMask = MDFTrailingMarginAutoresizingMaskForLayoutDirection(
-      self.mdf_effectiveUserInterfaceLayoutDirection);
+      self.effectiveUserInterfaceLayoutDirection);
   [self.contentView addSubview:_imageView];
 }
 
@@ -172,7 +188,7 @@ static inline CGRect AlignRectToUpperPixel(CGRect rect) {
       _imageView.image ? kCellTextWithImagePaddingLeading : kCellTextNoImagePaddingLeading;
   CGFloat trailingPadding = kCellTextNoImagePaddingTrailing;
   UIEdgeInsets insets = MDFInsetsMakeWithLayoutDirection(
-      0, leadingPadding, 0, trailingPadding, self.mdf_effectiveUserInterfaceLayoutDirection);
+      0, leadingPadding, 0, trailingPadding, self.effectiveUserInterfaceLayoutDirection);
   return UIEdgeInsetsInsetRect(self.contentView.bounds, insets);
 }
 
@@ -240,7 +256,7 @@ static inline CGRect AlignRectToUpperPixel(CGRect rect) {
   detailFrame = AlignRectToUpperPixel(detailFrame);
   imageFrame = AlignRectToUpperPixel(imageFrame);
 
-  if (self.mdf_effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
+  if (self.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft) {
     textFrame = MDFRectFlippedHorizontally(textFrame, CGRectGetWidth(_contentWrapper.bounds));
     detailFrame = MDFRectFlippedHorizontally(detailFrame, CGRectGetWidth(_contentWrapper.bounds));
     imageFrame = MDFRectFlippedHorizontally(imageFrame, CGRectGetWidth(self.contentView.bounds));

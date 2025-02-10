@@ -16,6 +16,11 @@
 
 #import "MDCFontTextStyle.h"
 
+API_DEPRECATED_BEGIN("🤖👀 Use typography tokens instead. "
+                     "See go/material-ios-typography/gm2-migration for more details."
+                     "This has go/material-ios-migrations#scriptable-potential 🤖👀. ",
+                     ios(11, 12))
+
 /**
  A representation of a mapping of UIContentSizeCategory keys to font size values.
 
@@ -49,13 +54,6 @@ typedef NSDictionary<UIContentSizeCategory, NSNumber *> *MDCScalingCurve;
 /**
  Returns a font with the same family, weight and traits, but whose point size is based on the given
  trait environment's preferred content size category.
-
- If the device is running iOS 9 and not in an extension, then the provided traitEnvironment will be
- ignored and the UIApplication sharedApplication's preferredContentSizeCategory will be used
- instead.
-
- If the device is running iOS 9 and in an extension, then the provided trait environment will be
- ignored and the returned font will be scaled with UIContentSizeCategoryLarge.
 
  @param traitEnvironment The trait environment whose trait collection should be queried.
  @return A font whose point size is determined by @c mdc_scalingCurve for the given trait
@@ -93,3 +91,5 @@ typedef NSDictionary<UIContentSizeCategory, NSNumber *> *MDCScalingCurve;
 - (nonnull UIFont *)mdc_scaledFontForCurrentSizeCategory;
 
 @end
+
+API_DEPRECATED_END

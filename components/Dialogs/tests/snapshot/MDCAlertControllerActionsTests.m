@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "MaterialButtons.h"
 #import "MaterialSnapshot.h"
 
 #import "MDCAlertController+ButtonForAction.h"
-#import "MDCAlertControllerView+Private.h"
-#import "MaterialContainerScheme.h"
-#import "MaterialDialogs+Theming.h"
 #import "MaterialDialogs.h"
+#import "MDCAlertController+Testing.h"
+#import "MaterialDialogs+Theming.h"
+#import "MaterialColorScheme.h"
+#import "MaterialContainerScheme.h"
+#import "MaterialTypographyScheme.h"
 
 static NSString *const kTitleShortLatin = @"Title";
 static NSString *const kMessageShortLatin = @"Message";
@@ -38,6 +41,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
 @property(nonatomic, strong) MDCContainerScheme *containerScheme2019;
 @end
 
+@interface MDCAlertControllerView (Testing)
+@property(nonatomic, getter=isVerticalActionsLayout) BOOL verticalActionsLayout;
+@end
+
 @implementation MDCAlertControllerActionsTests
 
 - (void)setUp {
@@ -49,7 +56,6 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
 
   self.alertController = [MDCAlertController alertControllerWithTitle:kTitleShortLatin
                                                               message:kMessageLongLatin];
-  self.alertController.view.bounds = CGRectMake(0, 0, 300, 300);
 
   self.containerScheme2019 = [[MDCContainerScheme alloc] init];
   self.containerScheme2019.colorScheme =
@@ -65,12 +71,9 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [super tearDown];
 }
 
-- (void)sizeTofitContent {
-  // Ensure snapshot view size matches actual runtime size of alert
-  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
-  CGSize preferredContentSize = self.alertController.preferredContentSize;
-  CGSize bounds = [alertView calculatePreferredContentSizeForBounds:preferredContentSize];
-  self.alertController.view.bounds = CGRectMake(0.f, 0.f, bounds.width, bounds.height);
+- (void)generateSizedSnapshotAndVerifyForAlert:(MDCAlertController *)alert {
+  [alert sizeToFitContentInBounds:CGSizeMake(300.0f, 300.0f)];
+  [self generateSnapshotAndVerifyForView:alert.view];
 }
 
 - (void)generateSnapshotAndVerifyForView:(UIView *)view {
@@ -98,7 +101,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Low Emphasis | Default Alignment (center)
@@ -113,7 +116,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | High Emphasis | Default Alignment (trailing)
@@ -128,7 +131,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | High Emphasis | Default Alignment (center)
@@ -143,7 +146,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | Low Emphasis | RTL | Default Alignment (trailing)
@@ -159,7 +162,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Low Emphasis | RTL | Default Alignment (center)
@@ -175,7 +178,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | High Emphasis | RTL | Default Alignment (trailing)
@@ -191,7 +194,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | High Emphasis | RTL | Default Alignment (center)
@@ -207,12 +210,12 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Verify correct layout for issues reported in:
 //    https://github.com/material-components/material-components-ios/issues/8434.
-- (void)testActionsLayoutHorizontallyForCatpitalizedButtonCase {
+- (void)testActionsLayoutHorizontallyForCapitalizedButtonCase {
   // Given
   self.alertController.title = @"Recurring actions";
   self.alertController.message = nil;
@@ -229,7 +232,8 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   }
 
   // Then
-  [self sizeTofitContent];
+  // An extra wide view (generated using CGRectInfinite.size) is required for this test case.
+  [self.alertController sizeToFitContentInBounds:CGRectInfinite.size];
   [self generateSnapshotAndVerifyForView:self.alertController.view];
 }
 
@@ -244,8 +248,7 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self sizeTofitContent];
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 #pragma mark - Alignment Tests
@@ -258,11 +261,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignment = MDCContentHorizontalAlignmentCenter;
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentCenter;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | Low Emphasis | Leading Alignment
@@ -273,11 +275,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignment = MDCContentHorizontalAlignmentLeading;
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentLeading;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | Low Emphasis | Justified Alignment
@@ -288,11 +289,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | Medium Emphasis | Center Alignment
@@ -303,11 +303,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignment = MDCContentHorizontalAlignmentCenter;
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentCenter;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | Medium Emphasis | Leading Alignment
@@ -318,11 +317,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignment = MDCContentHorizontalAlignmentLeading;
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentLeading;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Horizontal Layout | Medium Emphasis | Justified Alignment
@@ -333,11 +331,10 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Low Emphasis | Trailing Alignment
@@ -348,11 +345,11 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentTrailing;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentTrailing;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Low Emphasis | Leading Alignment
@@ -363,11 +360,11 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentLeading;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentLeading;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Low Emphasis | Justified Alignment
@@ -378,11 +375,11 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentJustified;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentJustified;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Medium Emphasis | Trailing Alignment
@@ -393,11 +390,11 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentTrailing;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentTrailing;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Medium Emphasis | Leading Alignment
@@ -408,11 +405,11 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentLeading;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentLeading;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // Vertical Layout | Medium Emphasis | Justified Alignment
@@ -423,11 +420,55 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentJustified;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentJustified;
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// b/155350470: test long justified actions are vertically aligned.
+- (void)testLongJustifiedActionsAreVerticallyAligned {
+  // Given
+  [self.alertController addAction:[MDCAlertAction actionWithTitle:@"First Long Action"
+                                                         emphasis:MDCActionEmphasisMedium
+                                                          handler:nil]];
+  [self addCancelActionWithEmphasis:MDCActionEmphasisMedium];
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+
+  // When
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentJustified;
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+  XCTAssertEqual(alertView.isVerticalActionsLayout, true);
+}
+
+// b/155350470: test long justified actions are horizontally aligned when there's enough space.
+- (void)testLongJustifiedActionsAreHorizontallyAligned {
+  // Given
+  [self.alertController addAction:[MDCAlertAction actionWithTitle:@"Promoted Action"
+                                                         emphasis:MDCActionEmphasisHigh
+                                                          handler:nil]];
+  [self.alertController addAction:[MDCAlertAction actionWithTitle:@"Cancel Action"
+                                                         emphasis:MDCActionEmphasisMedium
+                                                          handler:nil]];
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
+  CGFloat width = 500.0f;  // Minimum width that fits both actions (calculated manually).
+  [self.alertController sizeToFitContentInBounds:CGSizeMake(width, 300.0f)];
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+
+  // When
+  self.alertController.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentJustified;
 
   // Then
   [self generateSnapshotAndVerifyForView:self.alertController.view];
+  XCTAssertEqual(alertView.isVerticalActionsLayout, false);
 }
 
 #pragma mark - Vertical Order Tests
@@ -439,11 +480,25 @@ static NSString *const kSecondLongAction = @"Second Long Long Action";
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  MDCAlertControllerView *view = (MDCAlertControllerView *)self.alertController.view;
-  view.orderVerticalActionsByEmphasis = YES;
+  self.alertController.orderVerticalActionsByEmphasis = YES;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+- (void)testVerticalTrailingActionsAreOrderedByEmphasis {
+  // Given
+  [self addFirstLongActionWithEmphasis:MDCActionEmphasisHigh];
+  [self addCancelActionWithEmphasis:MDCActionEmphasisMedium];
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
+
+  // When
+  self.alertController.orderVerticalActionsByEmphasis = YES;
+  self.alertController.actionsHorizontalAlignmentInVerticalLayout =
+      MDCContentHorizontalAlignmentTrailing;
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 #pragma mark - Helpers

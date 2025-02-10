@@ -4,7 +4,7 @@ layout: detail
 section: components
 excerpt: "The flexible header is a container view whose height and vertical offset react to UIScrollViewDelegate events."
 iconId: header
-path: /catalog/flexible-headers/
+path: /catalog/flexible-header/
 api_doc_root: true
 -->
 
@@ -17,25 +17,22 @@ api_doc_root: true
 A flexible header is a container view whose height and vertical offset react to
 UIScrollViewDelegate events.
 
-<div class="article__asset article__asset--screenshot">
-  <img src="docs/assets/flexible-header.gif" alt="An animation showing a flexible header appearing and disappearing." width="320">
-</div>
+<img src="docs/assets/flexible-header.gif" alt="An animation showing a flexible header appearing and disappearing." width="320">
 
 ## Design & API documentation
 
 <ul class="icon-list">
   <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/go/design-app-bar-top">Material Design guidelines: App bars: top</a></li>
-  <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Classes/MDCFlexibleHeaderContainerViewController.html">MDCFlexibleHeaderContainerViewController</a></li>
-  <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Classes/MDCFlexibleHeaderView.html">MDCFlexibleHeaderView</a></li>
-  <li class="icon-list-item icon-list-item--link">Class: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Classes/MDCFlexibleHeaderViewController.html">MDCFlexibleHeaderViewController</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Protocols/MDCFlexibleHeaderSafeAreaDelegate.html">MDCFlexibleHeaderSafeAreaDelegate</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Protocols/MDCFlexibleHeaderViewAnimationDelegate.html">MDCFlexibleHeaderViewAnimationDelegate</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Protocols/MDCFlexibleHeaderViewDelegate.html">MDCFlexibleHeaderViewDelegate</a></li>
-  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Protocols/MDCFlexibleHeaderViewLayoutDelegate.html">MDCFlexibleHeaderViewLayoutDelegate</a></li>
-  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Enums.html">Enumerations</a></li>
-  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Enums/MDCFlexibleHeaderContentImportance.html">MDCFlexibleHeaderContentImportance</a></li>
-  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Enums/MDCFlexibleHeaderScrollPhase.html">MDCFlexibleHeaderScrollPhase</a></li>
-  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://material.io/components/ios/catalog/flexible-headers/api-docs/Enums/MDCFlexibleHeaderShiftBehavior.html">MDCFlexibleHeaderShiftBehavior</a></li>
+  <li class="icon-list-item icon-list-item--link">Class: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderContainerViewController.h">MDCFlexibleHeaderContainerViewController</a></li>
+  <li class="icon-list-item icon-list-item--link">Class: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderView.h">MDCFlexibleHeaderView</a></li>
+  <li class="icon-list-item icon-list-item--link">Class: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderViewController.h">MDCFlexibleHeaderViewController</a></li>
+  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderSafeAreaDelegate.h">MDCFlexibleHeaderSafeAreaDelegate</a></li>
+  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderViewAnimationDelegate.h">MDCFlexibleHeaderViewAnimationDelegate</a></li>
+  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderViewDelegate.h">MDCFlexibleHeaderViewDelegate</a></li>
+  <li class="icon-list-item icon-list-item--link">Protocol: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderViewLayoutDelegate.h">MDCFlexibleHeaderViewLayoutDelegate</a></li>
+  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderView+ShiftBehavior.h">MDCFlexibleHeaderContentImportance</a></li>
+  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/MDCFlexibleHeaderView.h">MDCFlexibleHeaderScrollPhase</a></li>
+  <li class="icon-list-item icon-list-item--link">Enumeration: <a href="https://github.com/material-components/material-components-ios/blob/develop/components/FlexibleHeader/src/ShiftBehavior/MDCFlexibleHeaderShiftBehavior.h">MDCFlexibleHeaderShiftBehavior</a></li>
 </ul>
 
 ## Related components
@@ -1125,7 +1122,7 @@ Deprecation schedule:
 - October 23, 2018: minMaxHeightIncludesSafeArea will be marked deprecated.
 - November 23, 2018: minMaxHeightIncludesSafeArea will be deleted.
 
-`minMaxHeightIncludesSafeArea` is a behavioral flag on `MDCFlexibleHeaderView that must be disabled
+`minMaxHeightIncludesSafeArea` is a behavioral flag on `MDCFlexibleHeaderView` that must be disabled
 to ensure iPhone X compatibility.
 
 When this property is enabled (the legacy behavior), the `minimumHeight` and `maximumHeight` values

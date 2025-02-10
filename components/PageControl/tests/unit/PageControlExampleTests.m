@@ -14,7 +14,9 @@
 
 #import <XCTest/XCTest.h>
 
-#import "MaterialPageControl.h"
+#import "MDCPageControl.h"
+
+#import <CoreGraphics/CoreGraphics.h>
 
 @interface PageControlExampleTests : XCTestCase
 
@@ -70,36 +72,22 @@
 }
 
 - (void)testSizeThatFits {
-  // Tests that MDCPageControl and UIPageControl frames are equivalent when calling -sizeToFit.
+  // Tests the MDCPageControl frame when calling -sizeToFit.
   MDCPageControl *pageControl = [[MDCPageControl alloc] init];
-  UIPageControl *nativePageControl = [[UIPageControl alloc] init];
 
-  // Test both controls with 1 page.
+  // Test with 1 page.
   pageControl.numberOfPages = 1;
   [pageControl sizeToFit];
-  nativePageControl.numberOfPages = 1;
-  [nativePageControl sizeToFit];
   CGRect frame = CGRectIntegral(pageControl.frame);
   XCTAssertEqual(frame.size.height, 48.0);
-  XCTAssertEqual(frame.size.width, nativePageControl.frame.size.width);
+  XCTAssertEqual(frame.size.width, 7);
 
-  // Test both controls with 4 pages.
+  // Test with 4 pages.
   pageControl.numberOfPages = 4;
   [pageControl sizeToFit];
-  nativePageControl.numberOfPages = 4;
-  [nativePageControl sizeToFit];
   frame = CGRectIntegral(pageControl.frame);
   XCTAssertEqual(frame.size.height, 48.0);
-  XCTAssertEqual(frame.size.width, nativePageControl.frame.size.width);
-
-  // Test with different number of pages for each control.
-  pageControl.numberOfPages = 4;
-  [pageControl sizeToFit];
-  nativePageControl.numberOfPages = 2;
-  [nativePageControl sizeToFit];
-  frame = CGRectIntegral(pageControl.frame);
-  XCTAssertEqual(frame.size.height, 48.0);
-  XCTAssertNotEqual(frame.size.width, nativePageControl.frame.size.width);
+  XCTAssertEqual(frame.size.width, 55);
 }
 
 - (void)testIntrinsicContentSize {

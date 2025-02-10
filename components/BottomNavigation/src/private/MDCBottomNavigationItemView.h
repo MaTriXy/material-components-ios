@@ -15,21 +15,22 @@
 #import <UIKit/UIKit.h>
 
 #import "MDCBottomNavigationBar.h"
-#import "MaterialInk.h"
 #import "MaterialRipple.h"
 
+NS_ASSUME_NONNULL_BEGIN
+
+__attribute__((objc_subclassing_restricted))
 @interface MDCBottomNavigationItemView : UIView
 
 @property(nonatomic, assign) BOOL titleBelowIcon;
 @property(nonatomic, assign) BOOL selected;
 @property(nonatomic, assign) MDCBottomNavigationBarTitleVisibility titleVisibility;
-@property(nonatomic, strong, nonnull) MDCInkView *inkView;
-@property(nonatomic, strong, nonnull) MDCRippleTouchController *rippleTouchController;
+@property(nonatomic, strong) MDCRippleTouchController *rippleTouchController API_DEPRECATED(
+    "Follow go/material-ios-touch-response for guidance instead.", ios(12, 12));
 @property(nonatomic, assign) UIOffset titlePositionAdjustment;
 
-@property(nonatomic, copy, nullable) NSString *badgeValue;
 @property(nonatomic, copy, nullable) NSString *title;
-@property(nonatomic, strong, nullable) UIFont *itemTitleFont UI_APPEARANCE_SELECTOR;
+@property(nonatomic, strong, nullable) UIFont *itemTitleFont;
 
 /**
  The number of lines available for rendering the title of this item.  Defaults to 1.
@@ -40,14 +41,14 @@
 // Default = YES
 @property(nonatomic, assign) BOOL truncatesTitle;
 
-@property(nonatomic, strong, nonnull) UIButton *button;
+@property(nonatomic, strong) UIButton *button;
 @property(nonatomic, strong, nullable) UIImage *image;
 @property(nonatomic, strong, nullable) UIImage *selectedImage;
+@property(nonatomic, strong) UIImageView *iconImageView;
+@property(nonatomic, strong) UIView *iconContainerView;
 
-@property(nonatomic, strong, nullable) UIColor *badgeColor UI_APPEARANCE_SELECTOR;
-@property(nonatomic, copy, nullable) UIColor *badgeTextColor;
-@property(nonatomic, strong, nullable) UIColor *selectedItemTintColor UI_APPEARANCE_SELECTOR;
-@property(nonatomic, strong, nullable) UIColor *unselectedItemTintColor UI_APPEARANCE_SELECTOR;
+@property(nonatomic, strong, nullable) UIColor *selectedItemTintColor;
+@property(nonatomic, strong, nullable) UIColor *unselectedItemTintColor;
 @property(nonatomic, strong, nullable) UIColor *selectedItemTitleColor;
 
 @property(nonatomic, assign) CGFloat contentVerticalMargin;
@@ -55,7 +56,111 @@
 /** The @c accessibilityIdentifier of the accessibility element for this view. */
 @property(nonatomic, copy, nullable) NSString *accessibilityElementIdentifier;
 
+#pragma mark - Vertical layout flags
+
+/** The flag to enable vertical layout mode. */
+@property(nonatomic) BOOL enableVerticalLayout;
+
+/** The flag to enable displaying titles vertical layout mode. */
+@property(nonatomic) BOOL displayTitleInVerticalLayout;
+
+/**
+ If true, the tab icon will be placed in a square container for layout.
+*/
+@property(nonatomic, assign) BOOL enableSquareImages;
+
+/**
+ Returns a rect that is the union of all visible content views, inset by
+ kMDCButtonNavigationItemViewPointerEffectHoverRectInset. This rect will never be larger than the
+ view's bounds.
+
+ This is intended to be used by a @c UIPointerInteractionDelegate when creating a @c UIPointerShape
+ for a @c UIPointerStyle.
+ */
+- (CGRect)pointerEffectHighlightRect;
+
+#pragma mark - Configuring the selection appearance
+
+/**
+ Changes the selection state, optionally with animation.
+
+ If @c showsSelectionIndicator is enabled, then the selection indicator will also be animated.
+ */
 - (void)setSelected:(BOOL)selected animated:(BOOL)animated;
+
+/**
+ Configures whether an indicator is shown when @c selected is true.
+
+ If NO, then a selection indicator will never been shown regardless of @c selected state.
+ */
+@property(nonatomic) BOOL showsSelectionIndicator;
+
+/** The size of the selection indicator's bounds. */
+@property(nonatomic) CGSize selectionIndicatorSize;
+
+/** The background color of the selection indicator. */
+@property(nonatomic) UIColor *selectionIndicatorColor;
+
+#pragma mark - Configuring the ripple appearance
+
+/** The color of the ripple effect shown when the user taps on an item. */
+@property(nonatomic, strong, nullable) UIColor *rippleColor API_DEPRECATED(
+    "Follow go/material-ios-touch-response for guidance instead.", ios(12, 12));
+
+#pragma mark - Displaying a value in the badge
+
+/**
+ The human-readable value, typically numerical, that will be shown for this item's badge.
+
+ The badge will only be visible if the text is a non-empty string. To hide the badge, set this
+ property to nil or an empty string.
+ */
+@property(nonatomic, copy, nullable) NSString *badgeText API_DEPRECATED(
+    "See go/material-ios-badges for badge appearance guidance instead.", ios(12, 12));
+#pragma mark - Configuring a badge's visual appearance
+
+/**
+ The default appearance to be used for this item's badge.
+
+ If this item's associated UITabBarItem has set a non-nil badgeColor, then that value will be used
+ for the badge instead of the backgroundColor associated with this appearance object.
+ */
+@property(nonatomic, copy) MDCBadgeAppearance *badgeAppearance;
+
+/**
+ X-offset for Badge position.
+
+ This property should be set in the BottomNavigationBar, which will then propagate it to its item
+ views.
+
+ Default is 0.
+ */
+@property(nonatomic, assign) CGFloat badgeHorizontalOffset;
+
+/**
+ The background color of this item's badge.
+
+ If not nil, this value will override badgeAppearance.backgroundColor. If nil, then
+ badgeAppearance.backgroundColor will be used instead.
+ */
+@property(nonatomic, strong, nullable) UIColor *badgeColor API_DEPRECATED_WITH_REPLACEMENT(
+    "badgeAppearance.backgroundColor", ios(12, 12));
+
+/**
+ The color of the text representing this item's badge value.
+
+ This property is a proxy for badgeAppearance.textColor.
+ */
+@property(nonatomic, copy, null_resettable) UIColor *badgeTextColor API_DEPRECATED_WITH_REPLACEMENT(
+    "badgeAppearance.textColor", ios(12, 12));
+
+/**
+ The font that will be used to display the value of this item's badge.
+
+ This property is a proxy for badgeAppearance.font.
+ */
+@property(nonatomic, copy, null_resettable)
+    UIFont *badgeFont API_DEPRECATED_WITH_REPLACEMENT("badgeAppearance.font", ios(12, 12));
 
 #pragma mark - UILargeContentViewerItem
 
@@ -71,4 +176,11 @@
  */
 @property(nonatomic, nullable) UIImage *largeContentImage NS_AVAILABLE_IOS(13_0);
 
+#pragma mark - Unsupported APIs
+
+// Interface builder is not supported.
+- (nullable instancetype)initWithCoder:(NSCoder *)aDecoder NS_UNAVAILABLE;
+
 @end
+
+NS_ASSUME_NONNULL_END

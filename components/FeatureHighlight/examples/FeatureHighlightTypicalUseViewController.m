@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import "supplemental/FeatureHighlightExampleSupplemental.h"
 #import "MaterialFeatureHighlight+ColorThemer.h"
 #import "MaterialFeatureHighlight.h"
-#import "supplemental/FeatureHighlightExampleSupplemental.h"
+#import "MaterialColorScheme.h"
+#import "MaterialTypographyScheme.h"
 
 @implementation FeatureHighlightTypicalUseViewController
 
@@ -35,7 +37,7 @@
                           toFeatureHighlightViewController:vc];
   vc.titleFont = self.typographyScheme.headline6;
   vc.bodyFont = self.typographyScheme.body2;
-  vc.mdc_adjustsFontForContentSizeCategory = YES;
+  vc.adjustsFontForContentSizeCategory = YES;
 
   vc.titleText = @"Hey this is a multi-line title for the Feature Highlight";
   vc.bodyText = @"This is the description of the feature highlight view controller.";

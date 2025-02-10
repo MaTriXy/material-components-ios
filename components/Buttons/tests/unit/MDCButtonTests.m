@@ -17,6 +17,7 @@
 #import "MaterialButtons.h"
 #import "MaterialShadowElevations.h"
 #import "MaterialShadowLayer.h"
+#import "MaterialShapeLibrary.h"
 #import "MaterialShapes.h"
 #import "MaterialTypography.h"
 
@@ -29,9 +30,7 @@ static const UIControlState kNumUIControlStates = 2 * UIControlStateSelected - 1
 static const UIControlState kUIControlStateDisabledHighlighted =
     UIControlStateHighlighted | UIControlStateDisabled;
 
-static CGFloat randomNumber() {
-  return arc4random_uniform(100) / (CGFloat)10;
-}
+static CGFloat randomNumber(void) { return arc4random_uniform(100) / (CGFloat)10; }
 
 static CGFloat randomNumberNotEqualTo(const CGFloat targetNumber) {
   while (1) {
@@ -42,7 +41,7 @@ static CGFloat randomNumberNotEqualTo(const CGFloat targetNumber) {
   }
 }
 
-static UIColor *randomColor() {
+static UIColor *randomColor(void) {
   switch (arc4random_uniform(5)) {
     case 0:
       return [UIColor colorWithRed:1 green:1 blue:1 alpha:1];
@@ -149,6 +148,23 @@ static NSString *controlStateDescription(UIControlState controlState) {
                         [originalTitle uppercaseStringWithLocale:[NSLocale currentLocale]]);
 }
 
+- (void)testUppercaseAttributedTitleYes {
+  // Given
+  NSAttributedString *originalAttributedTitle =
+      [[NSAttributedString alloc] initWithString:@"some Text"];
+
+  // When
+  self.button.uppercaseTitle = YES;
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateNormal];
+
+  // Then
+  NSString *uppercaseString =
+      [originalAttributedTitle.string uppercaseStringWithLocale:[NSLocale currentLocale]];
+  NSAttributedString *uppercaseAttributedTitle =
+      [[NSAttributedString alloc] initWithString:uppercaseString];
+  XCTAssertEqualObjects(self.button.currentAttributedTitle, uppercaseAttributedTitle);
+}
+
 - (void)testUppercaseTitleNo {
   // Given
   NSString *originalTitle = @"some Text";
@@ -159,6 +175,19 @@ static NSString *controlStateDescription(UIControlState controlState) {
 
   // Then
   XCTAssertEqualObjects(self.button.currentTitle, originalTitle);
+}
+
+- (void)testUppercaseAttributedTitleNo {
+  // Given
+  NSAttributedString *originalAttributedTitle =
+      [[NSAttributedString alloc] initWithString:@"some Text"];
+
+  // When
+  self.button.uppercaseTitle = NO;
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateNormal];
+
+  // Then
+  XCTAssertEqualObjects(self.button.currentAttributedTitle, originalAttributedTitle);
 }
 
 - (void)testUppercaseTitleNoChangedToYes {
@@ -177,6 +206,26 @@ static NSString *controlStateDescription(UIControlState controlState) {
                         [originalTitle uppercaseStringWithLocale:[NSLocale currentLocale]]);
 }
 
+- (void)testUppercaseAttributedTitleNoChangedToYes {
+  // Given
+  NSAttributedString *originalAttributedTitle =
+      [[NSAttributedString alloc] initWithString:@"some Text"];
+
+  // When
+  self.button.uppercaseTitle = NO;
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateNormal];
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateHighlighted];
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateDisabled];
+  self.button.uppercaseTitle = YES;
+
+  // Then
+  NSString *uppercaseString =
+      [originalAttributedTitle.string uppercaseStringWithLocale:[NSLocale currentLocale]];
+  NSAttributedString *uppercaseAttributedTitle =
+      [[NSAttributedString alloc] initWithString:uppercaseString];
+  XCTAssertEqualObjects(self.button.currentAttributedTitle, uppercaseAttributedTitle);
+}
+
 - (void)testUppercaseTitleYesChangedToNo {
   // Given
   NSString *originalTitle = @"some Text";
@@ -190,6 +239,22 @@ static NSString *controlStateDescription(UIControlState controlState) {
 
   // Then
   XCTAssertEqualObjects(self.button.currentTitle, originalTitle);
+}
+
+- (void)testUppercaseAttributedTitleYesChangedToNo {
+  // Given
+  NSAttributedString *originalAttributedTitle =
+      [[NSAttributedString alloc] initWithString:@"some Text"];
+
+  // When
+  self.button.uppercaseTitle = YES;
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateNormal];
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateHighlighted];
+  [self.button setAttributedTitle:originalAttributedTitle forState:UIControlStateDisabled];
+  self.button.uppercaseTitle = NO;
+
+  // Then
+  XCTAssertEqualObjects(self.button.currentAttributedTitle, originalAttributedTitle);
 }
 
 - (void)testSetEnabledAnimated {
@@ -528,9 +593,6 @@ static NSString *controlStateDescription(UIControlState controlState) {
 }
 
 - (void)testTitleFontForStateFallbackBehaviorWithLegacyDynamicType {
-  // Given
-  self.button.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
-
   // When
   self.button.mdc_adjustsFontForContentSizeCategory = YES;
 
@@ -554,7 +616,6 @@ static NSString *controlStateDescription(UIControlState controlState) {
 
   // When
   self.button.mdc_adjustsFontForContentSizeCategory = YES;
-  self.button.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
 
   // Then
   XCTAssertFalse([[self.button titleFontForState:UIControlStateNormal] mdc_isSimplyEqual:userFont],
@@ -573,7 +634,6 @@ static NSString *controlStateDescription(UIControlState controlState) {
   UIFont *userFont = [UIFont systemFontOfSize:99];
   [self.button setTitleFont:userFont forState:UIControlStateNormal];
   self.button.mdc_adjustsFontForContentSizeCategory = YES;
-  self.button.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
 
   // When
   self.button.mdc_adjustsFontForContentSizeCategory = NO;
@@ -925,51 +985,23 @@ static NSString *controlStateDescription(UIControlState controlState) {
   XCTAssertEqualObjects(self.button.inkColor, color);
 }
 
+- (void)testRippleColors {
+  // Given
+  UIColor *color = randomColor();
+
+  // When
+  self.button.rippleColor = color;
+
+  // Then
+  XCTAssertEqualObjects(self.button.rippleColor, color);
+}
+
 /*
  TODO: things to unit test
  (should these even be a thing?)
  - hitAreaInset
  - underlyingColor (text color)
  */
-
-- (void)testAlphaRestoredWhenReenabled {
-  // Given
-  CGFloat alpha = (CGFloat)0.5;
-
-  // When
-  self.button.alpha = alpha;
-  self.button.enabled = NO;
-  self.button.enabled = YES;
-
-  // Then
-  XCTAssertEqualWithAccuracy(alpha, self.button.alpha, 0.0001);
-}
-
-- (void)testEnabledAlphaNotSetWhileDisabled {
-  // Given
-  CGFloat alpha = (CGFloat)0.2;
-
-  // When
-  self.button.alpha = alpha;
-  self.button.enabled = NO;
-  self.button.alpha = 1 - alpha;
-  self.button.enabled = YES;
-
-  // Then
-  XCTAssertEqualWithAccuracy(alpha, self.button.alpha, (CGFloat)0.0001);
-}
-
-- (void)testDisabledAlpha {
-  // Given
-  CGFloat alpha = 0.5;
-
-  // When
-  [self.button setDisabledAlpha:alpha];
-  self.button.enabled = NO;
-
-  // Then
-  XCTAssertEqualWithAccuracy(alpha, self.button.alpha, (CGFloat)0.0001);
-}
 
 - (void)testPointInsideWithoutHitAreaInsets {
   // Given
@@ -1251,32 +1283,8 @@ static NSString *controlStateDescription(UIControlState controlState) {
 }
 
 /**
- Test legacy dynamic type has no impact on a @c MDCButton when @c
- adjustFontForContentSizeCategoryWhenScaledFontIsUnavailable is set to @c NO before setting @c
- mdc_adjustsFontForContentSizeCategory to @c YES that the font stays the same.
- */
-- (void)testLegacyDynamicTypeDisabledThenDynamicTypeTurnedOn {
-  // Given
-  UIFont *fakeFont = [UIFont systemFontOfSize:55];
-  [self.button setTitleFont:fakeFont forState:UIControlStateNormal];
-  UIFont *originalFont = self.button.titleLabel.font;
-  self.button.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = NO;
-
-  // When
-  self.button.mdc_adjustsFontForContentSizeCategory = YES;
-
-  // Then
-  XCTAssertTrue([self.button.titleLabel.font mdc_isSimplyEqual:originalFont],
-                @"(%@) is not equal to (%@)", self.button.titleLabel.font, originalFont);
-  XCTAssertTrue(
-      [[self.button titleFontForState:UIControlStateNormal] mdc_isSimplyEqual:originalFont],
-      @"(%@) is not equal to (%@)", [self.button titleFontForState:UIControlStateNormal],
-      originalFont);
-}
-
-/**
  Test legacy dynamic type impacts a @c MDCButton when @c
- adjustFontForContentSizeCategoryWhenScaledFontIsUnavailable is set to @c YES that the font changes.
+ mdc_adjustsFontForContentSizeCategory is set to @c YES that the font changes.
  */
 - (void)testLegacyDynamicTypeEnabled {
   // Given
@@ -1284,9 +1292,6 @@ static NSString *controlStateDescription(UIControlState controlState) {
   [self.button setTitleFont:fakeFont forState:UIControlStateNormal];
   UIFont *originalFont = self.button.titleLabel.font;
   self.button.mdc_adjustsFontForContentSizeCategory = YES;
-
-  // When
-  self.button.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
 
   // Then
   XCTAssertFalse([self.button.titleLabel.font mdc_isSimplyEqual:originalFont], @"%@ is equal to %@",
@@ -1501,7 +1506,7 @@ static NSString *controlStateDescription(UIControlState controlState) {
   [button setElevation:1 forState:UIControlStateNormal];
   [button setElevation:9 forState:UIControlStateSelected];
   __block CGFloat newElevation = 0;
-  button.mdc_elevationDidChangeBlock = ^(MDCButton *object, CGFloat elevation) {
+  button.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     newElevation = elevation;
   };
 
@@ -1519,7 +1524,7 @@ static NSString *controlStateDescription(UIControlState controlState) {
   [button setElevation:1 forState:UIControlStateNormal];
   [button setElevation:1 forState:UIControlStateHighlighted];
   __block BOOL blockCalled = NO;
-  button.mdc_elevationDidChangeBlock = ^(MDCButton *object, CGFloat elevation) {
+  button.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 
@@ -1535,7 +1540,7 @@ static NSString *controlStateDescription(UIControlState controlState) {
   MDCButton *button = [[MDCButton alloc] init];
   button.selected = YES;
   __block CGFloat newElevation = 0;
-  button.mdc_elevationDidChangeBlock = ^(MDCButton *object, CGFloat elevation) {
+  button.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     newElevation = elevation;
   };
 
@@ -1544,6 +1549,108 @@ static NSString *controlStateDescription(UIControlState controlState) {
 
   // Then
   XCTAssertEqualWithAccuracy(newElevation, [button elevationForState:button.state], 0.001);
+}
+
+- (void)testDefaultVisibleAreaInsetAndShapeGeneratorValues {
+  // Then
+  XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(self.button.visibleAreaInsets, UIEdgeInsetsZero));
+  XCTAssertNil(self.button.shapeGenerator);
+}
+
+- (void)testSettingVisibleAreaInsetCreatesCorrectShape {
+  // Given
+  CGFloat cornerRadius = 5;
+  UIEdgeInsets visibleAreaInsets = UIEdgeInsetsMake(1, 2, 3, 4);
+  MDCRectangleShapeGenerator *rectangleShapeGenerator = [[MDCRectangleShapeGenerator alloc] init];
+  MDCCornerTreatment *cornerTreatment =
+      [[MDCRoundedCornerTreatment alloc] initWithRadius:cornerRadius];
+  [rectangleShapeGenerator setCorners:cornerTreatment];
+  rectangleShapeGenerator.topLeftCornerOffset =
+      CGPointMake(visibleAreaInsets.left, visibleAreaInsets.top);
+  rectangleShapeGenerator.topRightCornerOffset =
+      CGPointMake(-visibleAreaInsets.right, visibleAreaInsets.top);
+  rectangleShapeGenerator.bottomLeftCornerOffset =
+      CGPointMake(visibleAreaInsets.left, -visibleAreaInsets.bottom);
+  rectangleShapeGenerator.bottomRightCornerOffset =
+      CGPointMake(-visibleAreaInsets.right, -visibleAreaInsets.bottom);
+  self.button.layer.cornerRadius = cornerRadius;
+  [self.button sizeToFit];
+
+  // When
+  self.button.visibleAreaInsets = visibleAreaInsets;
+
+  // Then
+  XCTAssertTrue(CGPathEqualToPath([self.button.shapeGenerator pathForSize:CGSizeMake(100, 100)],
+                                  [rectangleShapeGenerator pathForSize:CGSizeMake(100, 100)]));
+}
+
+- (void)testSettingVisibleAreaInsetAndAfterCornerRadiusCreatesCorrectShape {
+  // Given
+  CGFloat cornerRadius = 12;
+  UIEdgeInsets visibleAreaInsets = UIEdgeInsetsMake(1, 2, 3, 4);
+  MDCRectangleShapeGenerator *rectangleShapeGenerator = [[MDCRectangleShapeGenerator alloc] init];
+  MDCCornerTreatment *cornerTreatment =
+      [[MDCRoundedCornerTreatment alloc] initWithRadius:cornerRadius];
+  [rectangleShapeGenerator setCorners:cornerTreatment];
+  rectangleShapeGenerator.topLeftCornerOffset =
+      CGPointMake(visibleAreaInsets.left, visibleAreaInsets.top);
+  rectangleShapeGenerator.topRightCornerOffset =
+      CGPointMake(-visibleAreaInsets.right, visibleAreaInsets.top);
+  rectangleShapeGenerator.bottomLeftCornerOffset =
+      CGPointMake(visibleAreaInsets.left, -visibleAreaInsets.bottom);
+  rectangleShapeGenerator.bottomRightCornerOffset =
+      CGPointMake(-visibleAreaInsets.right, -visibleAreaInsets.bottom);
+  self.button.layer.cornerRadius = 5;
+  [self.button sizeToFit];
+
+  // When
+  self.button.visibleAreaInsets = visibleAreaInsets;
+  self.button.layer.cornerRadius = cornerRadius;
+
+  // Then
+  XCTAssertTrue(CGPathEqualToPath([self.button.shapeGenerator pathForSize:CGSizeMake(100, 100)],
+                                  [rectangleShapeGenerator pathForSize:CGSizeMake(100, 100)]));
+}
+
+- (void)testSettingVisibleAreaInsetAndThenResetingItAndCheckingCorrectShapeGeneratorValue {
+  // Given
+  UIEdgeInsets visibleAreaInsets = UIEdgeInsetsMake(1, 2, 3, 4);
+  [self.button sizeToFit];
+  self.button.visibleAreaInsets = visibleAreaInsets;
+
+  // When
+  self.button.visibleAreaInsets = UIEdgeInsetsZero;
+
+  // Then
+  XCTAssertNil(self.button.shapeGenerator);
+  XCTAssertTrue(UIEdgeInsetsEqualToEdgeInsets(self.button.visibleAreaInsets, UIEdgeInsetsZero));
+}
+
+- (void)testSettingVisibleAreaInsetsProvidesCorrectSizeThatFitsAndIntrinsicContentSize {
+  // Given
+  CGSize buttonSize = CGSizeMake(32, 33);
+  UIEdgeInsets visibleAreaInsets = UIEdgeInsetsMake(1, 2, 3, 4);
+  [self.button sizeToFit];
+  CGRect beforeButtonFrame = self.button.frame;
+  CGSize beforeInsetsSize = [self.button intrinsicContentSize];
+
+  // When
+  self.button.visibleAreaInsets = visibleAreaInsets;
+  [self.button sizeToFit];
+  CGRect afterButtonFrame = self.button.frame;
+  CGSize afterInsetsSize = [self.button intrinsicContentSize];
+
+  // Then
+  XCTAssertTrue(CGSizeEqualToSize(beforeInsetsSize, buttonSize));
+  XCTAssertTrue(CGSizeEqualToSize(beforeButtonFrame.size, buttonSize));
+  XCTAssertTrue(CGSizeEqualToSize(
+      afterInsetsSize,
+      CGSizeMake(buttonSize.width + visibleAreaInsets.left + visibleAreaInsets.right,
+                 buttonSize.height + visibleAreaInsets.top + visibleAreaInsets.bottom)));
+  XCTAssertTrue(CGSizeEqualToSize(
+      afterButtonFrame.size,
+      CGSizeMake(buttonSize.width + visibleAreaInsets.left + visibleAreaInsets.right,
+                 buttonSize.height + visibleAreaInsets.top + visibleAreaInsets.bottom)));
 }
 
 @end

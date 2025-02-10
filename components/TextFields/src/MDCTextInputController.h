@@ -20,6 +20,13 @@
 @protocol MDCTextInputCharacterCounter;
 
 /** Controllers that manipulate styling and animation of text inputs. */
+
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 @protocol MDCTextInputController <NSObject, NSCopying, MDCTextInputPositioningDelegate>
 
 /**
@@ -178,13 +185,10 @@
  This property is modeled after the adjustsFontForContentSizeCategory property in the
  UIContentSizeCategoryAdjusting protocol added by Apple in iOS 10.0.
 
- Default is mdc_adjustsFontForContentSizeCategoryDefault.
+ Default is @c NO.
  */
 @property(nonatomic, assign, readwrite, setter=mdc_setAdjustsFontForContentSizeCategory:)
     BOOL mdc_adjustsFontForContentSizeCategory;
-
-/** Default value for mdc_adjustsFontForContentSizeCategory. */
-@property(class, nonatomic, assign) BOOL mdc_adjustsFontForContentSizeCategoryDefault;
 
 /**
  Color for decorations that indicates the input is enabled but not currently editing.
@@ -340,3 +344,5 @@
     helperAccessibilityLabel:(nullable NSString *)helperAccessibilityLabel;
 
 @end
+
+API_DEPRECATED_END

@@ -14,6 +14,12 @@
 
 #import "MaterialButtons.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UINavigationController instead: go/material-ios-top-app-bars/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 /**
  The MDCButtonBarButton class is used by MDCButtonBar.
  */
@@ -29,4 +35,20 @@
  */
 - (void)setTitleFont:(nullable UIFont *)font forState:(UIControlState)state UI_APPEARANCE_SELECTOR;
 
+#pragma mark - UILargeContentViewerItem
+
+/**
+ The title to display in the large content viewer. If set to nil, this property will return
+ @c title.
+ */
+@property(nonatomic, copy, nullable) NSString *largeContentTitle NS_AVAILABLE_IOS(13_0);
+
+/**
+ The image to display in the large content viwer.  If set to nil, the property will return
+ @c image . If set to nil (or not set) @c scalesLargeContentImage will return YES otherwise NO.
+ */
+@property(nonatomic, nullable) UIImage *largeContentImage NS_AVAILABLE_IOS(13_0);
+
 @end
+
+API_DEPRECATED_END

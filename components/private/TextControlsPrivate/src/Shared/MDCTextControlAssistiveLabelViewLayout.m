@@ -14,6 +14,8 @@
 
 #import "MDCTextControlAssistiveLabelViewLayout.h"
 
+#import "MDCTextControlAssistiveLabelDrawPriority.h"
+
 @interface MDCTextControlAssistiveLabelViewLayout ()
 
 @property(nonatomic, assign) CGRect leadingAssistiveLabelFrame;
@@ -32,7 +34,8 @@
           assistiveLabelDrawPriority:
               (MDCTextControlAssistiveLabelDrawPriority)assistiveLabelDrawPriority
     customAssistiveLabelDrawPriority:(CGFloat)customAssistiveLabelDrawPriority
-                   horizontalPadding:(CGFloat)horizontalPadding
+                  leadingEdgePadding:(CGFloat)leadingEdgePadding
+                 trailingEdgePadding:(CGFloat)trailingEdgePadding
          paddingAboveAssistiveLabels:(CGFloat)paddingAboveAssistiveLabels
          paddingBelowAssistiveLabels:(CGFloat)paddingBelowAssistiveLabels
                                isRTL:(BOOL)isRTL {
@@ -43,7 +46,8 @@
                      trailingAssistiveLabel:trailingAssistiveLabel
                  assistiveLabelDrawPriority:assistiveLabelDrawPriority
            customAssistiveLabelDrawPriority:customAssistiveLabelDrawPriority
-                          horizontalPadding:horizontalPadding
+                         leadingEdgePadding:leadingEdgePadding
+                        trailingEdgePadding:trailingEdgePadding
                 paddingAboveAssistiveLabels:(CGFloat)paddingAboveAssistiveLabels
                 paddingBelowAssistiveLabels:(CGFloat)paddingBelowAssistiveLabels
                                       isRTL:isRTL];
@@ -60,12 +64,15 @@
                assistiveLabelDrawPriority:
                    (MDCTextControlAssistiveLabelDrawPriority)assistiveLabelDrawPriority
          customAssistiveLabelDrawPriority:(CGFloat)customAssistiveLabelDrawPriority
-                        horizontalPadding:(CGFloat)horizontalPadding
+                       leadingEdgePadding:(CGFloat)leadingEdgePadding
+                      trailingEdgePadding:(CGFloat)trailingEdgePadding
               paddingAboveAssistiveLabels:(CGFloat)paddingAboveAssistiveLabels
               paddingBelowAssistiveLabels:(CGFloat)paddingBelowAssistiveLabels
                                     isRTL:(BOOL)isRTL {
-  CGFloat assistiveLabelsCombinedMinX = horizontalPadding;
-  CGFloat assistiveLabelsCombinedMaxX = superviewWidth - horizontalPadding;
+  CGFloat leftEdgePadding = isRTL ? trailingEdgePadding : leadingEdgePadding;
+  CGFloat rightEdgePadding = isRTL ? leadingEdgePadding : trailingEdgePadding;
+  CGFloat assistiveLabelsCombinedMinX = leftEdgePadding;
+  CGFloat assistiveLabelsCombinedMaxX = superviewWidth - rightEdgePadding;
   CGFloat assistiveLabelsCombinedMaxWidth =
       assistiveLabelsCombinedMaxX - assistiveLabelsCombinedMinX;
 

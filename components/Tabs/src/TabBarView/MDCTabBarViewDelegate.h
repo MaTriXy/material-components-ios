@@ -15,11 +15,14 @@
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 @class MDCTabBarView;
 
 /**
  Methods for notification and control of selection events for @c MDCTabBarView.
  */
+NS_SWIFT_UI_ACTOR
 @protocol MDCTabBarViewDelegate <NSObject>
 
 @optional
@@ -46,3 +49,5 @@
 - (void)tabBarView:(nonnull MDCTabBarView *)tabBarView didSelectItem:(nonnull UITabBarItem *)item;
 
 @end
+
+NS_ASSUME_NONNULL_END

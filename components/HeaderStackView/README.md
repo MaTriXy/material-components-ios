@@ -4,7 +4,7 @@ layout: detail
 section: components
 excerpt: "The Header Stack View component is a view that coordinates the layout of two vertically stacked bar views."
 iconId: header
-path: /catalog/app-bars/header-stack-view/
+path: /catalog/header-stack-view/
 api_doc_root: true
 -->
 
@@ -13,15 +13,13 @@ api_doc_root: true
 The header stack view component is a view that coordinates the layout of two vertically stacked
 bar views.
 
-<div class="article__asset article__asset--screenshot">
-  <img src="docs/assets/header_stack_view.png" alt="Header Stack View" width="320">
-</div>
+<img src="docs/assets/header_stack_view.png" alt="Header Stack View" width="320">
 
 ## Design & API Documentation
 
 <ul class="icon-list">
-  <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/guidelines/layout/structure.html#structure-app-bar">Material Design guidelines: App Bar</a></li>
-  <li class="icon-list-item icon-list-item--link"><a href="https://material.io/components/ios/catalog/flexible-headers/header-stack-views/api-docs/Classes/MDCHeaderStackView.html">API: MDCHeaderStackView</a></li>
+  <li class="icon-list-item icon-list-item--spec"><a href="https://material.io/components/app-bars-top/ios">Material Design guidelines: App Bar</a></li>
+  <li class="icon-list-item icon-list-item--link"><a href="https://github.com/material-components/material-components-ios/blob/develop/components/HeaderStackView/src/MDCHeaderStackView.h">API: MDCHeaderStackView</a></li>
 </ul>
 
 - - -

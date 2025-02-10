@@ -15,10 +15,9 @@
 import CoreGraphics
 import UIKit
 import MaterialComponents.MaterialAppBar
-import MaterialComponents.MaterialAppBar_Theming
-import MaterialComponents.MaterialContainerScheme
-import MaterialComponents.MaterialFlexibleHeader_CanAlwaysExpandToMaximumHeight
+import MaterialComponents.MaterialAppBar_Theming 
 import MaterialComponents.MaterialTabs
+import MaterialComponents.MaterialContainerScheme
 
 // This example demonstrates issues with flexible header tabs and animations.
 class AppBarAnimatedJumpExample: UIViewController {
@@ -27,11 +26,11 @@ class AppBarAnimatedJumpExample: UIViewController {
   @objc var containerScheme: MDCContainerScheming = MDCContainerScheme()
 
   fileprivate let tabs = [
-    SimpleComposedTableViewController(title: "First"),
-    SimpleComposedTableViewController(title: "Second"),
-    SimpleComposedTableViewController(title: "Third"),
+    SiblingOfTrackingScrollViewViewController(title: "First"),
+    SiblingOfTrackingScrollViewViewController(title: "Second"),
+    SiblingOfTrackingScrollViewViewController(title: "Third"),
   ]
-  private var currentTab: SimpleComposedTableViewController? = nil
+  private var currentTab: SiblingOfTrackingScrollViewViewController? = nil
 
   lazy var tabBar: MDCTabBar = {
     let tabBar = MDCTabBar()
@@ -73,7 +72,9 @@ class AppBarAnimatedJumpExample: UIViewController {
     switchToTab(tabs[0], animated: false)
   }
 
-  fileprivate func switchToTab(_ tab: SimpleComposedTableViewController, animated: Bool = true) {
+  fileprivate func switchToTab(
+    _ tab: SiblingOfTrackingScrollViewViewController, animated: Bool = true
+  ) {
 
     appBarViewController.headerView.trackingScrollWillChange(toScroll: tab.tableView)
 
@@ -119,13 +120,16 @@ class AppBarAnimatedJumpExample: UIViewController {
     }
 
     if animated {
-      UIView.animate(withDuration: 1, animations: {
-        animateOut()
-        animateIn()
-      }, completion: { _ in
-        removeOld()
-        finishMove()
-      })
+      UIView.animate(
+        withDuration: 1,
+        animations: {
+          animateOut()
+          animateIn()
+        },
+        completion: { _ in
+          removeOld()
+          finishMove()
+        })
     } else {
       animateOut()
       removeOld()
@@ -154,7 +158,6 @@ class AppBarAnimatedJumpExample: UIViewController {
     // Give the tab bar enough height to accomodate all possible item appearances.
     appBarViewController.headerView.minMaxHeightIncludesSafeArea = false
     appBarViewController.inferTopSafeAreaInsetFromViewController = true
-    appBarViewController.headerView.canAlwaysExpandToMaximumHeight = true
     appBarViewController.headerView.sharedWithManyScrollViews = true
 
     appBarViewController.headerView.minimumHeight = 56
@@ -190,4 +193,3 @@ extension AppBarAnimatedJumpExample {
     return true
   }
 }
-

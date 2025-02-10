@@ -46,12 +46,9 @@
 }
 
 - (UITraitCollection *)traitCollection {
-  if (@available(iOS 10.0, *)) {
-    UITraitCollection *traitCollection = [UITraitCollection
-        traitCollectionWithPreferredContentSizeCategory:self.contentSizeCategoryOverride];
-    return traitCollection;
-  }
-  return [super traitCollection];
+  UITraitCollection *traitCollection = [UITraitCollection
+      traitCollectionWithPreferredContentSizeCategory:self.contentSizeCategoryOverride];
+  return traitCollection;
 }
 
 @end
@@ -91,22 +88,17 @@
                     object:nil];
 
   // Then
-  // We only test the behavior for iOS10.0+ because we are not able to
-  // simulate UIApplication in this test for iOS9.0 path.
-  if (@available(iOS 10.0, *)) {
-    XCTAssertGreaterThan(cell.titleLabel.font.pointSize, defaultTitleSize);
-    XCTAssertGreaterThan(cell.detailLabel.font.pointSize, defaultDetailSize);
-  }
+  XCTAssertGreaterThan(cell.titleLabel.font.pointSize, defaultTitleSize);
+  XCTAssertGreaterThan(cell.detailLabel.font.pointSize, defaultDetailSize);
 }
 
-- (void)testAdjustsFontForContentSizeCategoryWhenScaledFontIsUnavailableIsYES {
+- (void)testAdjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable {
   // Given
   MDCSelfSizingStereoCell *cell = [[MDCSelfSizingStereoCell alloc] init];
   UIFont *originalTitleFont = [UIFont systemFontOfSize:99];
   UIFont *originalDetailFont = [UIFont systemFontOfSize:99];
   cell.titleLabel.font = originalTitleFont;
   cell.detailLabel.font = originalDetailFont;
-  cell.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = YES;
   cell.mdc_adjustsFontForContentSizeCategory = YES;
   cell.titleLabel.text = @"Title";
   cell.detailLabel.text = @"Detail";
@@ -124,33 +116,6 @@
   // Then
   XCTAssertFalse([cell.titleLabel.font mdc_isSimplyEqual:originalTitleFont]);
   XCTAssertFalse([cell.detailLabel.font mdc_isSimplyEqual:originalDetailFont]);
-}
-
-- (void)testDoesNotAdjustFontForContentSizeCategoryWhenScaledFontIsUnavailableIsNO {
-  // Given
-  MDCSelfSizingStereoCell *cell = [[MDCSelfSizingStereoCell alloc] init];
-  UIFont *originalTitleFont = [UIFont systemFontOfSize:99];
-  UIFont *originalDetailFont = [UIFont systemFontOfSize:99];
-  cell.titleLabel.font = originalTitleFont;
-  cell.detailLabel.font = originalDetailFont;
-  cell.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable = NO;
-  cell.mdc_adjustsFontForContentSizeCategory = YES;
-  cell.titleLabel.text = @"Title";
-  cell.detailLabel.text = @"Detail";
-
-  // When
-  MDCSelfSizingStereoCellTestsDynamicTypeContentSizeCategoryOverrideWindow
-      *extraExtraLargeContainer =
-          [[MDCSelfSizingStereoCellTestsDynamicTypeContentSizeCategoryOverrideWindow alloc]
-              initWithContentSizeCategoryOverride:UIContentSizeCategoryExtraLarge];
-  [extraExtraLargeContainer addSubview:cell];
-  [NSNotificationCenter.defaultCenter
-      postNotificationName:UIContentSizeCategoryDidChangeNotification
-                    object:nil];
-
-  // Then
-  XCTAssertTrue([cell.titleLabel.font mdc_isSimplyEqual:originalTitleFont]);
-  XCTAssertTrue([cell.detailLabel.font mdc_isSimplyEqual:originalDetailFont]);
 }
 
 - (void)testSizingWithPreferredLayoutAttributesFittingAttributes {
@@ -229,7 +194,7 @@
   const CGFloat finalElevation = 6;
   cell.elevation = finalElevation - 1;
   __block CGFloat newElevation = -1;
-  cell.mdc_elevationDidChangeBlock = ^(MDCBaseCell *blockCell, CGFloat elevation) {
+  cell.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     newElevation = elevation;
   };
 
@@ -245,7 +210,7 @@
   MDCSelfSizingStereoCell *cell = [[MDCSelfSizingStereoCell alloc] init];
   cell.elevation = 5;
   __block BOOL blockCalled = NO;
-  cell.mdc_elevationDidChangeBlock = ^(MDCBaseCell *blockCell, CGFloat elevation) {
+  cell.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 

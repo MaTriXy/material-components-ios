@@ -14,6 +14,16 @@
 
 #import <UIKit/UIKit.h>
 
+// TODO(b/151929968): Delete import of delegate headers when client code has been migrated to no
+// longer import delegates as transitive dependencies.
+#import "MDCInkViewDelegate.h"
+
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use default system highlight behavior instead: go/material-ios-touch-response. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 @protocol MDCInkViewDelegate;
 
 /** Completion block signature for all ink animations. */
@@ -46,7 +56,7 @@ typedef NS_ENUM(NSInteger, MDCInkStyle) {
  bounded ink isn't just clipped unbounded ink. Whether the ink is bounded or not depends on the kind
  of UI element the user is interacting with.
  */
-@interface MDCInkView : UIView
+__deprecated_msg("Please use MDCRippleView instead.") @interface MDCInkView : UIView
 
 /**
  Ink view animation delegate. Clients set this delegate to receive updates when ink animations
@@ -175,26 +185,4 @@ typedef NS_ENUM(NSInteger, MDCInkStyle) {
 
 @end
 
-/**
- Delegate protocol for MDCInkView. Clients may implement this protocol to receive updates when ink
- layer start and end.
- */
-@protocol MDCInkViewDelegate <NSObject>
-
-@optional
-
-/**
- Called when the ink ripple animation begins.
-
- @param inkView The MDCInkView that starts animating.
- */
-- (void)inkAnimationDidStart:(nonnull MDCInkView *)inkView;
-
-/**
- Called when the ink ripple animation ends.
-
- @param inkView The MDCInkView that ends animating.
- */
-- (void)inkAnimationDidEnd:(nonnull MDCInkView *)inkView;
-
-@end
+API_DEPRECATED_END

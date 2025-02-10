@@ -15,14 +15,24 @@
 #import <UIKit/UIKit.h>
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCBottomNavigationItemView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomNavigationItemView.h"
+#pragma clang diagnostic pop
 
-#import "MaterialBottomNavigation.h"
-#import "MaterialInk.h"
-#import "MaterialSnapshot.h"
-#import "supplemental/MDCBottomNavigationSnapshotTestMutableTraitCollection.h"
 #import "supplemental/MDCBottomNavigationSnapshotTestUtilities.h"
 #import "supplemental/MDCFakeBottomNavigationBar.h"
+#import "MDCBottomNavigationBar.h"
+#import "MDCRippleTouchController.h"
+#import "MDCRippleView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCSnapshotTestCase.h"
+#import "UIImage+MDCSnapshot.h"
+#import "UIView+MDCSnapshot.h"
+#pragma clang diagnostic pop
+
+NS_ASSUME_NONNULL_BEGIN
 
 @interface MDCBottomNavigationBarBlurEffectSnapshotTests : MDCSnapshotTestCase
 @property(nonatomic, strong) MDCFakeBottomNavigationBar *navigationBar;
@@ -82,14 +92,14 @@
   [self snapshotVerifyView:backgroundView];
 }
 
-- (void)performInkTouchOnBar:(MDCBottomNavigationBar *)navigationBar item:(UITabBarItem *)item {
+- (void)performRippleTouchOnBar:(MDCBottomNavigationBar *)navigationBar item:(UITabBarItem *)item {
   [navigationBar layoutIfNeeded];
   MDCBottomNavigationItemView *itemView =
       (MDCBottomNavigationItemView *)[navigationBar viewForItem:item];
-  [itemView.inkView startTouchBeganAtPoint:CGPointMake(CGRectGetMidX(itemView.bounds),
-                                                       CGRectGetMidY(itemView.bounds))
-                                  animated:NO
-                            withCompletion:nil];
+  CGPoint point = CGPointMake(CGRectGetMidX(itemView.bounds), CGRectGetMidY(itemView.bounds));
+  [itemView.rippleTouchController.rippleView beginRippleTouchDownAtPoint:point
+                                                                animated:NO
+                                                              completion:nil];
 }
 
 - (void)changeToRTLAndArabicWithTitle:(NSString *)title {
@@ -122,7 +132,6 @@
   navigationBar.frame =
       CGRectMake(0, MDCBottomNavigationBarTestHeightTypical, MDCBottomNavigationBarTestWidthTypical,
                  MDCBottomNavigationBarTestHeightTypical);
-  [self performInkTouchOnBar:navigationBar item:self.tabItem2];
 }
 
 #pragma mark - Tests
@@ -205,7 +214,6 @@
   [self.navigationBar.barItemsBottomAnchor constraintEqualToAnchor:superView.bottomAnchor
                                                           constant:-20]
       .active = YES;
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
   [self.navigationBar setNeedsLayout];
   [self.navigationBar layoutIfNeeded];
   [self.navigationBar setNeedsUpdateConstraints];
@@ -235,7 +243,6 @@
   [superView.trailingAnchor constraintEqualToAnchor:self.navigationBar.trailingAnchor].active = YES;
 
   // When
-  [self performInkTouchOnBar:self.navigationBar item:self.tabItem1];
   [superView layoutIfNeeded];
 
   // Then
@@ -244,3 +251,5 @@
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

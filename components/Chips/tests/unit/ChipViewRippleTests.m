@@ -18,8 +18,31 @@
 #import "MaterialInk.h"
 #import "MaterialRipple.h"
 
+static UIColor *RandomColor(void) {
+  switch (arc4random_uniform(5)) {
+    case 0:
+      return [UIColor colorWithRed:1 green:1 blue:1 alpha:1];
+      break;
+    case 1:
+      return [UIColor colorWithRed:0 green:0 blue:0 alpha:1];
+      break;
+    case 2:
+      return [UIColor redColor];
+      break;
+    case 3:
+      return [UIColor orangeColor];
+      break;
+    case 4:
+      return [UIColor greenColor];
+      break;
+    default:
+      return [UIColor blueColor];
+      break;
+  }
+}
+
 @interface MDCChipView (Testing)
-@property(nonatomic, strong) MDCStatefulRippleView *rippleView;
+@property(nonatomic, strong) MDCRippleView *rippleView;
 @property(nonatomic, strong) MDCInkView *inkView;
 @end
 
@@ -52,15 +75,10 @@
 - (void)testDefaultChipViewBehaviorWithRipple {
   // Then
   XCTAssertNotNil(self.chipView.rippleView);
-  XCTAssertEqualObjects([self.chipView.rippleView rippleColorForState:MDCRippleStateNormal],
-                        [UIColor colorWithWhite:0 alpha:(CGFloat)0.12]);
-  XCTAssertEqualObjects([self.chipView.rippleView rippleColorForState:MDCRippleStateHighlighted],
-                        [UIColor colorWithWhite:0 alpha:(CGFloat)0.12]);
+  XCTAssertEqualObjects([self.chipView rippleColorForState:UIControlStateNormal], nil);
   XCTAssertEqual(self.chipView.rippleView.rippleStyle, MDCRippleStyleBounded);
   XCTAssertFalse(self.chipView.enableRippleBehavior);
   XCTAssertNil(self.chipView.rippleView.superview);
-  XCTAssertTrue(self.chipView.rippleAllowsSelection);
-  XCTAssertTrue(self.chipView.rippleView.allowsSelection);
   CGRect chipViewBounds = CGRectStandardize(self.chipView.bounds);
   CGRect rippleBounds = CGRectStandardize(self.chipView.rippleView.bounds);
   XCTAssertTrue(CGRectEqualToRect(chipViewBounds, rippleBounds), @"%@ is not equal to %@",
@@ -94,7 +112,6 @@
 
 - (void)testAllowsSelectionDefaultState {
   // Then
-  XCTAssertTrue(self.chipView.rippleAllowsSelection);
   XCTAssertFalse(self.chipView.selected);
   XCTAssertFalse(self.chipView.highlighted);
 }
@@ -104,19 +121,15 @@
   self.chipView.selected = YES;
 
   // Then
-  XCTAssertTrue(self.chipView.rippleAllowsSelection);
   XCTAssertTrue(self.chipView.selected);
   XCTAssertFalse(self.chipView.highlighted);
 }
 
 - (void)testNotAllowingSelection {
   // When
-  self.chipView.rippleAllowsSelection = NO;
   self.chipView.selected = YES;
 
   // Then
-  XCTAssertFalse(self.chipView.rippleAllowsSelection);
-  XCTAssertFalse(self.chipView.rippleView.allowsSelection);
   XCTAssertTrue(self.chipView.selected);
   XCTAssertFalse(self.chipView.highlighted);
 }
@@ -130,10 +143,10 @@
 
   // When
   [self.chipView setInkColor:color forState:UIControlStateHighlighted];
+  self.chipView.highlighted = YES;
 
   // Then
-  XCTAssertEqualObjects([self.chipView.rippleView rippleColorForState:MDCRippleStateHighlighted],
-                        color);
+  XCTAssertEqualObjects(self.chipView.rippleView.rippleColor, color);
 }
 
 /**
@@ -152,27 +165,31 @@
   XCTAssertEqualObjects(self.chipView.rippleView.rippleColor, color);
 }
 
-- (void)testChipViewHighlightedSetsRippleHighlightedToYES {
-  // Given
-  self.chipView.enableRippleBehavior = YES;
+- (void)testSetRippleColorForStateReturnsTheCorrectValue {
+  UIControlState maxState = UIControlStateNormal | UIControlStateHighlighted |
+                            UIControlStateDisabled | UIControlStateSelected;
+  for (NSUInteger state = 0; state <= maxState; ++state) {
+    // Given
+    UIColor *color = RandomColor();
 
-  // When
-  self.chipView.highlighted = YES;
+    // When
+    [self.chipView setRippleColor:color forState:state];
 
-  // Then
-  XCTAssertTrue(self.chipView.rippleView.isRippleHighlighted);
+    // Then
+    XCTAssertEqualObjects([self.chipView rippleColorForState:state], color);
+  }
 }
 
-- (void)testChipViewNotHighlightedSetsRippleHighlightedToNO {
+- (void)testSetRippleColorToNilReturnsTheCorrectValueForNormal {
   // Given
-  self.chipView.enableRippleBehavior = YES;
-  self.chipView.rippleView.rippleHighlighted = YES;
+  UIColor *color = UIColor.orangeColor;
+  [self.chipView setRippleColor:color forState:UIControlStateNormal];
 
   // When
-  self.chipView.highlighted = NO;
+  [self.chipView setRippleColor:nil forState:UIControlStateSelected];
 
   // Then
-  XCTAssertFalse(self.chipView.rippleView.isRippleHighlighted);
+  XCTAssertEqualObjects([self.chipView rippleColorForState:UIControlStateSelected], color);
 }
 
 @end

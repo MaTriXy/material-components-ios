@@ -20,9 +20,8 @@
 #import "MaterialButtons.h"
 #import "MaterialColorScheme.h"
 #import "MaterialContainerScheme.h"
-#import "MaterialTypographyScheme.h"
 
-@interface ActionSheetComparisonExampleViewController : UIViewController
+@interface ActionSheetComparisonExample : UIViewController
 
 @property(nonatomic, strong) MDCButton *showMaterialButton;
 @property(nonatomic, strong) MDCButton *showUIKitButton;
@@ -30,7 +29,7 @@
 
 @end
 
-@implementation ActionSheetComparisonExampleViewController
+@implementation ActionSheetComparisonExample
 
 - (instancetype)init {
   self = [super init];
@@ -86,19 +85,19 @@
                                                        message:@"Action Sheet Message"];
   MDCActionSheetAction *homeAction =
       [MDCActionSheetAction actionWithTitle:@"Home"
-                                      image:[UIImage imageNamed:@"Home"]
+                                      image:[UIImage imageNamed:@"system_icons/home"]
                                     handler:^(MDCActionSheetAction *action) {
                                       NSLog(@"Home Action");
                                     }];
   MDCActionSheetAction *favoriteAction =
       [MDCActionSheetAction actionWithTitle:@"Favorite"
-                                      image:[UIImage imageNamed:@"Favorite"]
+                                      image:[UIImage imageNamed:@"system_icons/favorite"]
                                     handler:^(MDCActionSheetAction *action) {
                                       NSLog(@"Favorite Action");
                                     }];
   MDCActionSheetAction *emailAction =
       [MDCActionSheetAction actionWithTitle:@"Email"
-                                      image:[UIImage imageNamed:@"Email"]
+                                      image:[UIImage imageNamed:@"system_icons/email"]
                                     handler:^(MDCActionSheetAction *action) {
                                       NSLog(@"Email Action");
                                     }];
@@ -135,12 +134,12 @@
 
 @end
 
-@implementation ActionSheetComparisonExampleViewController (CatalogByConvention)
+@implementation ActionSheetComparisonExample (CatalogByConvention)
 
 + (NSDictionary *)catalogMetadata {
   return @{
     @"breadcrumbs" : @[ @"Action Sheet", @"Material : UIKit Comparison" ],
-    @"primaryDemo" : @YES,
+    @"primaryDemo" : @NO,
     @"presentable" : @NO
   };
 }

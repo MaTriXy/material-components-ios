@@ -14,9 +14,9 @@
 
 #import "CardsCollectionTintingExample.h"
 
-#import "MaterialCards+Theming.h"
-#import "MaterialInk.h"
 #import "supplemental/CardTintExampleCell.h"
+#import "MaterialCards+Theming.h"
+#import "MaterialContainerScheme.h"
 
 @interface CardsCollectionTintingExample ()
 
@@ -32,16 +32,13 @@ static NSString *const kReusableIdentifierItem = @"itemCellIdentifier";
   defaultLayout.minimumInteritemSpacing = 0;
   defaultLayout.minimumLineSpacing = 1;
   defaultLayout.scrollDirection = UICollectionViewScrollDirectionVertical;
-  self = [super initWithCollectionViewLayout:defaultLayout];
-  if (self) {
-    self.containerScheme = [[MDCContainerScheme alloc] init];
-  }
-  return self;
+  return [self initWithCollectionViewLayout:defaultLayout];
 }
 
 - (instancetype)initWithCollectionViewLayout:(UICollectionViewLayout *)layout {
   self = [super initWithCollectionViewLayout:layout];
   if (self) {
+    self.containerScheme = [[MDCContainerScheme alloc] init];
     _collectionViewLayout = layout;
   }
   return self;

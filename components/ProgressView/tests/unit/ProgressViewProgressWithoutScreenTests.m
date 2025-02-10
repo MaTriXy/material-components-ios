@@ -12,10 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#import <CoreGraphics/CoreGraphics.h>
 #import <XCTest/XCTest.h>
 
-#import "MaterialMath.h"
-#import "MaterialProgressView.h"
+#import "MDCProgressView.h"
 
 @interface MDCProgressView ()
 @property(nonatomic, strong) UIView *progressView;

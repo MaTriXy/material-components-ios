@@ -14,14 +14,13 @@
 
 #import "MDCMultilineTextField.h"
 
+#import "private/MDCTextInputCommonFundament.h"
 #import "MDCIntrinsicHeightTextView.h"
+#import "MDCMultilineTextInputLayoutDelegate.h"
 #import "MDCTextField.h"
 #import "MDCTextFieldPositioningDelegate.h"
 #import "MDCTextInputBorderView.h"
-#import "MDCTextInputCharacterCounter.h"
-#import "MDCTextInputController.h"
 #import "MDCTextInputUnderlineView.h"
-#import "private/MDCTextInputCommonFundament.h"
 
 #import "MaterialMath.h"
 #import "MaterialTypography.h"
@@ -30,6 +29,10 @@
 static NSString *const kClearButtonKey = @"MaterialTextFieldClearButtonAccessibilityLabel";
 /** Table name within the bundle used for localizing accessibility values. */
 static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTextField";
+// The Bundle for string resources.
+static NSString *const kBundle = @"MaterialTextFields.bundle";
+// The font opacity to be used for the caption.
+static const CGFloat kButtonFontOpacity = 0.54f;
 
 @interface MDCMultilineTextField () {
   UIColor *_cursorColor;
@@ -98,10 +101,6 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
   return self;
 }
 
-- (void)dealloc {
-  [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
 - (instancetype)copyWithZone:(__unused NSZone *)zone {
   MDCMultilineTextField *copy = [[[self class] alloc] initWithFrame:self.frame];
 
@@ -131,8 +130,8 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
   self.textColor = _fundament.textColor;
   // TODO: (#4331) This needs to be converted to the new text scheme.
   self.font = [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleBody1];
-  self.clearButton.tintColor = [UIColor colorWithWhite:0 alpha:[MDCTypography captionFontOpacity]];
-  NSBundle *bundle = [NSBundle bundleForClass:[MDCMultilineTextField class]];
+  self.clearButton.tintColor = [UIColor colorWithWhite:0 alpha:kButtonFontOpacity];
+  NSBundle *bundle = [[self class] bundle];
   NSString *accessibilityLabel =
       [bundle localizedStringForKey:kClearButtonKey
                               value:@"Clear text"
@@ -253,6 +252,9 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
 #pragma mark - Layout (UIView)
 
 - (CGSize)intrinsicContentSize {
+  if (self.useConstraintsForIntrinsicContentSize) {
+    return [super intrinsicContentSize];
+  }
   CGSize boundingSize = CGSizeZero;
   boundingSize.width = UIViewNoIntrinsicMetric;
 
@@ -344,10 +346,11 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
                                         toItem:self
                                      attribute:NSLayoutAttributeBottom
                                     multiplier:1
-                                      constant:-1 * MDCTextInputHalfPadding];
+                                      constant:-1 * self.textInsets.bottom];
     self.textViewBottomSuperviewBottom.priority = UILayoutPriorityDefaultLow;
     self.textViewBottomSuperviewBottom.active = YES;
   }
+  self.textViewBottomSuperviewBottom.constant = -1 * self.textInsets.bottom;
 
   if (!self.textViewTop) {
     self.textViewTop = [NSLayoutConstraint constraintWithItem:self.textView
@@ -403,7 +406,7 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
 
 - (CGFloat)estimatedTextViewLineHeight {
   CGFloat scale = UIScreen.mainScreen.scale;
-  return MDCCeil(self.textView.font.lineHeight * scale) / scale;
+  return ceil(self.textView.font.lineHeight * scale) / scale;
 }
 
 - (void)updateIntrinsicSizeFromTextView {
@@ -792,6 +795,14 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
 
 #pragma mark - Accessibility
 
+- (NSInteger)accessibilityElementCount {
+  if (self.isAccessibilityElement) {
+    return [super accessibilityElementCount];
+  } else {
+    return [self accessibilityElements].count;
+  }
+}
+
 - (NSString *)accessibilityValue {
   NSString *value = [self.text length] ? self.text : self.placeholder;
 
@@ -804,20 +815,56 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
 }
 
 - (NSString *)accessibilityLabel {
-  NSMutableArray *accessibilityStrings = [[NSMutableArray alloc] init];
-  if ([super accessibilityLabel].length > 0) {
-    [accessibilityStrings addObject:[super accessibilityLabel]];
-  } else if (self.placeholderLabel.accessibilityLabel.length > 0) {
-    [accessibilityStrings addObject:self.placeholderLabel.accessibilityLabel];
+  if (self.isAccessibilityElement) {
+    NSMutableArray *accessibilityStrings = [[NSMutableArray alloc] init];
+    if ([super accessibilityLabel].length > 0) {
+      [accessibilityStrings addObject:[super accessibilityLabel]];
+    } else if (self.placeholderLabel.accessibilityLabel.length > 0) {
+      [accessibilityStrings addObject:self.placeholderLabel.accessibilityLabel];
+    }
+    if (self.leadingUnderlineLabel.accessibilityLabel.length > 0) {
+      [accessibilityStrings addObject:self.leadingUnderlineLabel.accessibilityLabel];
+    }
+    if (self.trailingUnderlineLabel.accessibilityLabel.length > 0) {
+      [accessibilityStrings addObject:self.trailingUnderlineLabel.accessibilityLabel];
+    }
+    return accessibilityStrings.count > 0 ? [accessibilityStrings componentsJoinedByString:@", "]
+                                          : nil;
+  } else {
+    return [super accessibilityLabel];
   }
-  if (self.leadingUnderlineLabel.accessibilityLabel.length > 0) {
-    [accessibilityStrings addObject:self.leadingUnderlineLabel.accessibilityLabel];
+}
+
+- (NSArray *)accessibilityElements {
+  if (self.isAccessibilityElement) {
+    return [super accessibilityElements];
+  } else {
+    NSMutableArray *mutableElements = [super accessibilityElements] == nil
+                                          ? [[NSMutableArray alloc] init]
+                                          : [[super accessibilityElements] mutableCopy];
+
+    if (self.placeholderLabel.isAccessibilityElement) {
+      [mutableElements insertObject:self.placeholderLabel atIndex:0];
+    }
+
+    if (self.textView.isAccessibilityElement) {
+      [mutableElements addObject:self.textView];
+    }
+
+    if (self.leadingUnderlineLabel.isAccessibilityElement) {
+      [mutableElements addObject:self.leadingUnderlineLabel];
+    }
+
+    if (self.clearButton.isAccessibilityElement && self.isEditing) {
+      [mutableElements addObject:self.clearButton];
+    }
+
+    if (self.trailingUnderlineLabel.isAccessibilityElement) {
+      [mutableElements addObject:self.trailingUnderlineLabel];
+    }
+
+    return [mutableElements copy];
   }
-  if (self.trailingUnderlineLabel.accessibilityLabel.length > 0) {
-    [accessibilityStrings addObject:self.trailingUnderlineLabel.accessibilityLabel];
-  }
-  return accessibilityStrings.count > 0 ? [accessibilityStrings componentsJoinedByString:@", "]
-                                        : nil;
 }
 
 - (BOOL)mdc_adjustsFontForContentSizeCategory {
@@ -831,6 +878,24 @@ static NSString *const kAccessibilityLocalizationStringsTableName = @"MaterialTe
   }
 
   [_fundament mdc_setAdjustsFontForContentSizeCategory:adjusts];
+}
+
+#pragma mark - Resource Bundle
+
++ (NSBundle *)bundle {
+  static NSBundle *bundle = nil;
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    bundle = [NSBundle bundleWithPath:[self bundlePathWithName:kBundle]];
+  });
+
+  return bundle;
+}
+
++ (NSString *)bundlePathWithName:(NSString *)bundleName {
+  NSBundle *bundle = [NSBundle bundleForClass:[MDCMultilineTextField class]];
+  NSString *resourcePath = [(nil == bundle ? [NSBundle mainBundle] : bundle) resourcePath];
+  return [resourcePath stringByAppendingPathComponent:bundleName];
 }
 
 @end

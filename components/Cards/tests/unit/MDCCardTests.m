@@ -15,6 +15,8 @@
 #import <XCTest/XCTest.h>
 
 #import "MaterialCards.h"
+#import "MaterialInk.h"
+#import "MaterialShadowLayer.h"
 
 @interface MDCCardCollectionCell (MDCCardTests)
 - (void)setState:(MDCCardCellState)state animated:(BOOL)animated;
@@ -431,7 +433,7 @@ static UIImage *FakeImage(void) {
   // Given
   [self.card setShadowElevation:5 forState:UIControlStateNormal];
   __block BOOL blockCalled = NO;
-  self.card.mdc_elevationDidChangeBlock = ^(MDCCard *object, CGFloat elevation) {
+  self.card.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 
@@ -447,7 +449,7 @@ static UIImage *FakeImage(void) {
   // Given
   [self.card setShadowElevation:5 forState:UIControlStateNormal];
   __block BOOL blockCalled = NO;
-  self.card.mdc_elevationDidChangeBlock = ^(MDCCard *object, CGFloat elevation) {
+  self.card.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 
@@ -488,7 +490,7 @@ static UIImage *FakeImage(void) {
   // Given
   [self.cell setShadowElevation:5 forState:MDCCardCellStateNormal];
   __block BOOL blockCalled = NO;
-  self.cell.mdc_elevationDidChangeBlock = ^(MDCCardCollectionCell *object, CGFloat elevation) {
+  self.cell.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 
@@ -504,7 +506,7 @@ static UIImage *FakeImage(void) {
   // Given
   [self.cell setShadowElevation:5 forState:MDCCardCellStateNormal];
   __block BOOL blockCalled = NO;
-  self.cell.mdc_elevationDidChangeBlock = ^(MDCCardCollectionCell *object, CGFloat elevation) {
+  self.cell.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 

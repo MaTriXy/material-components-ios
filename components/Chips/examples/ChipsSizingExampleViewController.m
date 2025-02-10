@@ -17,6 +17,7 @@
 #import "MaterialSlider.h"
 
 #import "supplemental/ChipsExampleAssets.h"
+#import "MaterialContainerScheme.h"
 
 @interface ChipsSizingExampleViewController : UIViewController <MDCSliderDelegate>
 @property(nonatomic, strong) id<MDCContainerScheming> containerScheme;
@@ -84,11 +85,7 @@
   [super viewWillLayoutSubviews];
 
   CGFloat topEdge;
-  if (@available(iOS 11, *)) {
-    topEdge = self.view.safeAreaInsets.top;
-  } else {
-    topEdge = self.topLayoutGuide.length;
-  }
+  topEdge = self.view.safeAreaInsets.top;
   CGRect frame = self.chipView.frame;
   frame.origin.y = topEdge + 16;
   self.chipView.frame = frame;

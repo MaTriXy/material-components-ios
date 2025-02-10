@@ -12,9 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialSnapshot.h"
+#import "MDCProgressView.h"
 
-#import "MaterialProgressView.h"
+#import <CoreGraphics/CoreGraphics.h>
+
+#import "MDCSnapshotTestCase.h"
+#import "UIView+MDCSnapshot.h"
 
 /** Snapshot tests for MDCProgressView. */
 @interface MDCProgressViewSnapshotTests : MDCSnapshotTestCase
@@ -129,6 +132,119 @@
   // When
   [self changeViewToRTL:self.progressView];
   self.progressView.progress = 1;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testGradientProgress000LTR {
+  // Given
+  self.progressView.progressTintColors =
+      @[ UIColor.greenColor, UIColor.blueColor, UIColor.redColor ];
+
+  // When
+  self.progressView.progress = 0;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testGradientProgress050LTR {
+  // Given
+  self.progressView.progressTintColors =
+      @[ UIColor.greenColor, UIColor.blueColor, UIColor.redColor ];
+
+  // When
+  self.progressView.progress = 0.5f;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testGradientProgress100LTR {
+  // Given
+  self.progressView.progressTintColors =
+      @[ UIColor.greenColor, UIColor.blueColor, UIColor.redColor ];
+
+  // When
+  self.progressView.progress = 1;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testGradientProgress000RTL {
+  // Given
+  self.progressView.progressTintColors =
+      @[ UIColor.greenColor, UIColor.blueColor, UIColor.redColor ];
+
+  // When
+  [self changeViewToRTL:self.progressView];
+  self.progressView.progress = 0;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testGradientProgress050RTL {
+  // Given
+  self.progressView.progressTintColors =
+      @[ UIColor.greenColor, UIColor.blueColor, UIColor.redColor ];
+
+  // When
+  [self changeViewToRTL:self.progressView];
+  self.progressView.progress = 0.5f;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testGradientProgress100RTL {
+  // Given
+  self.progressView.progressTintColors =
+      @[ UIColor.greenColor, UIColor.blueColor, UIColor.redColor ];
+
+  // When
+  [self changeViewToRTL:self.progressView];
+  self.progressView.progress = 1;
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testHidden {
+  // When
+  self.progressView.progress = .5;
+  XCTestExpectation *hiddenExpectation = [self expectationWithDescription:@"hidden"];
+  [self.progressView setHidden:YES
+                      animated:NO
+                    completion:^(BOOL finished) {
+                      [hiddenExpectation fulfill];
+                    }];
+  [self waitForExpectations:@[ hiddenExpectation ] timeout:1];
+
+  // Then
+  [self generateSnapshotAndVerifyForView:self.progressView];
+}
+
+- (void)testHiddenThenUnhidden {
+  // When
+  self.progressView.progress = .5;
+  XCTestExpectation *hiddenExpectation = [self expectationWithDescription:@"hidden"];
+  XCTestExpectation *unhiddenExpectation = [self expectationWithDescription:@"unhidden"];
+  [self.progressView setHidden:YES
+                      animated:NO
+                    completion:^(BOOL finished) {
+                      [hiddenExpectation fulfill];
+                    }];
+  [self waitForExpectations:@[ hiddenExpectation ] timeout:1];
+
+  [self.progressView setHidden:NO
+                      animated:NO
+                    completion:^(BOOL finished) {
+                      [unhiddenExpectation fulfill];
+                    }];
+  [self waitForExpectations:@[ unhiddenExpectation ] timeout:1];
 
   // Then
   [self generateSnapshotAndVerifyForView:self.progressView];

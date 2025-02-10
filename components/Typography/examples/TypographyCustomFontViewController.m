@@ -14,13 +14,13 @@
 
 #import "TypographyCustomFontViewController.h"
 
-#import "MaterialTypography.h"
+#import "MDCFontTextStyle.h"
+#import "UIFontDescriptor+MaterialTypography.h"
 
 @implementation TypographyCustomFontViewController {
   NSArray<NSString *> *_strings;
   NSArray<NSString *> *_styleNames;
   NSArray<UIFont *> *_styleFonts;
-  NSArray<NSNumber *> *_opacities;
 }
 
 static inline UIFont *customFont(MDCFontTextStyle style) {
@@ -47,7 +47,7 @@ static inline UIFont *customFont(MDCFontTextStyle style) {
     @"Caption Font", @"Button Font",
 
     // Display fonts (extra large fonts)
-    @"Display 1 Font", @"Display 2 Font", @"Display 3 Font", @"Display 4 Font"
+    @"Display 1 Font"
   ];
 
   _styleFonts = @[
@@ -55,17 +55,6 @@ static inline UIFont *customFont(MDCFontTextStyle style) {
     customFont(MDCFontTextStyleSubheadline), customFont(MDCFontTextStyleBody2),
     customFont(MDCFontTextStyleBody1), customFont(MDCFontTextStyleCaption),
     customFont(MDCFontTextStyleButton), customFont(MDCFontTextStyleDisplay1),
-    customFont(MDCFontTextStyleDisplay2), customFont(MDCFontTextStyleDisplay3),
-    customFont(MDCFontTextStyleDisplay4)
-  ];
-
-  _opacities = @[
-    @([MDCTypography headlineFontOpacity]), @([MDCTypography titleFontOpacity]),
-    @([MDCTypography subheadFontOpacity]), @([MDCTypography body2FontOpacity]),
-    @([MDCTypography body1FontOpacity]), @([MDCTypography captionFontOpacity]),
-    @([MDCTypography buttonFontOpacity]), @([MDCTypography display1FontOpacity]),
-    @([MDCTypography display2FontOpacity]), @([MDCTypography display3FontOpacity]),
-    @([MDCTypography display4FontOpacity])
   ];
 
   [[NSNotificationCenter defaultCenter] addObserver:self
@@ -81,8 +70,6 @@ static inline UIFont *customFont(MDCFontTextStyle style) {
     customFont(MDCFontTextStyleSubheadline), customFont(MDCFontTextStyleBody2),
     customFont(MDCFontTextStyleBody1), customFont(MDCFontTextStyleCaption),
     customFont(MDCFontTextStyleButton), customFont(MDCFontTextStyleDisplay1),
-    customFont(MDCFontTextStyleDisplay2), customFont(MDCFontTextStyleDisplay3),
-    customFont(MDCFontTextStyleDisplay4)
   ];
 
   [self.tableView reloadData];
@@ -107,7 +94,6 @@ static inline UIFont *customFont(MDCFontTextStyle style) {
   }
   cell.textLabel.text = _strings[indexPath.section];
   cell.textLabel.font = _styleFonts[indexPath.row];
-  cell.textLabel.alpha = [_opacities[indexPath.row] floatValue];
   cell.textLabel.numberOfLines = 0;
   cell.textLabel.lineBreakMode = NSLineBreakByWordWrapping;
 

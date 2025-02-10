@@ -12,15 +12,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialDialogs+TypographyThemer.h"
-#import "MaterialDialogs.h"
+#import "MDCButton.h"
+#import "MDCAlertController.h"
+#import "MDCAlertControllerView.h"
+#import "MDCDialogPresentationController.h"
 
+#import "MDCAlertController+ButtonForAction.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "UIViewController+MaterialDialogs.h"
 #import "MDCAlertControllerView+Private.h"
+#pragma clang diagnostic pop
 
 #import <XCTest/XCTest.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
+static inline UIImage *TestImage(CGSize size) {
+  CGFloat scale = [UIScreen mainScreen].scale;
+  UIGraphicsBeginImageContextWithOptions(size, false, scale);
+  [UIColor.redColor setFill];
+  CGRect fillRect = CGRectZero;
+  fillRect.size = size;
+  UIRectFill(fillRect);
+  UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+  return image;
+}
+
 @interface MDCAlertControllerView (Testing)
 @property(nonatomic, nullable, strong) UIImageView *titleIconImageView;
+@property(nonatomic, getter=isVerticalActionsLayout) BOOL verticalActionsLayout;
 @end
 
 @interface MDCAlertControllerCustomizationTests : XCTestCase
@@ -111,7 +133,7 @@
   // When
   self.presentationController.scrimColor = scrimColor;
 
-  // Then
+  // Them
   XCTAssertEqualObjects(self.presentationController.scrimColor, scrimColor);
 }
 
@@ -126,18 +148,142 @@
   XCTAssertEqualObjects(self.presentationController.scrimColor, scrimColor);
 }
 
-#pragma mark - helpers
+- (void)testTitleIconHasDefaultAlignment {
+  // Given
+  CGSize imageSize = CGSizeMake(24.0f, 24.0f);
+  self.alert.titleIcon = TestImage(imageSize);
 
-static inline UIImage *TestImage(CGSize size) {
-  CGFloat scale = [UIScreen mainScreen].scale;
-  UIGraphicsBeginImageContextWithOptions(size, false, scale);
-  [UIColor.redColor setFill];
-  CGRect fillRect = CGRectZero;
-  fillRect.size = size;
-  UIRectFill(fillRect);
-  UIImage *image = UIGraphicsGetImageFromCurrentImageContext();
-  UIGraphicsEndImageContext();
-  return image;
+  // Adjust the dialog size to the calculated preferred size.
+  UIEdgeInsets insets = self.alertView.titleIconInsets;
+  CGSize bounds = CGSizeMake(300.0f, 300.0f);
+  CGSize alertSize = [self.alertView calculatePreferredContentSizeForBounds:bounds];
+  self.alertView.bounds = CGRectMake(0.f, 0.f, alertSize.width, alertSize.height);
+  [self.alertView layoutIfNeeded];
+
+  // Then
+  XCTAssertEqual(self.alert.titleIconAlignment, NSTextAlignmentNatural);
+  CGRect iconFrame = CGRectMake(insets.left, insets.top, imageSize.width, imageSize.height);
+  XCTAssertTrue(CGRectEqualToRect(self.alertView.titleIconImageView.frame, iconFrame));
+}
+
+- (void)testTitleIconAlignmentChangesWithTitleAlignment {
+  // Given
+  self.alert.titleIcon = TestImage(CGSizeMake(24.0f, 24.0f));
+
+  // When
+  self.alert.titleAlignment = NSTextAlignmentRight;
+
+  // Then
+  XCTAssertEqual(self.alert.titleIconAlignment, NSTextAlignmentRight);
+}
+
+- (void)testTitleIconAlignmentDoesntChangeWithTitleAlignmentAfterAssignment {
+  // Given
+  self.alert.titleIcon = TestImage(CGSizeMake(24.0f, 24.0f));
+
+  // When
+  self.alert.titleIconAlignment = NSTextAlignmentCenter;
+  self.alert.titleAlignment = NSTextAlignmentRight;
+
+  // Then
+  XCTAssertEqual(self.alert.titleIconAlignment, NSTextAlignmentCenter);
+}
+
+- (void)testTitleIconJustifiedAlignmentFrameIsFullWidth {
+  // Given
+  CGSize imageSize = CGSizeMake(24.0f, 24.0f);
+  self.alert.titleIcon = TestImage(imageSize);
+  UIEdgeInsets insets = self.alertView.titleIconInsets;
+
+  // When
+  self.alert.titleIconAlignment = NSTextAlignmentJustified;
+  [self sizeAlertToFitContent];
+
+  // Then
+  XCTAssertEqual(self.alert.titleIconAlignment, NSTextAlignmentJustified);
+  CGFloat fullWidthMinusInsets = self.alertView.bounds.size.width - insets.left - insets.right;
+  CGRect iconFrame = CGRectMake(insets.left, insets.top, fullWidthMinusInsets, imageSize.height);
+  XCTAssertTrue(CGRectEqualToRect(self.alertView.titleIconImageView.frame, iconFrame));
+}
+
+// title icon alignment: Justified. image: extra wide, extra tall
+- (void)testTitleIconAlignmentIsJustifiedAndSquareImageResized {
+  // Given
+  CGSize imageSize = CGSizeMake(320.0f, 190.0f);
+  self.alert.titleIcon = TestImage(imageSize);
+  UIEdgeInsets insets = self.alertView.titleIconInsets;
+
+  // When
+  self.alert.titleIconAlignment = NSTextAlignmentJustified;
+  [self sizeAlertToFitContent];
+
+  // Then
+  XCTAssertEqual(self.alert.titleIconAlignment, NSTextAlignmentJustified);
+  CGFloat fullWidthMinusInsets = self.alertView.bounds.size.width - insets.left - insets.right;
+  CGRect iconFrame = CGRectMake(insets.left, insets.top, fullWidthMinusInsets,
+                                imageSize.height * (fullWidthMinusInsets / imageSize.width));
+  XCTAssertTrue(CGRectEqualToRect(self.alertView.titleIconImageView.frame, iconFrame));
+}
+
+// testing vertical alignment of long justified actions
+- (void)testLongJustifiedActionsAreVerticallyAligned {
+  // Given
+  [self.alert addAction:[MDCAlertAction actionWithTitle:@"First Long Action"
+                                               emphasis:MDCActionEmphasisMedium
+                                                handler:nil]];
+  [self.alert addAction:[MDCAlertAction actionWithTitle:@"Cancel"
+                                               emphasis:MDCActionEmphasisMedium
+                                                handler:nil]];
+
+  // When
+  self.alert.actionsHorizontalAlignment = MDCContentHorizontalAlignmentJustified;
+  self.alert.actionsHorizontalAlignmentInVerticalLayout = MDCContentHorizontalAlignmentJustified;
+  [self sizeAlertToFitContent];
+
+  // Then
+  XCTAssertEqual(self.alertView.isVerticalActionsLayout, true);
+}
+
+- (void)testAddActionsMaintainsOrder {
+  // Given
+  MDCAlertAction *actionOne = [MDCAlertAction actionWithTitle:@"Foo" handler:nil];
+  MDCAlertAction *actionTwo = [MDCAlertAction actionWithTitle:@"Bar" handler:nil];
+  MDCAlertController *otherAlert = [[MDCAlertController alloc] init];
+
+  // When
+  [self.alert addActions:@[ actionOne, actionTwo ]];
+  [otherAlert addAction:actionOne];
+  [otherAlert addAction:actionTwo];
+
+  // Then
+  XCTAssertEqualObjects(self.alert.actions, otherAlert.actions);
+}
+
+- (void)testAddActionsCreatesButtonsCorrectly {
+  // Given
+  MDCAlertAction *actionOne = [MDCAlertAction actionWithTitle:@"Foo" handler:nil];
+  MDCAlertAction *actionTwo = [MDCAlertAction actionWithTitle:@"Bar" handler:nil];
+
+  // When
+  [self.alert addActions:@[ actionOne, actionTwo ]];
+
+  // Then
+  XCTAssertEqualObjects([[self.alert buttonForAction:actionOne] titleForState:UIControlStateNormal],
+                        [actionOne.title uppercaseString]);
+  XCTAssertEqualObjects([[self.alert buttonForAction:actionTwo] titleForState:UIControlStateNormal],
+                        [actionTwo.title uppercaseString]);
+}
+
+#pragma mark - Helpers
+
+// Adjust the alert size to match the calculated preferred size.
+- (void)sizeAlertToFitContent {
+  CGSize bounds = CGSizeMake(300.0f, 300.0f);
+  CGSize alertSize = [self.alertView calculatePreferredContentSizeForBounds:bounds];
+  self.alertView.bounds = CGRectMake(0.f, 0.f, alertSize.width, alertSize.height);
+  [self.alertView layoutIfNeeded];
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -13,11 +13,10 @@
 // limitations under the License.
 
 import UIKit
-
 import MaterialComponents.MaterialBanner
-import MaterialComponents.MaterialBanner_Theming
+import MaterialComponents.MaterialBanner_Theming 
 import MaterialComponents.MaterialButtons
-import MaterialComponents.MaterialButtons_Theming
+import MaterialComponents.MaterialButtons_Theming 
 import MaterialComponents.MaterialColorScheme
 import MaterialComponents.MaterialContainerScheme
 
@@ -33,7 +32,8 @@ class BannerAutoLayoutSwiftExampleViewController: UIViewController {
     showBannerButton.translatesAutoresizingMaskIntoConstraints = false
     showBannerButton.applyTextTheme(withScheme: containerScheme)
     showBannerButton.setTitle("Material Banner", for: .normal)
-    showBannerButton.addTarget(self, action: #selector(self.didTapShowBannerButton), for: .touchUpInside)
+    showBannerButton.addTarget(
+      self, action: #selector(self.didTapShowBannerButton), for: .touchUpInside)
     view.addSubview(showBannerButton)
     showBannerButton.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
     showBannerButton.centerYAnchor.constraint(equalTo: view.centerYAnchor).isActive = true
@@ -45,22 +45,20 @@ class BannerAutoLayoutSwiftExampleViewController: UIViewController {
     bannerView.layoutMargins = .zero
     let actionButton = bannerView.leadingButton
     actionButton.setTitle("Dismiss", for: .normal)
-    actionButton.addTarget(self, action: #selector(self.didTapDismissOnBannerView), for: .touchUpInside)
+    actionButton.addTarget(
+      self, action: #selector(self.didTapDismissOnBannerView), for: .touchUpInside)
     bannerView.applyTheme(withScheme: containerScheme)
     view.addSubview(bannerView)
     bannerView.isHidden = true
-    if #available(iOS 11.0, *) {
-      bannerView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor).isActive = true
-    } else {
-      bannerView.topAnchor.constraint(equalTo: topLayoutGuide.bottomAnchor).isActive = true
-    }
+    bannerView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor).isActive = true
     bannerView.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
     bannerView.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
   }
 
   @objc func didTapShowBannerButton() {
     bannerView.isHidden = false
-    UIAccessibility.post(notification:.layoutChanged, argument: bannerView);
+    bannerView.setNeedsLayout()
+    UIAccessibility.post(notification: .layoutChanged, argument: bannerView)
   }
 
   @objc func didTapDismissOnBannerView() {
@@ -69,7 +67,7 @@ class BannerAutoLayoutSwiftExampleViewController: UIViewController {
 
 }
 
-// MARK: CBC
+// MARK: Catalog by Convention
 extension BannerAutoLayoutSwiftExampleViewController {
 
   @objc class func catalogMetadata() -> [String: Any] {
@@ -78,6 +76,14 @@ extension BannerAutoLayoutSwiftExampleViewController {
       "primaryDemo": false,
       "presentable": true,
     ]
+  }
+}
+
+// MARK: Snapshot Testing by Convention
+extension BannerAutoLayoutSwiftExampleViewController {
+
+  @objc func testDidTapShowBannerButton() {
+    self.didTapShowBannerButton()
   }
 
 }

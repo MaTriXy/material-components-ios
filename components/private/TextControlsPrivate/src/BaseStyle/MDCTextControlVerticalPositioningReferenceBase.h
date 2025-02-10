@@ -16,6 +16,12 @@
 
 #import "MDCTextControlVerticalPositioningReference.h"
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use branded UITextField or UITextView instead: go/material-ios-text-fields/gm2-migration. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 @interface MDCTextControlVerticalPositioningReferenceBase
     : NSObject <MDCTextControlVerticalPositioningReference>
 
@@ -24,6 +30,9 @@
                                  textRowHeight:(CGFloat)textRowHeight
                               numberOfTextRows:(CGFloat)numberOfTextRows
                                        density:(CGFloat)density
-                      preferredContainerHeight:(CGFloat)preferredContainerHeight;
+                      preferredContainerHeight:(CGFloat)preferredContainerHeight
+                        isMultilineTextControl:(BOOL)isMultilineTextControl;
 
 @end
+
+API_DEPRECATED_END

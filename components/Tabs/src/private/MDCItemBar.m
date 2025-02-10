@@ -16,15 +16,17 @@
 
 #import <MDFInternationalization/MDFInternationalization.h>
 
-#import "MDCItemBarCell.h"
-#import "MDCItemBarStyle.h"
+#import "MDCTabBar.h"
+#import "MDCItemBarAlignment.h"
+
 #import "MDCTabBarDisplayDelegate.h"
-#import "MDCTabBarIndicatorAttributes.h"
 #import "MDCTabBarIndicatorTemplate.h"
+#import "MDCTabBarSizeClassDelegate.h"
+#import "MDCItemBarCell.h"
+#import "MDCItemBarDelegate.h"
+#import "MDCItemBarStyle.h"
 #import "MDCTabBarIndicatorView.h"
 #import "MDCTabBarPrivateIndicatorContext.h"
-#import "MDCTabBarSizeClassDelegate.h"
-#import "MaterialAnimationTiming.h"
 
 /// Cell reuse identifier for item bar cells.
 static NSString *const kItemReuseID = @"MDCItem";
@@ -58,6 +60,11 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 @end
 
 #pragma mark -
+
+#ifdef __IPHONE_13_4
+@interface MDCItemBar (PointerInteraction) <UIPointerInteractionDelegate>
+@end
+#endif
 
 @interface MDCItemBar () <UICollectionViewDataSource, UICollectionViewDelegateFlowLayout>
 // Current style properties.
@@ -120,10 +127,7 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   collectionView.showsHorizontalScrollIndicator = NO;
   collectionView.showsVerticalScrollIndicator = NO;
 
-  if (@available(iOS 11.0, *)) {
-    collectionView.contentInsetAdjustmentBehavior =
-        UIScrollViewContentInsetAdjustmentScrollableAxes;
-  }
+  collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentScrollableAxes;
 
   collectionView.dataSource = self;
   collectionView.delegate = self;
@@ -230,10 +234,7 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 #pragma mark - Accessibility
 
 - (UIAccessibilityTraits)accessibilityTraits {
-  if (@available(iOS 10.0, *)) {
-    return [super accessibilityTraits] | UIAccessibilityTraitTabBar;
-  }
-  return [super accessibilityTraits];
+  return [super accessibilityTraits] | UIAccessibilityTraitTabBar;
 }
 
 - (id)accessibilityElementForItem:(UITabBarItem *)item {
@@ -316,9 +317,7 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 }
 
 - (void)safeAreaInsetsDidChange {
-  if (@available(iOS 11.0, *)) {
-    [super safeAreaInsetsDidChange];
-  }
+  [super safeAreaInsetsDidChange];
   [self setNeedsLayout];
 }
 
@@ -342,20 +341,14 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   [self updateColors];
 }
 
-// UISemanticContentAttribute was added in iOS SDK 9.0 but is available on devices running earlier
-// version of iOS. We ignore the partial-availability warning that gets thrown on our use of this
-// symbol.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpartial-availability"
-- (void)mdf_setSemanticContentAttribute:(UISemanticContentAttribute)semanticContentAttribute {
-  if (semanticContentAttribute == self.mdf_semanticContentAttribute) {
+- (void)setSemanticContentAttribute:(UISemanticContentAttribute)semanticContentAttribute {
+  if (semanticContentAttribute == self.semanticContentAttribute) {
     return;
   }
-  [super mdf_setSemanticContentAttribute:semanticContentAttribute];
-  _collectionView.mdf_semanticContentAttribute = semanticContentAttribute;
+  super.semanticContentAttribute = semanticContentAttribute;
+  _collectionView.semanticContentAttribute = semanticContentAttribute;
   [_collectionView.collectionViewLayout invalidateLayout];
 }
-#pragma clang diagnostic pop
 
 #pragma mark - UICollectionViewDelegate
 
@@ -430,6 +423,9 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   UITabBarItem *item = [self itemAtIndexPath:indexPath];
   if (item) {
     [self.tabBar.displayDelegate tabBar:self.tabBar willDisplayItem:item];
+    if ([cell isKindOfClass:[MDCItemBarCell class]]) {
+      cell.selected = (item == self.selectedItem);
+    }
   }
 }
 
@@ -482,10 +478,8 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 #pragma mark - Private
 
 - (CGFloat)adjustedCollectionViewWidth {
-  if (@available(iOS 11.0, *)) {
-    return CGRectGetWidth(
-        UIEdgeInsetsInsetRect(_collectionView.bounds, _collectionView.adjustedContentInset));
-  }
+  return CGRectGetWidth(
+      UIEdgeInsetsInsetRect(_collectionView.bounds, _collectionView.adjustedContentInset));
   return CGRectGetWidth(_collectionView.bounds);
 }
 
@@ -497,9 +491,11 @@ static void *kItemPropertyContext = &kItemPropertyContext;
     s_keys = @[
       NSStringFromSelector(@selector(title)),
       NSStringFromSelector(@selector(image)),
+      NSStringFromSelector(@selector(selectedImage)),
       NSStringFromSelector(@selector(badgeValue)),
       NSStringFromSelector(@selector(badgeColor)),
-      NSStringFromSelector(@selector(accessibilityIdentifier))
+      NSStringFromSelector(@selector(accessibilityIdentifier)),
+      NSStringFromSelector(@selector(accessibilityLabel))
     ];
   });
   // clang-format on
@@ -568,6 +564,18 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   return [NSIndexPath indexPathForItem:index inSection:0];
 }
 
+- (void)invalidateItemCellPointerInteractions {
+#ifdef __IPHONE_13_4
+  if (@available(iOS 13.4, *)) {
+    for (MDCItemBarCell *cell in self.collectionView.visibleCells) {
+      for (UIPointerInteraction *interaction in cell.interactions) {
+        [interaction invalidate];
+      }
+    }
+  }
+#endif
+}
+
 - (void)reload {
   [_collectionView reloadData];
   [self updateAlignmentAnimated:NO];
@@ -592,13 +600,18 @@ static void *kItemPropertyContext = &kItemPropertyContext;
     [self->_selectionIndicator layoutIfNeeded];
   };
 
+  void (^completionBlock)(void) = ^{
+    [self invalidateItemCellPointerInteractions];
+  };
+
   if (animate) {
     CAMediaTimingFunction *easeInOutFunction =
-        [CAMediaTimingFunction mdc_functionWithType:MDCAnimationTimingFunctionEaseInOut];
+        [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     // Wrap in explicit CATransaction to allow layer-based animations with the correct duration.
     [CATransaction begin];
     [CATransaction setAnimationDuration:kDefaultAnimationDuration];
     [CATransaction setAnimationTimingFunction:easeInOutFunction];
+    [CATransaction setCompletionBlock:completionBlock];
     [UIView animateWithDuration:kDefaultAnimationDuration
                           delay:0
                         options:UIViewAnimationOptionBeginFromCurrentState
@@ -608,6 +621,7 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 
   } else {
     animationBlock();
+    completionBlock();
   }
 }
 
@@ -694,7 +708,7 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   if (animate) {
     [CATransaction begin];
     CAMediaTimingFunction *easeInOut =
-        [CAMediaTimingFunction mdc_functionWithType:MDCAnimationTimingFunctionEaseInOut];
+        [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
     [CATransaction setAnimationTimingFunction:easeInOut];
     [UIView animateWithDuration:kDefaultAnimationDuration
                           delay:0
@@ -758,10 +772,8 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   const BOOL isRegular = (sizeClass == UIUserInterfaceSizeClassRegular);
   CGFloat inset = isRegular ? kRegularInset : kCompactInset;
   // If the collection view has Safe Area insets, we don't want to add an extra horizontal inset.
-  if (@available(iOS 11.0, *)) {
-    if (_collectionView.safeAreaInsets.left > 0 || _collectionView.safeAreaInsets.right > 0) {
-      inset = 0;
-    }
+  if (_collectionView.safeAreaInsets.left > 0 || _collectionView.safeAreaInsets.right > 0) {
+    inset = 0;
   }
   return UIEdgeInsetsMake(0, inset, 0, inset);
 }
@@ -824,6 +836,21 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 - (void)configureCell:(MDCItemBarCell *)cell {
   // Configure content style
   [cell applyStyle:_style];
+
+#ifdef __IPHONE_13_4
+  if (@available(iOS 13.4, *)) {
+    // Add a pointer interaction if necessary
+    if (cell.interactions.count == 0) {
+      // Because some iOS 13 betas did not have the UIPointerInteraction class, we need to verify
+      // that it exists before attempting to use it.
+      if (NSClassFromString(@"UIPointerInteraction")) {
+        UIPointerInteraction *pointerInteraction =
+            [[UIPointerInteraction alloc] initWithDelegate:self];
+        [cell addInteraction:pointerInteraction];
+      }
+    }
+  }
+#endif
 }
 
 - (void)configureVisibleCells {
@@ -850,6 +877,21 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 - (void)updateSelectionIndicatorVisibility {
   _selectionIndicator.hidden = !_style.shouldDisplaySelectionIndicator;
 }
+
+#pragma mark - UIPointerInteractionDelegate
+
+#ifdef __IPHONE_13_4
+- (UIPointerStyle *)pointerInteraction:(UIPointerInteraction *)interaction
+                        styleForRegion:(UIPointerRegion *)region API_AVAILABLE(ios(13.4)) {
+  UIPointerStyle *pointerStyle = nil;
+  if (interaction.view) {
+    UITargetedPreview *targetedPreview = [[UITargetedPreview alloc] initWithView:interaction.view];
+    UIPointerEffect *highlightEffect = [UIPointerHighlightEffect effectWithPreview:targetedPreview];
+    pointerStyle = [UIPointerStyle styleWithEffect:highlightEffect shape:nil];
+  }
+  return pointerStyle;
+}
+#endif
 
 @end
 
@@ -977,7 +1019,7 @@ static void *kItemPropertyContext = &kItemPropertyContext;
   UIUserInterfaceLayoutDirection rtl = UIUserInterfaceLayoutDirectionRightToLeft;
   NSProcessInfo *processInfo = [NSProcessInfo processInfo];
   return [processInfo isOperatingSystemAtLeastVersion:iOS9Version] &&
-         self.collectionView.mdf_effectiveUserInterfaceLayoutDirection == rtl;
+         self.collectionView.effectiveUserInterfaceLayoutDirection == rtl;
 }
 
 /// Indicates if the superclass' layout appears to have been layed out in a left-to-right order. If
@@ -1067,10 +1109,8 @@ static void *kItemPropertyContext = &kItemPropertyContext;
 }
 
 - (CGRect)adjustedCollectionViewBounds {
-  if (@available(iOS 11.0, *)) {
-    return UIEdgeInsetsInsetRect(self.collectionView.bounds,
-                                 self.collectionView.adjustedContentInset);
-  }
+  return UIEdgeInsetsInsetRect(self.collectionView.bounds,
+                               self.collectionView.adjustedContentInset);
   return self.collectionView.bounds;
 }
 

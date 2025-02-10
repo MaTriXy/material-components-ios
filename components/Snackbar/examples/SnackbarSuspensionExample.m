@@ -14,22 +14,31 @@
 
 #import <UIKit/UIKit.h>
 
-#import "MaterialSnackbar.h"
 #import "supplemental/SnackbarExampleSupplemental.h"
+#import "MDCCollectionViewTextCell.h"
+#import "MDCCollectionViewController.h"
+#import "MDCSnackbarManager.h"
+#import "MDCSnackbarMessage.h"
+#import "MDCSemanticColorScheme.h"
+#import "MDCTypographyScheme.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 static NSString *const kCategoryA = @"CategoryA";
 static NSString *const kCategoryB = @"CategoryB";
 
-@interface SnackbarSuspensionExample ()
+@interface SnackbarSuspensionExample : SnackbarExample
+
+- (void)handleSuspendStateChanged:(UISwitch *)sender;
 
 /** The current suspension token. */
-@property(nonatomic) id<MDCSnackbarSuspensionToken> allMessagesToken;
+@property(nullable, nonatomic) id<MDCSnackbarSuspensionToken> allMessagesToken;
 
 /** Token held when suspending messages from Group A. */
-@property(nonatomic) id<MDCSnackbarSuspensionToken> groupAToken;
+@property(nullable, nonatomic) id<MDCSnackbarSuspensionToken> groupAToken;
 
 /** Token held when suspending messages from Group B. */
-@property(nonatomic) id<MDCSnackbarSuspensionToken> groupBToken;
+@property(nullable, nonatomic) id<MDCSnackbarSuspensionToken> groupBToken;
 
 @end
 
@@ -53,7 +62,7 @@ static NSString *const kCategoryB = @"CategoryB";
   self.title = @"Message Suspension";
 }
 
-- (void)showMessageWithPrefix:(NSString *)prefix category:(NSString *)category {
+- (void)showMessageWithPrefix:(NSString *)prefix category:(nullable NSString *)category {
   MDCSnackbarMessage *message = [[MDCSnackbarMessage alloc] init];
   NSMutableAttributedString *attributedMessage = [[NSMutableAttributedString alloc] init];
   NSString *formattedPrefix = [NSString stringWithFormat:@"%@ : ", prefix];
@@ -67,34 +76,34 @@ static NSString *const kCategoryB = @"CategoryB";
   [attributedMessage appendAttributedString:attributedStringID];
   message.attributedText = attributedMessage;
   message.category = category;
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
 }
 
 #pragma mark - Suspend/Resume
 
 - (void)setSuspendedGroupA:(BOOL)suspended {
   if (suspended && self.groupAToken == nil) {
-    self.groupAToken = [MDCSnackbarManager suspendMessagesWithCategory:kCategoryA];
+    self.groupAToken = [MDCSnackbarManager.defaultManager suspendMessagesWithCategory:kCategoryA];
   } else if (!suspended && self.groupAToken != nil) {
-    [MDCSnackbarManager resumeMessagesWithToken:self.groupAToken];
+    [MDCSnackbarManager.defaultManager resumeMessagesWithToken:self.groupAToken];
     self.groupAToken = nil;
   }
 }
 
 - (void)setSuspendedGroupB:(BOOL)suspended {
   if (suspended && self.groupBToken == nil) {
-    self.groupBToken = [MDCSnackbarManager suspendMessagesWithCategory:kCategoryB];
+    self.groupBToken = [MDCSnackbarManager.defaultManager suspendMessagesWithCategory:kCategoryB];
   } else if (!suspended && self.groupBToken != nil) {
-    [MDCSnackbarManager resumeMessagesWithToken:self.groupBToken];
+    [MDCSnackbarManager.defaultManager resumeMessagesWithToken:self.groupBToken];
     self.groupBToken = nil;
   }
 }
 
 - (void)setSuspendedAllMessages:(BOOL)suspended {
   if (suspended && self.allMessagesToken == nil) {
-    self.allMessagesToken = [MDCSnackbarManager suspendAllMessages];
+    self.allMessagesToken = [MDCSnackbarManager.defaultManager suspendAllMessages];
   } else if (!suspended && self.allMessagesToken != nil) {
-    [MDCSnackbarManager resumeMessagesWithToken:self.allMessagesToken];
+    [MDCSnackbarManager.defaultManager resumeMessagesWithToken:self.allMessagesToken];
     self.allMessagesToken = nil;
   }
 }
@@ -178,3 +187,48 @@ static NSString *const kCategoryB = @"CategoryB";
 }
 
 @end
+
+@implementation SnackbarSuspensionExample (CollectionView)
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView
+                  cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+  MDCCollectionViewTextCell *cell =
+      [collectionView dequeueReusableCellWithReuseIdentifier:kSnackbarExamplesCellIdentifier
+                                                forIndexPath:indexPath];
+
+  cell.textLabel.text = self.choices[indexPath.row];
+  cell.isAccessibilityElement = YES;
+  cell.accessibilityTraits = cell.accessibilityTraits | UIAccessibilityTraitButton;
+  cell.accessibilityLabel = cell.textLabel.text;
+  if (indexPath.row > 2) {
+    UISwitch *editingSwitch = [[UISwitch alloc] initWithFrame:CGRectZero];
+    [editingSwitch setTag:indexPath.row];
+    [editingSwitch addTarget:self
+                      action:@selector(handleSuspendStateChanged:)
+            forControlEvents:UIControlEventValueChanged];
+    cell.accessoryView = editingSwitch;
+    cell.accessibilityValue = editingSwitch.isOn ? @"on" : @"off";
+  } else {
+    cell.accessoryView = nil;
+    cell.accessibilityValue = nil;
+  }
+
+  return cell;
+}
+
+@end
+
+@implementation SnackbarSuspensionExample (CatalogByConvention)
+
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Snackbar", @"Snackbar Suspension" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @YES,
+    @"snapshotDelay" : @1.0,
+  };
+}
+
+@end
+
+NS_ASSUME_NONNULL_END

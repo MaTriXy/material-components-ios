@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import <MDFInternationalization/MDFInternationalization.h>
 #import <UIKit/UIKit.h>
 
 #import "MaterialPageControl.h"
@@ -41,9 +40,7 @@
 
   // Scroll view configuration
   _scrollView = [[UIScrollView alloc] initWithFrame:self.view.bounds];
-  if (@available(iOS 11.0, *)) {
-    _scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
-  }
+  _scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
   _scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
   _scrollView.delegate = self;
   _scrollView.pagingEnabled = YES;
@@ -119,10 +116,8 @@
 
   // We want the page control to hug the bottom of the screen.
   UIEdgeInsets edgeInsets = UIEdgeInsetsZero;
-  if (@available(iOS 11.0, *)) {
-    // Accommodate insets for iPhone X.
-    edgeInsets = self.view.safeAreaInsets;
-  }
+  // Accommodate insets for iPhone X.
+  edgeInsets = self.view.safeAreaInsets;
   [_pageControl sizeToFit];
   CGFloat yOffset =
       CGRectGetHeight(self.view.frame) - CGRectGetHeight(_pageControl.frame) - edgeInsets.bottom;
@@ -178,7 +173,7 @@
 }
 
 - (BOOL)isRTL {
-  return self.view.mdf_effectiveUserInterfaceLayoutDirection ==
+  return self.view.effectiveUserInterfaceLayoutDirection ==
          UIUserInterfaceLayoutDirectionRightToLeft;
 }
 

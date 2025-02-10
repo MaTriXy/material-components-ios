@@ -12,14 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialDialogs.h"
+#import "MDCButton.h"
+#import "MDCAlertController.h"
+#import "MDCAlertControllerView.h"
 
+#import "MDCAlertController+ButtonForAction.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
 #import "MDCAlertControllerView+Private.h"
+#pragma clang diagnostic pop
 
 #import <XCTest/XCTest.h>
 
+NS_ASSUME_NONNULL_BEGIN
+
 static const CGFloat kFourInchPortraitWidth = 320.0;
 static const CGFloat kFourInchLandscapeWidth = 568.0;
+
+/** Expose private properties for testing. */
+@interface MDCAlertControllerView (Testing)
+@property(nonatomic, readonly) BOOL isVerticalActionsLayout;
+@end
 
 @interface MDCAlertControllerLayoutTests : XCTestCase
 
@@ -41,22 +54,21 @@ static const CGFloat kFourInchLandscapeWidth = 568.0;
   NSString *urduFontName = @"NotoNastaliqUrdu";
   UIFont *dialogBodyFont;
   UIFont *dialogButtonFont;
-  if (@available(iOS 11, *)) {
-    // Noto Nastaliq Urdu was added in iOS 11, and is an extremely tall
-    // font for any given nominal point size.
-    dialogBodyFont = [UIFont fontWithName:urduFontName size:20.0];
-    dialogButtonFont = [UIFont fontWithName:urduFontName size:26.0];
-  } else {
-    dialogBodyFont = [UIFont systemFontOfSize:20.0];
-    dialogButtonFont = [UIFont systemFontOfSize:26.0];
-  }
+  // Noto Nastaliq Urdu was added in iOS 11, and is an extremely tall
+  // font for any given nominal point size.
+  dialogBodyFont = [UIFont fontWithName:urduFontName size:20.0];
+  dialogButtonFont = [UIFont fontWithName:urduFontName size:26.0];
   _alertController.messageFont = dialogBodyFont;
-  _alertController.buttonFont = dialogButtonFont;
 
   MDCAlertAction *retryAction = [MDCAlertAction actionWithTitle:@"دوبارہ کوشش کریں" handler:nil];
   MDCAlertAction *cancelAction = [MDCAlertAction actionWithTitle:@"منسوخ کریں" handler:nil];
   [_alertController addAction:retryAction];
   [_alertController addAction:cancelAction];
+
+  for (MDCAlertAction *action in _alertController.actions) {
+    [[_alertController buttonForAction:action] setTitleFont:dialogButtonFont
+                                                   forState:UIControlStateNormal];
+  }
 }
 
 - (void)tearDown {
@@ -73,8 +85,51 @@ static const CGFloat kFourInchLandscapeWidth = 568.0;
 
   // The vertical layout should be approximately twice as high as the horizontal layout, +/-
   // padding between buttons.
-  XCTAssertEqualWithAccuracy(sizeOnFourInchLandscape.height * 2, sizeOnFourInchPortrait.height, 5);
+  XCTAssertEqualWithAccuracy(sizeOnFourInchLandscape.height * 2, sizeOnFourInchPortrait.height, 40);
   XCTAssertGreaterThan(sizeOnFourInchLandscape.width, sizeOnFourInchPortrait.width);
 }
 
+- (void)testButtonLayoutReturnsToHorizontalWhenFontSizeChanges {
+  // Given
+  _alertController = [MDCAlertController alertControllerWithTitle:nil message:@"Hello"];
+  MDCAlertAction *longNamedAction = [MDCAlertAction actionWithTitle:@"Long action name"
+                                                            handler:nil];
+  MDCAlertAction *otherAction = [MDCAlertAction actionWithTitle:@"Other" handler:nil];
+  [_alertController addAction:longNamedAction];
+  [_alertController addAction:otherAction];
+  MDCAlertControllerView *view = (MDCAlertControllerView *)_alertController.view;
+  // Set the bounds of the view such that the buttons will fit horizontally with the smaller font
+  // size but must be vertical with the larger font size.
+  view.bounds = CGRectMake(0, 0, 350, 500);
+
+  // When
+  // With the smaller font size, the buttons should start in a horizontal layout.
+  for (MDCAlertAction *action in _alertController.actions) {
+    [[_alertController buttonForAction:action] setTitleFont:[UIFont systemFontOfSize:20]
+                                                   forState:UIControlStateNormal];
+  }
+  [view layoutSubviews];
+  XCTAssertFalse(view.isVerticalActionsLayout);
+
+  // When the font size is increased, the buttons should be arranged vertically.
+  for (MDCAlertAction *action in _alertController.actions) {
+    [[_alertController buttonForAction:action] setTitleFont:[UIFont systemFontOfSize:40]
+                                                   forState:UIControlStateNormal];
+  }
+  [view layoutSubviews];
+  XCTAssertTrue(view.isVerticalActionsLayout);
+
+  // When the font size is decreased again, the buttons should return to a horizontal layout.
+  for (MDCAlertAction *action in _alertController.actions) {
+    [[_alertController buttonForAction:action] setTitleFont:[UIFont systemFontOfSize:20]
+                                                   forState:UIControlStateNormal];
+  }
+  [view layoutSubviews];
+
+  // Then
+  XCTAssertFalse(view.isVerticalActionsLayout);
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

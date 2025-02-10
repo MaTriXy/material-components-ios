@@ -13,8 +13,7 @@
 // limitations under the License.
 
 import UIKit
-
-import MaterialComponentsBeta.MaterialTabs_TabBarView
+import MaterialComponents.MaterialTabs_TabBarView 
 import MaterialComponents.MaterialContainerScheme
 
 class TabBarViewExample: UIViewController {
@@ -32,11 +31,11 @@ class TabBarViewExample: UIViewController {
   }()
 
   let itemIcons = [
-    UIImage(named: "Home")?.withRenderingMode(.alwaysTemplate),
-    UIImage(named: "Favorite")?.withRenderingMode(.alwaysTemplate),
-    UIImage(named: "Cake")?.withRenderingMode(.alwaysTemplate),
-    UIImage(named: "Email")?.withRenderingMode(.alwaysTemplate),
-    UIImage(named: "Search")?.withRenderingMode(.alwaysTemplate)
+    UIImage(named: "system_icons/home")?.withRenderingMode(.alwaysTemplate),
+    UIImage(named: "system_icons/favorite")?.withRenderingMode(.alwaysTemplate),
+    UIImage(named: "system_icons/cake")?.withRenderingMode(.alwaysTemplate),
+    UIImage(named: "system_icons/email")?.withRenderingMode(.alwaysTemplate),
+    UIImage(named: "system_icons/search")?.withRenderingMode(.alwaysTemplate),
   ]
 
   let itemTitles = ["Home", "Unselectable", "Cake", "Email", "Search"]
@@ -47,7 +46,7 @@ class TabBarViewExample: UIViewController {
       .map { (index, titleIconPair) in
         let (title, icon) = titleIconPair
         return UITabBarItem(title: title, image: icon, tag: index)
-    }
+      }
   }()
 
   override func viewDidLoad() {
@@ -56,13 +55,9 @@ class TabBarViewExample: UIViewController {
 
     applyFixForInjectedAppBar()
 
-    view.backgroundColor = containerScheme.colorScheme.backgroundColor;
+    view.backgroundColor = containerScheme.colorScheme.backgroundColor
     view.addSubview(tabBar)
-    if #available(iOS 11.0, *) {
-      view.layoutMarginsGuide.topAnchor.constraint(equalTo: tabBar.topAnchor).isActive = true
-    } else {
-      topLayoutGuide.bottomAnchor.constraint(equalTo: tabBar.topAnchor).isActive = true
-    }
+    view.layoutMarginsGuide.topAnchor.constraint(equalTo: tabBar.topAnchor).isActive = true
     view.leadingAnchor.constraint(equalTo: tabBar.leadingAnchor).isActive = true
     view.trailingAnchor.constraint(equalTo: tabBar.trailingAnchor).isActive = true
 
@@ -73,8 +68,9 @@ class TabBarViewExample: UIViewController {
 
   private func applyThemingToTabBarView() {
     tabBar.barTintColor = containerScheme.colorScheme.surfaceColor
-    tabBar.setTitleColor(containerScheme.colorScheme.onSurfaceColor.withAlphaComponent(0.6),
-                         for: .normal)
+    tabBar.setTitleColor(
+      containerScheme.colorScheme.onSurfaceColor.withAlphaComponent(0.6),
+      for: .normal)
     tabBar.setTitleColor(containerScheme.colorScheme.primaryColor, for: .selected)
     tabBar.setImageTintColor(containerScheme.colorScheme.onSurfaceColor, for: .normal)
     tabBar.setImageTintColor(containerScheme.colorScheme.primaryColor, for: .selected)
@@ -109,9 +105,9 @@ extension TabBarViewExample: MDCTabBarViewDelegate {
 extension TabBarViewExample {
   @objc class func catalogMetadata() -> [String: Any] {
     return [
-      "breadcrumbs" : ["Tab Bar", TabBarViewExample.title],
-      "primaryDemo" : false,
-      "presentable" : false,
+      "breadcrumbs": ["Tab Bar", TabBarViewExample.title],
+      "primaryDemo": false,
+      "presentable": false,
     ]
   }
 }

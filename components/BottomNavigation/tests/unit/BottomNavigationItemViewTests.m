@@ -14,10 +14,17 @@
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCBottomNavigationItemBadge.h"
-#import "../../src/private/MDCBottomNavigationItemView.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCBottomNavigationItemView+Testing.h"
+#import "MDCBottomNavigationItemView.h"
+#pragma clang diagnostic pop
+#import "MDCBottomNavigationBar.h"
 
-#import "MaterialInk.h"
+NS_ASSUME_NONNULL_BEGIN
+
+static NSString *const kTestTitleText = @"title";
+static NSString *const kTestBadgeValue = @"100";
 
 static UIImage *fakeImage(void) {
   CGSize imageSize = CGSizeMake(24, 24);
@@ -32,7 +39,6 @@ static UIImage *fakeImage(void) {
 @interface MDCBottomNavigationItemView (Testing)
 @property(nonatomic, strong) UIImageView *iconImageView;
 @property(nonatomic, strong) UILabel *label;
-@property(nonatomic, strong) MDCBottomNavigationItemBadge *badge;
 - (CGPoint)badgeCenterFromIconFrame:(CGRect)iconFrame isRTL:(BOOL)isRTL;
 @end
 
@@ -84,36 +90,6 @@ static UIImage *fakeImage(void) {
   CGFloat expectedDistance = contentWidth / 2 + view.contentHorizontalMargin;
   XCTAssertEqualWithAccuracy(view.label.center.x - view.iconImageView.center.x, expectedDistance,
                              (CGFloat)0.001);
-}
-
-- (void)testSetSelectedItemTintColorUpdatesInkColor {
-  // Given
-  MDCBottomNavigationItemView *item1 = [[MDCBottomNavigationItemView alloc] init];
-  MDCBottomNavigationItemView *item2 = [[MDCBottomNavigationItemView alloc] init];
-  item1.selected = YES;
-  UIColor *item1DefaultInkColor = item1.inkView.inkColor;
-  UIColor *item2DefaultInkColor = item2.inkView.inkColor;
-
-  // When
-  item1.selectedItemTintColor = UIColor.cyanColor;
-  item2.selectedItemTintColor = UIColor.cyanColor;
-
-  // Then
-  XCTAssertNotEqualObjects(item1.inkView.inkColor, item1DefaultInkColor);
-  XCTAssertNotEqualObjects(item2.inkView.inkColor, item2DefaultInkColor);
-  XCTAssertEqualObjects(item1.inkView.inkColor, item2.inkView.inkColor);
-}
-
-- (void)testBadgeTextColorSetsBadgeLabelTextColor {
-  // Given
-  MDCBottomNavigationItemView *itemView = [[MDCBottomNavigationItemView alloc] init];
-  itemView.badgeValue = @"123";
-
-  // When
-  itemView.badgeTextColor = UIColor.purpleColor;
-
-  // Then
-  XCTAssertEqualObjects(itemView.badge.badgeValueLabel.textColor, UIColor.purpleColor);
 }
 
 - (void)testSetTitleVisibilityUpdatesLayout {
@@ -457,4 +433,77 @@ static UIImage *fakeImage(void) {
   XCTAssertEqual(itemView.label.numberOfLines, itemView.titleNumberOfLines);
 }
 
+/**
+ Verifies that pointerEffectHighlightRect is equivalent to an MDCBottomNavigationItemView's label
+ if the label is the only visible subview.
+ */
+- (void)testPointerEffectHoverRectIsFrameForOneVisibleView {
+  // Given
+  MDCBottomNavigationItemView *itemView = [[MDCBottomNavigationItemView alloc] init];
+  itemView.frame = CGRectMake(0, 0, 100, 100);
+  itemView.title = kTestTitleText;
+  [itemView layoutIfNeeded];
+
+  // Then
+  CGRect expectedRect = CGRectInset(
+      itemView.label.frame, MDCButtonNavigationItemViewPointerEffectHighlightRectInset.width,
+      MDCButtonNavigationItemViewPointerEffectHighlightRectInset.height);
+  CGRect actualRect = [itemView pointerEffectHighlightRect];
+  XCTAssertEqualWithAccuracy(actualRect.size.width, expectedRect.size.width, 0.001);
+  XCTAssertEqualWithAccuracy(actualRect.size.height, expectedRect.size.height, 0.001);
+  XCTAssertEqualWithAccuracy(actualRect.origin.x, expectedRect.origin.x, 0.001);
+  XCTAssertEqualWithAccuracy(actualRect.origin.y, expectedRect.origin.y, 0.001);
+}
+
+/**
+ Verifies that pointerEffectHighlightRect is equivalent to the bounding rect of all visible subviews
+ when multiple subviews are visible.
+*/
+- (void)testPointerEffectHoverRectIsFrameWhenAllViewsVisible {
+  // Given
+  MDCBottomNavigationItemView *itemView = [[MDCBottomNavigationItemView alloc] init];
+  itemView.frame = CGRectMake(0, 0, 100, 100);
+  itemView.title = kTestTitleText;
+  itemView.image = fakeImage();
+  itemView.badgeText = kTestBadgeValue;
+  [itemView layoutIfNeeded];
+
+  // Then
+  CGRect expectedRect = CGRectMake(0, 26, 100, 55);
+  XCTAssert(CGRectEqualToRect([itemView pointerEffectHighlightRect], expectedRect), @"%@",
+            [self errorStringForExpectedPointerRect:expectedRect
+                             doesNotMatchActualRect:[itemView pointerEffectHighlightRect]]);
+}
+
+/**
+ Verifies that pointerEffectHighlightRect doesn't exceed the bounds of the
+ MDCBottomNavigationItemView.
+*/
+- (void)testPointerEffectHoverRectIsNotLargerThanBounds {
+  // Given
+  MDCBottomNavigationItemView *itemView = [[MDCBottomNavigationItemView alloc] init];
+  itemView.frame = CGRectMake(0, 0, 10, 10);
+  itemView.title = kTestTitleText;
+  itemView.image = fakeImage();
+  itemView.badgeText = kTestBadgeValue;
+  [itemView layoutIfNeeded];
+
+  // Then
+  CGRect expectedRect = itemView.bounds;
+  XCTAssert(CGRectEqualToRect([itemView pointerEffectHighlightRect], expectedRect), @"%@",
+            [self errorStringForExpectedPointerRect:expectedRect
+                             doesNotMatchActualRect:[itemView pointerEffectHighlightRect]]);
+}
+
+#pragma mark - Helpers
+
+- (NSString *)errorStringForExpectedPointerRect:(CGRect)expectedRect
+                         doesNotMatchActualRect:(CGRect)actualRect {
+  return
+      [NSString stringWithFormat:@"pointerEffectHighlightRect expected to equal %@ (got %@)",
+                                 NSStringFromCGRect(expectedRect), NSStringFromCGRect(actualRect)];
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

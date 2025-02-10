@@ -12,23 +12,55 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialSnapshot.h"
-
+#import "MDCAlertController+Customize.h"
+#import "MDCAlertController.h"
+#import "MDCAlertControllerView.h"
+#import "MDCAlertController+Testing.h"
+#import "MDCAlertController+MaterialTheming.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
 #import "MDCAlertControllerView+Private.h"
-#import "MaterialContainerScheme.h"
-#import "MaterialDialogs+Theming.h"
-#import "MaterialDialogs.h"
+#import "MDCSnapshotTestCase.h"
+#import "UIImage+MDCSnapshot.h"
+#import "UIView+MDCSnapshot.h"
+#pragma clang diagnostic pop
+#import "MDCSemanticColorScheme.h"
+#import "MDCContainerScheme.h"
+#import "MDCTypographyScheme.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 static NSString *const kTitleShortLatin = @"Title";
+static NSString *const kTitleLongLatin =
+    @"It's a long long long long long long long long long long long long long long long long long "
+     "long long long title";
 static NSString *const kMessageShortLatin = @"A short message.";
 static NSString *const kMessageLongLatin =
     @"Lorem ipsum dolor sit amet, consul docendi indoctum id quo, ad unum suavitate incorrupte "
      "sea. An his meis consul cotidieque, eam recteque mnesarchum et, mundi volumus cu cum. Quo "
      "falli dicunt an. Praesent molestiae vim ut.";
 
+static NSString *const kMessageVeryLongLatin =
+    @"Lorem ipsum dolor sit amet, consul docendi indoctum id quo, ad unum suavitate incorrupte "
+     "sea. An his meis consul cotidieque, eam recteque mnesarchum et, mundi volumus cu cum. Quo "
+     "falli dicunt an. Praesent molestiae vim ut. Lorem ipsum dolor sit amet, consul docendi "
+     "indoctum id quo, ad unum suavitate incorrupte  sea. An his meis consul cotidieque, eam "
+     "recteque mnesarchum et, mundi volumus cu cum. Quo  falli dicunt an. Praesent molestiae vim "
+     "ut. Lorem ipsum dolor sit amet, consul docendi indoctum id quo, ad unum suavitate incorrupte "
+     "sea. An his meis consul cotidieque, eam recteque mnesarchum et, mundi volumus cu cum. Quo "
+     "falli dicunt an. Praesent molestiae vim ut. Lorem ipsum dolor sit amet, consul docendi "
+     "indoctum id quo, ad unum suavitate incorrupte  sea. An his meis consul cotidieque, eam "
+     "recteque mnesarchum et, mundi volumus cu cum. Quo  falli dicunt an. Praesent molestiae vim "
+     "ut. Lorem ipsum dolor sit amet, consul docendi indoctum id quo, ad unum suavitate incorrupte "
+     "sea. An his meis consul cotidieque, eam recteque mnesarchum et, mundi volumus cu cum. Quo "
+     "falli dicunt an. Praesent molestiae vim ut. Lorem ipsum dolor sit amet, consul docendi "
+     "indoctum id quo, ad unum suavitate incorrupte sea. An his meis consul cotidieque, eam "
+     "recteque mnesarchum et, mundi volumus cu cum. Quo  falli dicunt an. Praesent molestiae vim "
+     "ut.";
+
 @interface MDCAlertControllerConfigurationsTests : MDCSnapshotTestCase
-@property(nonatomic, strong) MDCAlertController *alertController;
-@property(nonatomic, strong) MDCContainerScheme *containerScheme2019;
+@property(nonatomic, strong, nullable) MDCAlertController *alertController;
+@property(nonatomic, strong, nullable) MDCContainerScheme *containerScheme2019;
 @property(nonatomic, strong) UIImage *titleIcon;
 @property(nonatomic, strong) UIImage *titleImage;
 @property(nonatomic, strong) UIView *accessoryView;
@@ -45,12 +77,6 @@ static NSString *const kMessageLongLatin =
 
   self.alertController = [MDCAlertController alertControllerWithTitle:nil message:nil];
   [self addOutlinedActionWithTitle:@"OK"];
-
-  self.alertController.view.bounds = CGRectMake(0.f, 0.f, 300.f, 300.f);
-
-  //  Uncomment to test with the adjustableInsets flag enabled:
-  //    MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
-  //    alertView.enableAdjustableInsets = YES;
 
   self.titleIcon = [[UIImage mdc_testImageOfSize:CGSizeMake(24.f, 24.f)]
       imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
@@ -74,11 +100,7 @@ static NSString *const kMessageLongLatin =
   [super tearDown];
 }
 
-- (void)sizeAlertToFitContent {
-  CGSize preferredContentSize = self.alertController.preferredContentSize;
-  self.alertController.view.bounds =
-      CGRectMake(0.f, 0.f, preferredContentSize.width, preferredContentSize.height);
-}
+#pragma mark - Helpers
 
 - (void)addOutlinedActionWithTitle:(NSString *)actionTitle {
   [self.alertController addAction:[MDCAlertAction actionWithTitle:actionTitle
@@ -86,9 +108,14 @@ static NSString *const kMessageLongLatin =
                                                           handler:nil]];
 }
 
-- (void)generateSizedSnapshotAndVerifyForView:(UIView *)view {
-  [self sizeAlertToFitContent];
-  [self generateSnapshotAndVerifyForView:view];
+- (void)generateHighlightedSnapshotAndVerifyForAlert:(MDCAlertController *)alert {
+  [alert highlightAlertPanels];
+  [self generateSizedSnapshotAndVerifyForAlert:alert];
+}
+
+- (void)generateSizedSnapshotAndVerifyForAlert:(MDCAlertController *)alert {
+  [alert sizeToFitContentInBounds:CGSizeMake(300.0f, 300.0f)];
+  [self generateSnapshotAndVerifyForView:alert.view];
 }
 
 - (void)generateSnapshotAndVerifyForView:(UIView *)view {
@@ -100,6 +127,38 @@ static NSString *const kMessageLongLatin =
 
 - (void)changeToRTL:(MDCAlertController *)alertController {
   [self changeViewToRTL:alertController.view];
+}
+
+- (void)configAlertWithTitleIcon {
+  self.alertController.titleIcon = self.titleIcon;
+  [self configAlertWithResetSettings];
+}
+
+- (void)configAlertWithImageNamed:(NSString *)imageName {
+  NSBundle *bundle = [NSBundle bundleForClass:[MDCAlertControllerConfigurationsTests class]];
+  self.alertController.titleIcon = [UIImage imageNamed:imageName
+                                              inBundle:bundle
+                         compatibleWithTraitCollection:nil];
+  [self configAlertWithResetSettings];
+}
+
+- (void)configAlertWithWideImage {
+  [self configAlertWithImageNamed:@"wide-image"];
+}
+
+- (void)configAlertWithSquareImage {
+  [self configAlertWithImageNamed:@"square-image"];
+}
+
+- (void)configAlertWithLongImage {
+  [self configAlertWithImageNamed:@"long-image"];
+}
+
+- (void)configAlertWithResetSettings {
+  self.alertController.title = @"Reset Settings?";
+  self.alertController.message = @"This will reset your device to its default factory settings.";
+  [self addOutlinedActionWithTitle:@"Cancel"];
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
 }
 
 #pragma mark - Tests
@@ -114,7 +173,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-icon + actions
@@ -126,7 +185,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-image + actions
@@ -139,7 +198,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message + actions
@@ -151,7 +210,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // accessory-view + actions
@@ -164,7 +223,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-icon + message + actions
@@ -178,7 +237,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-image + message + actions
@@ -192,7 +251,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-icon + accessory-view + actions
@@ -205,7 +264,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-image + accessory-view + actions
@@ -219,7 +278,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message + accessory-view + actions
@@ -232,7 +291,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title + accessory-view + actions
@@ -246,7 +305,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title + title-icon + accessory-view + actions
@@ -260,7 +319,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title + title-image + accessory-view + actions
@@ -276,7 +335,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title + title-icon + message + accessory-view + actions
@@ -292,7 +351,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title + title-image + message + accessory-view + actions
@@ -307,7 +366,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-image + vertical actions
@@ -321,7 +380,7 @@ static NSString *const kMessageLongLatin =
 
   // Then
   // Avoid sizing of snapshot view - to allow butttons to auto-align vertically.
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title-icon + message + accessory-view + vertical actions
@@ -339,10 +398,8 @@ static NSString *const kMessageLongLatin =
 
   // Then
   // Ensure enough vertical space for all buttons before layout, then size to fit content.
-  self.alertController.view.bounds = CGRectMake(0.f, 0.f, 300.f, 500.f);
-  [self.alertController.view layoutIfNeeded];
-  [self sizeAlertToFitContent];
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self.alertController sizeToFitContentInBounds:CGSizeMake(300.0f, 500.0f)];
+  [self generateSnapshotAndVerifyForView:self.alertController.view];
 }
 
 // accessory-view + actions in RTL
@@ -355,7 +412,7 @@ static NSString *const kMessageLongLatin =
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // title + title-icon + message + accessory-view + actions in RTL
@@ -372,15 +429,35 @@ static NSString *const kMessageLongLatin =
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
+
+#pragma mark - Use Cases Tests
+
+- (void)testAlertHasAccessoryViewAndCustomInsets {
+  // Given
+  [self addOutlinedActionWithTitle:@"Cancel"];
+  self.alertController.accessoryView = self.accessoryView;
+
+  // When
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+  alertView.contentInsets = UIEdgeInsetsMake(0.f, 20.f, 0.f, 20.f);
+  alertView.actionsInsets = UIEdgeInsetsMake(12.f, 20.f, 16.f, 20.f);
+
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
+
+  // Then
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+#pragma mark - Message Alignment Tests
 
 // message alignment: default alignment is natural
 - (void)testMessageDefaultAlignmentIsNatural {
   // Given
   self.alertController.message = kMessageLongLatin;
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: center
@@ -393,7 +470,7 @@ static NSString *const kMessageLongLatin =
   self.alertController.messageAlignment = NSTextAlignmentCenter;
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: natural
@@ -407,7 +484,7 @@ static NSString *const kMessageLongLatin =
   self.alertController.messageAlignment = NSTextAlignmentNatural;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: natural in RTL
@@ -421,7 +498,7 @@ static NSString *const kMessageLongLatin =
   [self changeToRTL:self.alertController];
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: right
@@ -434,7 +511,7 @@ static NSString *const kMessageLongLatin =
   self.alertController.messageAlignment = NSTextAlignmentRight;
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: right in RTL
@@ -449,7 +526,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: left
@@ -463,7 +540,7 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: left in RTL
@@ -474,8 +551,8 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  self.alertController.messageAlignment = NSTextAlignmentLeft;
   [self changeToRTL:self.alertController];
+  self.alertController.messageAlignment = NSTextAlignmentLeft;
 
   // Then
   self.alertController.view.bounds = CGRectMake(0.f, 0.f, 300.f, 200.f);
@@ -490,11 +567,11 @@ static NSString *const kMessageLongLatin =
   [self.alertController applyThemeWithScheme:self.containerScheme2019];
 
   // When
-  self.alertController.messageAlignment = NSTextAlignmentLeft;
   [self changeToRTL:self.alertController];
+  self.alertController.messageAlignment = NSTextAlignmentLeft;
 
   // Then
-  [self generateSnapshotAndVerifyForView:self.alertController.view];
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
 }
 
 // message alignment: justified
@@ -507,7 +584,448 @@ static NSString *const kMessageLongLatin =
   self.alertController.messageAlignment = NSTextAlignmentJustified;
 
   // Then
-  [self generateSizedSnapshotAndVerifyForView:self.alertController.view];
+  [self generateSizedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+#pragma mark - Title Icon View Tests
+
+// title icon view: default alignment
+- (void)testAlertHasTitleIconViewWithDefaultNaturalAlignment {
+  // Given
+  [self configAlertWithTitleIcon];
+  self.alertController.titleIcon = nil;
+  self.alertController.titleIconView =
+      [[UIView alloc] initWithFrame:CGRectMake(0.f, 0.f, 100.f, 100.f)];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon view: natural alignment
+- (void)testAlertHasTitleIconViewWithCenterAlignment {
+  // Given
+  [self configAlertWithTitleIcon];
+  self.alertController.titleIcon = nil;
+  self.alertController.titleIconView =
+      [[UIView alloc] initWithFrame:CGRectMake(0.f, 0.f, 100.f, 100.f)];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon view: justified alignment
+- (void)testAlertHasTitleIconViewWithJustifiedAlignment {
+  // Given
+  [self configAlertWithTitleIcon];
+  self.alertController.titleIcon = nil;
+  self.alertController.titleIconView =
+      [[UIView alloc] initWithFrame:CGRectMake(0.f, 0.f, 100.f, 100.f)];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+#pragma mark - Title Icon - Default Alignment Tests
+
+// title icon alignment: default to title alignment: center, image: wide
+- (void)testTitleIconAlignmentDefaultIsCenteredForWideImage {
+  // Given
+  [self configAlertWithWideImage];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: center, image: square
+- (void)testTitleIconAlignmentDefaultIsCenteredForSquareImage {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: center, image: long
+- (void)testTitleIconAlignmentDefaultIsCenteredForLongImage {
+  // Given
+  [self configAlertWithLongImage];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: center, image: long, insets: custom
+- (void)testTitleIconAlignmentDefaultIsCenteredForLongImageWithCustomInsets {
+  // Given
+  [self configAlertWithLongImage];
+
+  // When
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+  alertView.titleInsets = UIEdgeInsetsMake(0.f, 0.f, 10.f, 0.f);
+  self.alertController.titleAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: center
+- (void)testTitleIconAlignmentDefaultIsCenteredWithCenteredTitle {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: natural
+- (void)testTitleIconAlignmentDefaultIsNaturalWithNaturalTitle {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentNatural;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: justified
+- (void)testTitleIconAlignmentDefaultIsJustifiedWithJustifiedTitle {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentJustified;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: left
+- (void)testTitleIconAlignmentDefaultIsLeftWithLeftTitle {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentLeft;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: right
+- (void)testTitleIconAlignmentDefaultIsRightWithRightTitle {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentRight;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: natural in RTL
+- (void)testTitleIconAlignmentDefaultIsNaturalWithNaturalTitleInRTL {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentNatural;
+  [self changeToRTL:self.alertController];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: left in RTL
+- (void)testTitleIconAlignmentDefaultIsLeftWithLeftTitleInRTL {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentLeft;
+  [self changeToRTL:self.alertController];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: default to title alignment: right - in RTL
+- (void)testTitleIconAlignmentDefaultIsRightWithRightTitleInRTL {
+  // Given
+  [self configAlertWithTitleIcon];
+
+  // When
+  self.alertController.titleAlignment = NSTextAlignmentRight;
+  [self changeToRTL:self.alertController];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+#pragma mark - Title Icon - Custom Alignment Tests
+
+// title icon alignment: Center
+- (void)testTitleIconAlignmentIsCentered {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentCenter;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Natural
+- (void)testTitleIconAlignmentIsNatural {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentNatural;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Left
+- (void)testTitleIconAlignmentIsLeft {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentLeft;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Natural in RTL
+- (void)testTitleIconAlignmentIsNaturalInRTL {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentNatural;
+  [self changeToRTL:self.alertController];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Left in RTL
+- (void)testTitleIconAlignmentIsLeftInRTL {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentLeft;
+  [self changeToRTL:self.alertController];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. Content mode: scale to fill
+- (void)testTitleIconAlignmentIsJustifiedContentModeAspectFill {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  self.alertController.titleIconImageView.contentMode = UIViewContentModeScaleToFill;
+  self.alertController.titleIconImageView.clipsToBounds = YES;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. Content mode: scale aspect fill
+- (void)testTitleIconAlignmentIsJustifiedContentModeScaleAspectFill {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  self.alertController.titleIconImageView.contentMode = UIViewContentModeScaleAspectFill;
+  self.alertController.titleIconImageView.clipsToBounds = YES;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. Content mode: scale aspect fit
+- (void)testTitleIconAlignmentIsJustifiedContentModeScaleAspectFit {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  self.alertController.titleIconImageView.contentMode = UIViewContentModeScaleAspectFit;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. Content mode: left
+- (void)testTitleIconAlignmentIsJustifiedContentModeLeft {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  self.alertController.titleIconImageView.contentMode = UIViewContentModeLeft;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. Content mode: right
+- (void)testTitleIconAlignmentIsJustifiedContentModeRight {
+  // Given
+  [self configAlertWithSquareImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  self.alertController.titleIconImageView.contentMode = UIViewContentModeRight;
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. image: extra wide
+- (void)testTitleIconAlignmentIsJustifiedAndWideImageResized {
+  // Given
+  [self configAlertWithWideImage];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  // Recalculate layout and adjust the snapshot size to fit the new dialog size.
+  [self.alertController sizeToFitContentInBounds:CGSizeMake(300.0f, 300.0f)];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// title icon alignment: Justified. image: extra wide, extra tall
+- (void)testTitleIconAlignmentIsJustifiedAndSquareImageResized {
+  // Given
+  self.alertController.titleIcon = [[UIImage mdc_testImageOfSize:CGSizeMake(400.f, 360.f)]
+      imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
+  [self configAlertWithResetSettings];
+
+  // When
+  self.alertController.titleIconAlignment = NSTextAlignmentJustified;
+  // Recalculate layout and adjust the snapshot size to fit the new dialog size.
+  [self.alertController sizeToFitContentInBounds:CGSizeMake(300.0f, 300.0f)];
+
+  // Then
+  [self generateHighlightedSnapshotAndVerifyForAlert:self.alertController];
+}
+
+// Min title
+- (void)testMinSizeDialog {
+  // Given
+  [self addOutlinedActionWithTitle:@"Cancel"];
+  self.alertController.title = @"A";
+
+  // When
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
+
+  // Then
+  [self.alertController sizeToFitContentInBounds:CGSizeMake(100.0f, 100.0f)];
+  [self generateSnapshotAndVerifyForView:self.alertController.view];
+}
+
+// Max size message
+- (void)testMaxSizeDialog {
+  // Given
+  [self addOutlinedActionWithTitle:@"Cancel"];
+  self.alertController.title = kTitleLongLatin;
+  self.alertController.message = kMessageVeryLongLatin;
+
+  // When
+  [self.alertController applyThemeWithScheme:self.containerScheme2019];
+
+  // Then
+  [self.alertController sizeToFitContentInBounds:CGSizeMake(1000.0f, 1000.0f)];
+  [self generateSnapshotAndVerifyForView:self.alertController.view];
+}
+
+// Test scrolling when title does not scroll with message
+- (void)testScrollingWhenTitlePinsToTop {
+  // Given
+  [self addOutlinedActionWithTitle:@"Cancel"];
+  self.alertController.title = kTitleLongLatin;
+  self.alertController.message = kMessageVeryLongLatin;
+
+  // When
+  self.alertController.titlePinsToTop = YES;
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+  CGPoint bottomOffset = CGPointMake(0, 50);
+  [alertView.contentScrollView setContentOffset:bottomOffset];
+
+  // Then
+  self.alertController.view.bounds = CGRectMake(0.f, 0.f, 300.f, 300.f);
+  [self generateSnapshotAndVerifyForView:self.alertController.view];
+}
+
+// Test scrolling when message and title scroll together
+- (void)testScrollingWhenTitleScrolls {
+  // Given
+  [self addOutlinedActionWithTitle:@"Cancel"];
+  self.alertController.title = kTitleLongLatin;
+  self.alertController.message = kMessageVeryLongLatin;
+
+  // When
+  self.alertController.titlePinsToTop = NO;
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+  CGPoint bottomOffset = CGPointMake(0, 50);
+  [alertView.contentScrollView setContentOffset:bottomOffset];
+
+  // Then
+  self.alertController.view.bounds = CGRectMake(0.f, 0.f, 300.f, 300.f);
+  [self generateSnapshotAndVerifyForView:self.alertController.view];
+}
+
+// Test scrolling when message and title scroll together with icon
+- (void)testScrollingWhenTitleScrollsWithIcon {
+  // Given
+  self.alertController.titleIcon = self.titleIcon;
+  self.alertController.title = kTitleLongLatin;
+  self.alertController.message = kMessageVeryLongLatin;
+
+  // When
+  self.alertController.titlePinsToTop = NO;
+  MDCAlertControllerView *alertView = (MDCAlertControllerView *)self.alertController.view;
+  CGPoint bottomOffset = CGPointMake(0, 50);
+  [alertView.contentScrollView setContentOffset:bottomOffset];
+
+  // Then
+  self.alertController.view.bounds = CGRectMake(0.f, 0.f, 300.f, 300.f);
+  [self generateSnapshotAndVerifyForView:self.alertController.view];
 }
 
 @end
+
+NS_ASSUME_NONNULL_END

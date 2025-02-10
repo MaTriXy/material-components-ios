@@ -14,6 +14,12 @@
 
 #import <UIKit/UIKit.h>
 
+API_DEPRECATED_BEGIN(
+    "🕘 Schedule time to migrate. "
+    "Use default system highlight behavior instead: go/material-ios-touch-response. "
+    "This is go/material-ios-migrations#not-scriptable 🕘",
+    ios(12, 12))
+
 /**
  Custom gesture recognizer to observe the various ink response states.
 
@@ -21,7 +27,8 @@
  fails if the touch moves outside the recongizer's view. Multiple touches will cause the
  recognizer to transition to the UIGestureRecognizerStateCancelled state.
  */
-@interface MDCInkGestureRecognizer : UIGestureRecognizer
+__deprecated_msg("Please use MDCRippleTouchController instead.") @interface MDCInkGestureRecognizer
+    : UIGestureRecognizer
 
 /**
  Set the distance that causes the recognizer to cancel.
@@ -57,3 +64,5 @@
 - (BOOL)isTouchWithinTargetBounds;
 
 @end
+
+API_DEPRECATED_END

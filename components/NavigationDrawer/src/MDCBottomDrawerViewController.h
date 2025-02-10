@@ -13,9 +13,12 @@
 // limitations under the License.
 
 #import <UIKit/UIKit.h>
+#import "MaterialElevation.h"
 #import "MDCBottomDrawerPresentationController.h"
 #import "MDCBottomDrawerState.h"
-#import "MaterialElevation.h"
+// TODO(b/151929968): Delete import of delegate headers when client code has been migrated to no
+// longer import delegates as transitive dependencies.
+#import "MDCBottomDrawerViewControllerDelegate.h"
 #import "MaterialShadowElevations.h"
 
 @protocol MDCBottomDrawerHeader;
@@ -28,6 +31,9 @@
     : UIViewController <MDCBottomDrawerPresentationControllerDelegate,
                         MDCElevatable,
                         MDCElevationOverriding>
+
+// NOTE: Setting several of the properties here doesn't set any internal state, instead,
+// it forwards the value to the presentation controller, assuming it's of the expected type.
 
 /**
  The main content displayed by the drawer.
@@ -42,6 +48,11 @@
 @property(nonatomic, nullable) UIViewController<MDCBottomDrawerHeader> *headerViewController;
 
 /**
+ A scroll view contained within the contentViewController.
+
+ If the contentViewController contains a UIScrollView or UIScrollView subclass it is recommended to
+ set that scroll view as the tracking scroll view.
+
  Setting the tracking scroll view allows the drawer scroll the content seamlessly as part of
  the drawer movement. This allows the provided scroll view to load the visible
  content as the drawer moves, and therefore not load all the content at once
@@ -58,6 +69,18 @@
  The color applied to the background scrim.
  */
 @property(nonatomic, strong, nullable) UIColor *scrimColor;
+
+/**
+ If @c YES, then the dimmed scrim view will act as an accessibility element for dismissing the
+ bottom drawer.
+ Default is NO.
+ */
+@property(nonatomic, assign) BOOL isScrimAccessibilityElement;
+
+/**
+ The @c accessibilityLabel value of the dimmed scrim view.
+ */
+@property(nullable, nonatomic, copy) NSString *scrimAccessibilityLabel;
 
 /**
  A Boolean value that determines whether the top handle of the drawer is hidden.
@@ -87,11 +110,34 @@
 @property(nonatomic, assign) CGFloat maximumInitialDrawerHeight;
 
 /**
+ The absolute height in points to which the drawer may expand when a user scrolls.
+
+ Defaults to 0, indicating no value has been set and it should use the default behavior of 100% of
+ the screen's height.
+
+ Once the maximumDrawerHeight is reached the drawer state will return @c
+ MDCBottomDrawerStateExpanded.
+
+ If the value is larger than the container's height, this will allow the drawer to be scrolled to
+ the full height of the container.
+ */
+@property(nonatomic, assign) CGFloat maximumDrawerHeight;
+
+/**
  A flag allowing clients to opt-out of the drawer closing when the user taps outside the content.
 
  @default YES The drawer should dismiss on tap.
  */
 @property(nonatomic, assign) BOOL dismissOnBackgroundTap;
+
+/**
+ A flag allowing clients to opt-out of the drawer closing when user uses accessibility escape
+ gesture. If set to NO, you can alternatively set an accessibility escape action by implementing the
+ @c accessibilityPerformEscape method in your provided contentViewController.
+
+ @default YES The drawer dismisses on z-gesture.
+ */
+@property(nonatomic, assign) BOOL shouldDismissOnAccessibilityPerformEscape;
 
 /**
  A flag allowing clients to opt-in to handling background touch events.
@@ -130,10 +176,17 @@
 
  Note: This flag is only applicable when @c headerViewController is nil. If @c headerViewController
  is non-nil, setting this flag to YES will have no effect.
- 
+
  Defaults to NO.
 */
 @property(nonatomic, assign) BOOL shouldUseStickyStatusBar;
+
+/**
+ This flag allows clients to have the drawer not go full screen when VoiceOver is enabled.
+
+ Defaults to NO.
+ */
+@property(nonatomic, assign) BOOL disableFullScreenVoiceOver;
 
 /**
  The drawer's top shadow color. Defaults to black with 20% opacity.
@@ -165,6 +218,34 @@
  Defaults to NO.
  */
 @property(nonatomic, assign) BOOL shouldAdjustOnContentSizeChange;
+
+/**
+ Whether layout adjustments should be made to support iPad Slide Over.
+
+ Defaults to NO to maintain the same behavior that existed before this property
+ was added and to allow apps to migrate on their own schedule.
+ */
+@property(nonatomic) BOOL adjustLayoutForIPadSlideOver;
+
+/**
+ Whether to display mobile landscape view as fullscreen.
+
+ When enabled, the drawer will fill the screen in landscape on mobile devices.
+
+ Defaults to YES.
+*/
+@property(nonatomic) BOOL shouldDisplayMobileLandscapeFullscreen;
+
+/** Whether the drawer allows the user to drag it or not. */
+@property(nonatomic) BOOL userDraggingEnabled;
+
+/**
+ * Whether the drawer allows the user to swipe down to dismiss it or not.
+ *
+ * Seting this to NO means that the drawer will just bounce back up when the user tries to
+ * swipe it down past its resistance point. Defaults to YES.
+ */
+@property(nonatomic) BOOL swipeToDismissEnabled;
 
 /**
  Sets the top corners radius for an MDCBottomDrawerState drawerState
@@ -217,83 +298,5 @@
 @property(nonatomic, copy, nullable) void (^traitCollectionDidChangeBlock)
     (MDCBottomDrawerViewController *_Nonnull bottomDrawer,
      UITraitCollection *_Nullable previousTraitCollection);
-
-@end
-
-/**
- Delegate for MDCBottomDrawerViewController.
- */
-@protocol MDCBottomDrawerViewControllerDelegate <NSObject>
-
-@optional
-/**
- Called when the top inset of the drawer changes due to size changes when moving into full screen
- to cover the status bar and safe area inset. Also if there is a top handle, the top inset will
- take into regards the handle height. The top inset indicates where the content can be safely
- laid out without it being clipped.
-
- @param controller The MDCBottomDrawerViewController.
- @param topInset The top inset in which the content should take into regards when being laid out.
- */
-- (void)bottomDrawerControllerDidChangeTopInset:(nonnull MDCBottomDrawerViewController *)controller
-                                       topInset:(CGFloat)topInset;
-
-/**
- Called when the y-offset of the visible contents of the drawer (excluding shadow & scrim) have
- changed. This is triggered when the drawer is presented and dismissed as well as when the content
- is being dragged interactively.
-
- @param controller The MDCBottomDrawerViewController.
- @param yOffset The y-Offset of the top of the visible contents of the drawer.
- */
-- (void)bottomDrawerControllerDidChangeTopYOffset:
-            (nonnull MDCBottomDrawerViewController *)controller
-                                          yOffset:(CGFloat)yOffset;
-
-/**
- Called when the bottom drawer will begin animating to an open state. This is triggered when the VC
- is being presented. Add animations and/or completion to the transitionCoordinator to cause them to
- animate/complete alongside the drawer animation.
-
- @param controller The MDCBottomDrawerViewController.
- @param transitionCoordinator The transitionCoordinator handling the presentation transition.
- @param targetYOffset The target yOffset of the content after the animation completes.
- */
-- (void)bottomDrawerControllerWillTransitionOpen:(nonnull MDCBottomDrawerViewController *)controller
-                                 withCoordinator:
-                                     (nullable id<UIViewControllerTransitionCoordinator>)
-                                         transitionCoordinator
-                                   targetYOffset:(CGFloat)targetYOffset;
-
-/**
- Called when the bottom drawer has completed animating to the open state.
-
- @param controller The MDCBottomDrawerViewController.
- */
-- (void)bottomDrawerControllerDidEndOpenTransition:
-    (nonnull MDCBottomDrawerViewController *)controller;
-
-/**
- Called when the bottom drawer will begin animating to a closed state. This is triggered when the VC
- is being dismissed. Add animations and/or completion to the transitionCoordinator to cause them to
- animate/complete alongside the drawer animation.
-
- @param controller The MDCBottomDrawerViewController.
- @param transitionCoordinator The transitionCoordinator handling the presentation transition.
- @param targetYOffset The target yOffset of the content after the animation completes.
- */
-- (void)
-    bottomDrawerControllerWillTransitionClosed:(nonnull MDCBottomDrawerViewController *)controller
-                               withCoordinator:(nullable id<UIViewControllerTransitionCoordinator>)
-                                                   transitionCoordinator
-                                 targetYOffset:(CGFloat)targetYOffset;
-
-/**
- Called when the bottom drawer has completed animating to the closed state.
-
- @param controller The MDCBottomDrawerViewController.
- */
-- (void)bottomDrawerControllerDidEndCloseTransition:
-    (nonnull MDCBottomDrawerViewController *)controller;
 
 @end

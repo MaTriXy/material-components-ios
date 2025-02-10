@@ -12,12 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#import "MaterialBottomSheet.h"
+#import "MDCBottomSheetController.h"
 
 #import <XCTest/XCTest.h>
 
-#import "../../src/private/MDCSheetContainerView.h"
-#import "MaterialShadowElevations.h"
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "UIViewController+MaterialBottomSheet.h"
+#import "MDCSheetContainerView.h"
+#pragma clang diagnostic pop
+#import "MDCBottomSheetPresentationController.h"
+
+NS_ASSUME_NONNULL_BEGIN
 
 /** Used to test the elevation @c MDCBottomSheetPresentationController and it's @c sheetView. */
 @interface MDCBottomSheetPresentationController (MDCElevationTesting)
@@ -93,4 +99,68 @@
   XCTAssertEqualObjects(self.presentationController.scrimColor, scrimColor);
 }
 
+// Test that the presentation controller's and sheet view's adjustHeightForSafeAreaInsets is set to
+// YES as the default.
+- (void)testDefaultadjustHeightForSafeAreaInsetsSheet {
+  // When
+  // Ensure that the presentation controller is allocated after the bottom sheet because the
+  // property is set on the presentation controller via the transition controller which keeps
+  // references to the properties it sets on the presentaiton controller but not the presentation
+  // conrollter itself.
+  self.presentationController = self.bottomSheet.mdc_bottomSheetPresentationController;
+
+  // Ensure that the bottom sheet has created all of the necessary internal storage for
+  // presentation by pretending to start the presentation.
+  [self.presentationController presentationTransitionWillBegin];
+
+  // Then
+  XCTAssertTrue(self.bottomSheet.adjustHeightForSafeAreaInsets);
+  XCTAssertTrue(self.presentationController.adjustHeightForSafeAreaInsets);
+  XCTAssertTrue(self.presentationController.sheetView.adjustHeightForSafeAreaInsets);
+}
+
+// Test that the presentation controller's and sheet view's adjustHeightForSafeAreaInsets is set to
+// NO when it is set on the sheet.
+- (void)testSettingadjustHeightForSafeAreaInsetsSheetNo {
+  // When
+  self.bottomSheet.adjustHeightForSafeAreaInsets = NO;
+
+  // Ensure that the presentation controller is allocated after the bottom sheet because the
+  // property is set on the presentation controller via the transition controller which keeps
+  // references to the properties it sets on the presentaiton controller but not the presentation
+  // conrollter itself.
+  self.presentationController = self.bottomSheet.mdc_bottomSheetPresentationController;
+
+  // Ensure that the bottom sheet has created all of the necessary internal storage for
+  // presentation by pretending to start the presentation.
+  [self.presentationController presentationTransitionWillBegin];
+
+  // Then
+  XCTAssertFalse(self.presentationController.adjustHeightForSafeAreaInsets);
+  XCTAssertFalse(self.presentationController.sheetView.adjustHeightForSafeAreaInsets);
+}
+
+// Test that the presentation controller's and sheet view's adjustHeightForSafeAreaInsets is set to
+// YES when it is set on the sheet.
+- (void)testSettingadjustHeightForSafeAreaInsetsSheetYes {
+  // When
+  self.bottomSheet.adjustHeightForSafeAreaInsets = YES;
+
+  // Ensure that the presentation controller is allocated after the bottom sheet because the
+  // property is set on the presentation controller via the transition controller which keeps
+  // references to the properties it sets on the presentaiton controller but not the presentation
+  // conrollter itself.
+  self.presentationController = self.bottomSheet.mdc_bottomSheetPresentationController;
+
+  // Ensure that the bottom sheet has created all of the necessary internal storage for
+  // presentation by pretending to start the presentation.
+  [self.presentationController presentationTransitionWillBegin];
+
+  // Then
+  XCTAssertTrue(self.presentationController.adjustHeightForSafeAreaInsets);
+  XCTAssertTrue(self.presentationController.sheetView.adjustHeightForSafeAreaInsets);
+}
+
 @end
+
+NS_ASSUME_NONNULL_END

@@ -51,7 +51,7 @@
   // Then
   XCTAssertNotNil(self.baseCell.rippleView);
   XCTAssertEqualObjects(self.baseCell.rippleView.rippleColor,
-                        [UIColor colorWithWhite:0 alpha:(CGFloat)0.16]);
+                        [UIColor colorWithWhite:0 alpha:(CGFloat)0.12]);
   XCTAssertEqual(self.baseCell.rippleView.rippleStyle, MDCRippleStyleBounded);
   XCTAssertFalse(self.baseCell.enableRippleBehavior);
   XCTAssertNil(self.baseCell.rippleView.superview);
@@ -71,7 +71,7 @@
   // Then
   XCTAssertNotNil(self.baseCell.rippleView);
   XCTAssertEqualObjects(self.baseCell.rippleView.rippleColor,
-                        [UIColor colorWithWhite:0 alpha:(CGFloat)0.16]);
+                        [UIColor colorWithWhite:0 alpha:(CGFloat)0.12]);
   XCTAssertEqual(self.baseCell.rippleView.rippleStyle, MDCRippleStyleBounded);
   XCTAssertTrue(self.baseCell.enableRippleBehavior);
   XCTAssertNotNil(self.baseCell.rippleView.superview);
@@ -158,7 +158,7 @@
   const CGFloat finalElevation = 6;
   self.baseCell.elevation = finalElevation - 1;
   __block CGFloat newElevation = -1;
-  self.baseCell.mdc_elevationDidChangeBlock = ^(MDCBaseCell *cell, CGFloat elevation) {
+  self.baseCell.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     newElevation = elevation;
   };
 
@@ -173,7 +173,7 @@
   // Given
   self.baseCell.elevation = 5;
   __block BOOL blockCalled = NO;
-  self.baseCell.mdc_elevationDidChangeBlock = ^(MDCBaseCell *object, CGFloat elevation) {
+  self.baseCell.mdc_elevationDidChangeBlock = ^(id<MDCElevatable> _, CGFloat elevation) {
     blockCalled = YES;
   };
 

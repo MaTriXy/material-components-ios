@@ -14,10 +14,16 @@
 
 #import "MDCBottomDrawerViewController.h"
 
-#import "MDCBottomDrawerTransitionController.h"
-#import "MaterialMath.h"
-#import "MaterialUIMetrics.h"
 #import "private/MDCBottomDrawerHeaderMask.h"
+#import "UIView+MaterialElevationResponding.h"
+#import "MDCBottomDrawerPresentationController.h"
+#import "MDCBottomDrawerPresentationControllerDelegate.h"
+#import "MDCBottomDrawerState.h"
+#import "MDCBottomDrawerTransitionController.h"
+#import "MDCBottomDrawerViewControllerDelegate.h"
+#import "MDCShadowElevations.h"
+#import "MDCMath.h"
+#import "MDCLayoutMetrics.h"
 
 @interface MDCBottomDrawerViewController () <MDCBottomDrawerPresentationControllerDelegate>
 
@@ -64,12 +70,15 @@
   _maskLayer = [[MDCBottomDrawerHeaderMask alloc] initWithMaximumCornerRadius:0
                                                           minimumCornerRadius:0];
   _maximumInitialDrawerHeight = 0;
+  _maximumDrawerHeight = 0;
   _drawerShadowColor = [UIColor.blackColor colorWithAlphaComponent:(CGFloat)0.2];
   _elevation = MDCShadowElevationNavDrawer;
   _mdc_overrideBaseElevation = -1;
 
   _dismissOnBackgroundTap = YES;
+  _shouldDismissOnAccessibilityPerformEscape = YES;
   _shouldForwardBackgroundTouchEvents = NO;
+  _shouldDisplayMobileLandscapeFullscreen = YES;
   _isDrawerClosed = YES;
   _lastOffset = NSNotFound;
 }
@@ -160,14 +169,52 @@
   }
 }
 
+- (void)setIsScrimAccessibilityElement:(BOOL)isScrimAccessibilityElement {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.isScrimAccessibilityElement = isScrimAccessibilityElement;
+  }
+}
+
+- (BOOL)isScrimAccessibilityElement {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    return bottomDrawerPresentationController.isScrimAccessibilityElement;
+  }
+  return NO;
+}
+
+- (void)setScrimAccessibilityLabel:(NSString *)scrimAccessibilityLabel {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.scrimAccessibilityLabel = scrimAccessibilityLabel;
+  }
+}
+
+- (NSString *)scrimAccessibilityLabel {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    return bottomDrawerPresentationController.scrimAccessibilityLabel;
+  }
+  return nil;
+}
+
 - (BOOL)isAccessibilityMode {
+  if (self.disableFullScreenVoiceOver) {
+    return NO;
+  }
   return UIAccessibilityIsVoiceOverRunning() || UIAccessibilityIsSwitchControlRunning();
 }
 - (BOOL)isMobileLandscape {
   return self.traitCollection.verticalSizeClass == UIUserInterfaceSizeClassCompact;
 }
 - (BOOL)shouldPresentFullScreen {
-  return [self isAccessibilityMode] || [self isMobileLandscape];
+  return [self isAccessibilityMode] ||
+         (self.shouldDisplayMobileLandscapeFullscreen && [self isMobileLandscape]);
 }
 
 - (BOOL)contentReachesFullScreen {
@@ -206,6 +253,15 @@
   }
 }
 
+- (void)setMaximumDrawerHeight:(CGFloat)maximumDrawerHeight {
+  _maximumDrawerHeight = maximumDrawerHeight;
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.maximumDrawerHeight = maximumDrawerHeight;
+  }
+}
+
 - (void)setDismissOnBackgroundTap:(BOOL)dismissOnBackgroundTap {
   _dismissOnBackgroundTap = dismissOnBackgroundTap;
   if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
@@ -217,6 +273,12 @@
 
 - (void)setShouldForwardBackgroundTouchEvents:(BOOL)shouldForwardBackgroundTouchEvents {
   _shouldForwardBackgroundTouchEvents = shouldForwardBackgroundTouchEvents;
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.shouldForwardBackgroundTouchEvents =
+        self.shouldForwardBackgroundTouchEvents;
+  }
   if (shouldForwardBackgroundTouchEvents) {
     [self setDismissOnBackgroundTap:NO];
   }
@@ -277,6 +339,42 @@
   }
 }
 
+- (BOOL)userDraggingEnabled {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    return bottomDrawerPresentationController.userDraggingEnabled;
+  } else {
+    return YES;
+  }
+}
+
+- (void)setUserDraggingEnabled:(BOOL)userDraggingEnabled {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.userDraggingEnabled = userDraggingEnabled;
+  }
+}
+
+- (BOOL)swipeToDismissEnabled {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    return bottomDrawerPresentationController.swipeToDismissEnabled;
+  } else {
+    return YES;
+  }
+}
+
+- (void)setSwipeToDismissEnabled:(BOOL)swipeToDismissEnabled {
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.swipeToDismissEnabled = swipeToDismissEnabled;
+  }
+}
+
 - (void)setShouldIncludeSafeAreaInContentHeight:(BOOL)shouldIncludeSafeAreaInContentHeight {
   _shouldIncludeSafeAreaInContentHeight = shouldIncludeSafeAreaInContentHeight;
   if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
@@ -307,6 +405,15 @@
   }
 }
 
+- (void)setDisableFullScreenVoiceOver:(BOOL)disableFullScreenVoiceOver {
+  _disableFullScreenVoiceOver = disableFullScreenVoiceOver;
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.disableFullScreenVoiceOver = disableFullScreenVoiceOver;
+  }
+}
+
 - (void)setShouldAdjustOnContentSizeChange:(BOOL)shouldAdjustOnContentSizeChange {
   _shouldAdjustOnContentSizeChange = shouldAdjustOnContentSizeChange;
   if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
@@ -321,6 +428,10 @@
 
 // Adds the Z gesture for dismissal.
 - (BOOL)accessibilityPerformEscape {
+  if (!self.shouldDismissOnAccessibilityPerformEscape) {
+    return NO;
+  }
+
   [self.presentingViewController dismissViewControllerAnimated:YES completion:nil];
   return YES;
 }
@@ -346,6 +457,12 @@
   _isDrawerClosed = YES;
   if ([self.delegate respondsToSelector:@selector(bottomDrawerControllerDidEndCloseTransition:)]) {
     [self.delegate bottomDrawerControllerDidEndCloseTransition:self];
+  }
+}
+
+- (void)bottomDrawerDidTapScrim:(MDCBottomDrawerPresentationController *)presentationController {
+  if ([self.delegate respondsToSelector:@selector(bottomDrawerControllerDidTapScrim:)]) {
+    [self.delegate bottomDrawerControllerDidTapScrim:self];
   }
 }
 
@@ -405,9 +522,7 @@
 
 - (void)contentDrawerTopInset:(CGFloat)transitionToTop {
   CGFloat topInset = MDCFixedStatusBarHeightOnPreiPhoneXDevices;
-  if (@available(iOS 11.0, *)) {
-    topInset = self.view.safeAreaInsets.top;
-  }
+  topInset = self.view.safeAreaInsets.top;
 
   if ([self contentReachesFullScreen]) {
     topInset -= ((CGFloat)1.0 - transitionToTop) * topInset;
@@ -439,6 +554,26 @@
         (MDCBottomDrawerPresentationController *)self.presentationController;
     [bottomDrawerPresentationController expandToFullscreenWithDuration:duration
                                                             completion:completion];
+  }
+}
+
+- (void)setAdjustLayoutForIPadSlideOver:(BOOL)adjustLayoutForIPadSlideOver {
+  _adjustLayoutForIPadSlideOver = adjustLayoutForIPadSlideOver;
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.adjustLayoutForIPadSlideOver =
+        self.adjustLayoutForIPadSlideOver;
+  }
+}
+
+- (void)setShouldDisplayMobileLandscapeFullscreen:(BOOL)shouldDisplayMobileLandscapeFullscreen {
+  _shouldDisplayMobileLandscapeFullscreen = shouldDisplayMobileLandscapeFullscreen;
+  if ([self.presentationController isKindOfClass:[MDCBottomDrawerPresentationController class]]) {
+    MDCBottomDrawerPresentationController *bottomDrawerPresentationController =
+        (MDCBottomDrawerPresentationController *)self.presentationController;
+    bottomDrawerPresentationController.shouldDisplayMobileLandscapeFullscreen =
+        self.shouldDisplayMobileLandscapeFullscreen;
   }
 }
 

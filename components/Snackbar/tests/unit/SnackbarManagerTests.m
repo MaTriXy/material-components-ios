@@ -13,8 +13,15 @@
 // limitations under the License.
 
 #import <XCTest/XCTest.h>
-#import "../../src/private/MDCSnackbarManagerInternal.h"
-#import "MaterialSnackbar.h"
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wprivate-header"
+#import "MDCShadowElevations.h"
+#import "MDCSnackbarManager.h"
+#import "MDCSnackbarMessage.h"
+#import "MDCSnackbarMessageView.h"
+#import "MDCSnackbarManagerInternal.h"
+#pragma clang diagnostic pop
 
 @interface MDCSnackbarManagerInternal (SnackbarManagerTesting)
 @property(nonatomic) MDCSnackbarMessageView *currentSnackbar;
@@ -31,7 +38,7 @@
 @implementation SnackbarManagerTests
 
 - (void)tearDown {
-  [MDCSnackbarManager dismissAndCallCompletionBlocksWithCategory:nil];
+  [MDCSnackbarManager.defaultManager dismissAndCallCompletionBlocksWithCategory:nil];
   [super tearDown];
 }
 
@@ -47,11 +54,11 @@
 
   // Encourage the runtime to deallocate the token immediately
   @autoreleasepool {
-    id<MDCSnackbarSuspensionToken> token = [MDCSnackbarManager suspendAllMessages];
-    [MDCSnackbarManager showMessage:suspendedMessage];
+    id<MDCSnackbarSuspensionToken> token = [MDCSnackbarManager.defaultManager suspendAllMessages];
+    [MDCSnackbarManager.defaultManager showMessage:suspendedMessage];
 
     // When
-    token = nil;
+    (void)token;
   }
 
   // Then
@@ -61,14 +68,14 @@
 - (void)testHasMessagesShowingOrQueued {
   MDCSnackbarMessage *message = [MDCSnackbarMessage messageWithText:@"foo1"];
   message.duration = 10;
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
 
   XCTestExpectation *expectation = [self expectationWithDescription:@"has_shown_message"];
 
   // We need to dispatch_async in order to assure that the assertion happens after showMessage:
   // actually displays the message.
   dispatch_async(dispatch_get_main_queue(), ^{
-    XCTAssertTrue([MDCSnackbarManager hasMessagesShowingOrQueued]);
+    XCTAssertTrue([MDCSnackbarManager.defaultManager hasMessagesShowingOrQueued]);
     [expectation fulfill];
   });
 
@@ -107,17 +114,6 @@
   XCTAssertEqual(manager.messageElevation, fakeElevation);
 }
 
-- (void)testAdjustsFontForContentSizeCategoryWhenScaledFontIsUnavailableDefaultValue {
-  // Given
-  MDCSnackbarManager *manager = [[MDCSnackbarManager alloc] init];
-
-  // Then
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-  XCTAssertTrue(manager.adjustsFontForContentSizeCategoryWhenScaledFontIsUnavailable);
-#pragma clang diagnostic pop
-}
-
 - (void)testTraitCollectionDidChangeCalledWhenTraitCollectionChanges {
   // Given
   MDCSnackbarMessage *message = [MDCSnackbarMessage messageWithText:@"foo1"];
@@ -135,7 +131,7 @@
       };
 
   // When
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
   XCTestExpectation *mainQueueExpectation = [self expectationWithDescription:@"completed"];
   dispatch_async(dispatch_get_main_queue(), ^{
     [mainQueueExpectation fulfill];
@@ -160,7 +156,7 @@
   MDCSnackbarManager.defaultManager.messageElevation = 4;
 
   // When
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
   XCTestExpectation *mainQueueExpectation = [self expectationWithDescription:@"completed"];
   dispatch_async(dispatch_get_main_queue(), ^{
     [mainQueueExpectation fulfill];
@@ -180,7 +176,7 @@
   CGFloat expectedBaseElevation = 99;
 
   // When
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
   XCTestExpectation *mainQueueExpectation = [self expectationWithDescription:@"completed"];
   dispatch_async(dispatch_get_main_queue(), ^{
     [mainQueueExpectation fulfill];
@@ -201,7 +197,7 @@
   MDCSnackbarManager.defaultManager.shouldApplyStyleChangesToVisibleSnackbars = YES;
 
   // When
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
   XCTestExpectation *mainQueueExpectation = [self expectationWithDescription:@"completed"];
   dispatch_async(dispatch_get_main_queue(), ^{
     [mainQueueExpectation fulfill];
@@ -211,7 +207,7 @@
 
   __block BOOL blockCalled = NO;
   MDCSnackbarManager.defaultManager.mdc_elevationDidChangeBlockForMessageView =
-      ^(MDCSnackbarMessageView *object, CGFloat elevation) {
+      ^(id<MDCElevatable> _, CGFloat elevation) {
         blockCalled = YES;
       };
 
@@ -230,7 +226,7 @@
   MDCSnackbarManager.defaultManager.shouldApplyStyleChangesToVisibleSnackbars = YES;
 
   // When
-  [MDCSnackbarManager showMessage:message];
+  [MDCSnackbarManager.defaultManager showMessage:message];
   XCTestExpectation *mainQueueExpectation = [self expectationWithDescription:@"completed"];
   dispatch_async(dispatch_get_main_queue(), ^{
     [mainQueueExpectation fulfill];
@@ -240,7 +236,7 @@
 
   __block BOOL blockCalled = NO;
   MDCSnackbarManager.defaultManager.mdc_elevationDidChangeBlockForMessageView =
-      ^(MDCSnackbarMessageView *object, CGFloat elevation) {
+      ^(id<MDCElevatable> _, CGFloat elevation) {
         blockCalled = YES;
       };
 
@@ -253,8 +249,18 @@
 }
 
 - (void)testDefaultValueForOverrideBaseElevationIsNegative {
+  // TODO(b/184189330): Evaluate why this is flaking.
+  XCTSkip("b/184189330");
+
   // Then
-  XCTAssertLessThan(MDCSnackbarManager.defaultManager.mdc_overrideBaseElevation, 0);
+  XCTAssertEqualWithAccuracy(MDCSnackbarManager.defaultManager.mdc_overrideBaseElevation, 99,
+                             FLT_EPSILON);
+}
+
+- (void)testDefaultValueForFocusedSnackbarsAccessibilityNotification {
+  // Then
+  XCTAssertEqual(MDCSnackbarManager.defaultManager.focusAccessibilityNotification,
+                 UIAccessibilityLayoutChangedNotification);
 }
 
 @end

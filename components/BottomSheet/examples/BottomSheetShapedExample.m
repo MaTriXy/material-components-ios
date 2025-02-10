@@ -14,15 +14,21 @@
 
 #import <UIKit/UIKit.h>
 
+#import "supplemental/BottomSheetDummyCollectionViewController.h"
 #import "MaterialAppBar+ColorThemer.h"
-#import "MaterialAppBar+TypographyThemer.h"
 #import "MaterialAppBar.h"
+#import "MaterialAppBar+TypographyThemer.h"
+#import "BottomSheetPresenterViewController.h"
+#import "MDCSheetState.h"
 #import "MaterialBottomSheet.h"
+#import "MaterialFlexibleHeader.h"
 #import "MaterialShapeLibrary.h"
 #import "MaterialShapes.h"
-#import "supplemental/BottomSheetDummyCollectionViewController.h"
-#import "supplemental/BottomSheetDummyStaticViewController.h"
-#import "supplemental/BottomSheetSupplemental.h"
+#import "MaterialColorScheme.h"
+#import "MaterialTypographyScheme.h"
+
+@interface BottomSheetShapedExample : BottomSheetPresenterViewController
+@end
 
 @implementation BottomSheetShapedExample
 
@@ -51,6 +57,18 @@
   shapeGenerator.topRightCorner = cornerTreatment;
   [bottomSheet setShapeGenerator:shapeGenerator forState:MDCSheetStatePreferred];
   [self presentViewController:bottomSheet animated:YES completion:nil];
+}
+
+@end
+
+@implementation BottomSheetShapedExample (CatalogByConvention)
+
++ (NSDictionary *)catalogMetadata {
+  return @{
+    @"breadcrumbs" : @[ @"Bottom Sheet", @"Shaped Bottom Sheet" ],
+    @"primaryDemo" : @NO,
+    @"presentable" : @NO,
+  };
 }
 
 @end

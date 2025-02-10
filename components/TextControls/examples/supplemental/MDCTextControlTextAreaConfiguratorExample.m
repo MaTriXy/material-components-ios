@@ -16,6 +16,7 @@
 
 #import "MDCTextControlTextAreaConfiguratorExample.h"
 
+#import "MDCTextControlConfiguratorExample.h"
 #import "MDCTextControlTextAreaContentViewController.h"
 
 static NSString *const kExampleTitle = @"MDCTextControl TextAreas";
@@ -45,8 +46,9 @@ static NSString *const kExampleTitle = @"MDCTextControl TextAreas";
 + (NSDictionary *)catalogMetadata {
   return @{
     @"breadcrumbs" : @[ @"Text Controls", kExampleTitle ],
+    @"description" : @"Text areas let users enter and edit text.",
     @"primaryDemo" : @NO,
-    @"presentable" : @NO,
+    @"presentable" : @YES,
   };
 }
 

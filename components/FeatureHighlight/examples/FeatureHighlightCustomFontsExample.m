@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #import "MaterialButtons.h"
-#import "MaterialFeatureHighlight+FeatureHighlightAccessibilityMutator.h"
 #import "MaterialFeatureHighlight.h"
 #import "MaterialTypography.h"
 #import "supplemental/FeatureHighlightExampleSupplemental.h"
@@ -38,8 +37,6 @@
   self.infoLabel = [[UILabel alloc] initWithFrame:CGRectZero];
   self.infoLabel.text = @"Tap on the button below.";
   self.infoLabel.font = [UIFont mdc_standardFontForMaterialTextStyle:MDCFontTextStyleCaption];
-  self.infoLabel.textColor =
-      [self.infoLabel.textColor colorWithAlphaComponent:[MDCTypography captionFontOpacity]];
   [self.view addSubview:self.infoLabel];
 
   self.button = [[MDCRaisedButton alloc] init];
@@ -56,7 +53,6 @@
 - (void)didTapButton:(id)sender {
   MDCFeatureHighlightViewController *vc =
       [[MDCFeatureHighlightViewController alloc] initWithHighlightedView:_button completion:nil];
-  [MDCFeatureHighlightAccessibilityMutator mutate:vc];
 
   vc.titleText = @"Feature Highlight can use custom fonts";
   vc.bodyText = @"The title and body font can be set individually.";

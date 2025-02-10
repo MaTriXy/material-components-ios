@@ -14,6 +14,10 @@
 
 #import <UIKit/UIKit.h>
 
+#import "MDCAvailability.h"
+
+NS_ASSUME_NONNULL_BEGIN
+
 @protocol MDCTabBarViewDelegate;
 @protocol MDCTabBarViewIndicatorTemplate;
 
@@ -52,7 +56,15 @@ typedef NS_ENUM(NSUInteger, MDCTabBarViewLayoutStyle) {
    The same as MDCTabBarViewLayoutStyleScrollable, but the selected tab is centered within the bar
    if its position in the scrollview's content area permits it.*/
   MDCTabBarViewLayoutStyleScrollableCentered = 5,
+
+  /**
+   Each item's width is based on its content. The items are arranged in the horizontal center of the
+   bar.
+   */
+  MDCTabBarViewLayoutStyleNonFixedClusteredCentered = 6,
 };
+
+@class MDCBadgeAppearance;
 
 /**
  An implementation of Material Tabs (https://material.io/design/components/tabs.html).
@@ -75,9 +87,28 @@ __attribute__((objc_subclassing_restricted)) @interface MDCTabBarView : UIScroll
 @property(nonnull, nonatomic, copy) UIColor *bottomDividerColor;
 
 /**
- The color for the Ripple effect for touch feedback.
+ If YES, all ripple behavior will be disabled.
+
+ Default value is NO.
  */
-@property(nonnull, nonatomic, copy) UIColor *rippleColor;
+@property(nonatomic) BOOL disableRippleBehavior;
+
+/**
+ The size of the icons within the tab bar.
+
+ This property is not respected unless a value other than @c CGSizeZero is used.
+
+ @note Defaults to CGSizeZero.
+ */
+@property(nonatomic, assign) CGSize itemIconSize;
+
+/**
+ The default appearance to be used for all item badges.
+
+ If a given UITabBarItem has set a non-nil badgeColor, then that value will be used for that item
+ view's badge instead of the backgroundColor associated with this appearance object.
+ */
+@property(nonatomic, copy, nonnull) MDCBadgeAppearance *itemBadgeAppearance;
 
 /** The tab bar view delegate. */
 @property(nullable, nonatomic, weak) id<MDCTabBarViewDelegate> tabBarDelegate;
@@ -99,6 +130,20 @@ __attribute__((objc_subclassing_restricted)) @interface MDCTabBarView : UIScroll
  Scrollable layout style may be used instead. Defaults to @c MDCTabBarViewLayoutStyleFixed.
  */
 @property(nonatomic, assign) MDCTabBarViewLayoutStyle preferredLayoutStyle;
+
+/**
+ The current layout style of the Tab Bar. Although the user sets a preferred layout style, not all
+ combinations of items, bounds, and style can be rendered correctly.
+ */
+@property(nonatomic, readonly) MDCTabBarViewLayoutStyle effectiveLayoutStyle;
+
+/**
+ Whether or not the tab bar should adjust for safe area insets when calculating content size.
+ Default is YES.
+ @note If you set set this property to @c NO you should also set @c contentInsetAdjustmentBehavior
+ to @c UIScrollViewContentInsetAdjustmentNever.
+ */
+@property(nonatomic, assign) BOOL shouldAdjustForSafeAreaInsets;
 
 /**
  A block that is invoked when the @c MDCTabBarView receives a call to @c
@@ -194,6 +239,23 @@ __attribute__((objc_subclassing_restricted)) @interface MDCTabBarView : UIScroll
 - (UIEdgeInsets)contentPaddingForLayoutStyle:(MDCTabBarViewLayoutStyle)layoutStyle;
 
 /**
+ The minimum width for each item in the tab bar view. Defaults to 90. This property is only used
+ when the tab bar view's items are @c UITabBarItems and not @c MDCTabBarItems, or any other custom
+ @c UITabBarItem subclasses that conform to @c MDCTabBarItemCustomViewing.
+ */
+@property(nonatomic, assign) CGFloat minItemWidth;
+
+/** The edge insets between for each item in the tab bar view. Defaults to:
+ * {.top = 8, .right = 16, .bottom = 8, .left = 16} for text only,
+ * {.top = 12, .right = 16, .bottom = 12, .left = 16} for image only, and
+ * {.top = 12, .right = 16, .bottom = 12, .left = 16} for text and image. Setting this property
+ * overrides all three defaults. This property is only used when the tab bar view's items are @c
+ * UITabBarItems and not @c MDCTabBarItems, or any other custom @c UITabBarItem subclasses that
+ * conform to @c MDCTabBarItemCustomViewing.
+ */
+@property(nonatomic) UIEdgeInsets itemViewContentInsets;
+
+/**
  Returns the @c UIAccessibility element associated with the provided item.
 
  @note The returned object is not guaranteed to be of type @c UIAccessibilityElement. It is
@@ -214,4 +276,46 @@ __attribute__((objc_subclassing_restricted)) @interface MDCTabBarView : UIScroll
 - (CGRect)rectForItem:(nonnull UITabBarItem *)item
     inCoordinateSpace:(nonnull id<UICoordinateSpace>)coordinateSpace;
 
+/**
+ Scrolls the tab bar so that @c item is centered.
+
+ @param item The tab bar item to be centered.
+ @param animated Whether to animate the scroll.
+ */
+- (void)scrollToItem:(nonnull UITabBarItem *)item animated:(BOOL)animated;
+
+/**
+ The color for the Ripple effect for touch feedback.
+ */
+@property(nonnull, nonatomic, copy)
+    UIColor *rippleColor __deprecated_msg("Enable disableRippleBehavior instead.");
+
+/**
+ Offset to shift the badge from its default location.
+
+ Positive x values move the badge toward the trailing edge, and positive y values move the badge
+ downward. All badges in the tab bar use the same offset.
+ */
+@property(nonatomic) CGPoint badgeOffset;
+
 @end
+
+#if MDC_AVAILABLE_SDK_IOS(13_0) && !TARGET_OS_TV
+/**
+ This component supports UIKit's Large Content Viewer. It is recommended that images associated with
+ each tab bar item be backed with a PDF image with "preserve vector data" enabled within the assets
+ entry in the catalog. This ensures that the image is scaled appropriately in the content viewer.
+ Alternatively specify an image to use for the large content viewer using UITabBarItem's property
+ @c largeContentSizeImage . If an image is specified, the given image is used as-is for the large
+ content viewer and will not be scaled.
+ If the image is not backed by PDF and a @c largeContentSizeImage is not specified, the given
+ @c image will be scaled and may be blurry.
+ For more details on the Large Content Viewer see:
+ https://developer.apple.com/videos/play/wwdc2019/261/
+ */
+@interface MDCTabBarView (UILargeContentViewerInteractionDelegate) <
+    UILargeContentViewerInteractionDelegate>
+@end
+#endif  // MDC_AVAILABLE_SDK_IOS(13_0)
+
+NS_ASSUME_NONNULL_END

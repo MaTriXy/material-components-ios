@@ -14,9 +14,14 @@
 
 #import <UIKit/UIKit.h>
 
+API_DEPRECATED_BEGIN("🤖👀 Use layer.cornerRadius to achieve rounded corners. "
+                     "This has go/material-ios-migrations#scriptable-potential 🤖👀.",
+                     ios(12, 12))
+
 /**
  A protocol for objects that create closed CGPaths of varying sizes.
  */
+NS_SWIFT_UI_ACTOR
 @protocol MDCShapeGenerating <NSCopying>
 
 /**
@@ -28,3 +33,5 @@
 - (nullable CGPathRef)pathForSize:(CGSize)size;
 
 @end
+
+API_DEPRECATED_END
